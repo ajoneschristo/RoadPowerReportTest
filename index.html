@@ -878,59 +878,175 @@ body.dark {
   font-family: 'IBM Plex Sans', sans-serif; white-space: nowrap;
 }
 .rp-mini-btn:active { opacity: .75; }
-/* ── Report view overlay ── */
-.rp-view-body { padding: 12px; }
-.rp-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+/* ═══════════════════════════════════════════════════════
+   REPORT SURFACE — "weighbridge"
+   Cool coal-grey paper, hairline ash grid, one signal colour.
+   The on-date column carries a load bar behind the figure, so the
+   day's ranking reads at a glance and survives a WhatsApp screenshot.
+   ═══════════════════════════════════════════════════════ */
+.rp-tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
 .rp-tab {
-  padding: 7px 12px; border-radius: 8px; cursor: pointer;
-  border: 1.5px solid var(--border); background: transparent;
-  color: var(--dim); font-size: 11px; font-weight: 700;
+  padding: 7px 13px; cursor: pointer;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--dim); font-size: 11px; font-weight: 600;
+  font-family: 'IBM Plex Sans Condensed', sans-serif;
+  text-transform: uppercase; letter-spacing: .09em;
+}
+.rp-tab.on { border-color: #d97a06; color: #d97a06; background: rgba(217,122,6,.08); }
+.rp-note { font-size: 11px; color: var(--dim); margin: 10px 2px 0; line-height: 1.55; }
+.rp-warn { font-size: 11px; color: var(--red); margin: 10px 2px 0; font-weight: 600; }
+.rp-tblwrap { }
+
+/* ── tokens ── */
+.rp-card {
+  --paper:    #f5f7f9;
+  --ink:      #151a21;
+  --ash:      #ccd4dd;
+  --ash-soft: #e6ebf0;
+  --mute:     #74808e;
+  --live:     #b8620a;
+  --live-bar: rgba(217,122,6,.17);
+  --band:     #212a35;
+  --band-ink: #f5f7f9;
+  --zero:     #a9b3be;
+
+  background: var(--paper);
+  border: 1px solid var(--ash);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+body.dark .rp-card {
+  --paper:    #131920;
+  --ink:      #e7edf4;
+  --ash:      #2a3541;
+  --ash-soft: #1c242e;
+  --mute:     #7e8b9b;
+  --live:     #f2a63b;
+  --live-bar: rgba(242,166,59,.16);
+  --band:     #0b1017;
+  --band-ink: #e7edf4;
+  --zero:     #4a5665;
+}
+/* snapshots always render light, whatever the app theme is */
+.rp-light .rp-card, .rp-light .rp-card * { color-scheme: light; }
+.rp-light .rp-card {
+  --paper:#f5f7f9; --ink:#151a21; --ash:#ccd4dd; --ash-soft:#e6ebf0;
+  --mute:#74808e; --live:#b8620a; --live-bar:rgba(217,122,6,.17);
+  --band:#212a35; --band-ink:#f5f7f9; --zero:#a9b3be;
+}
+
+/* ── caption ── */
+.rp-cap {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap;
+  padding: 11px 14px 9px;
+  border-bottom: 2px solid var(--ink);
+  background: var(--paper);
+}
+.rp-cap h3 {
+  font-family: 'IBM Plex Sans Condensed', sans-serif;
+  font-size: 14px; font-weight: 600; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--ink); margin: 0;
+}
+.rp-cap-meta {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .04em;
+  color: var(--mute); white-space: nowrap;
+}
+.rp-cap-meta b { color: var(--live); font-weight: 600; }
+
+/* ── grid ── */
+.rp-scrollx { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.rp-t {
+  border-collapse: separate; border-spacing: 0;
+  font-family: var(--mono); font-size: 12px; color: var(--ink);
+  background: var(--paper); min-width: 100%;
+}
+.rp-t th, .rp-t td {
+  padding: 5px 9px; white-space: nowrap;
+  border-bottom: 1px solid var(--ash-soft);
+}
+.rp-t thead th {
+  font-family: 'IBM Plex Sans Condensed', sans-serif;
+  font-size: 10px; font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--mute);
+  text-align: right; padding-top: 8px; padding-bottom: 7px;
+  border-bottom: 1px solid var(--ash);
+  background: var(--paper);
+}
+.rp-t thead th.rp-lead { text-align: left; }
+.rp-t thead th.rp-on   { color: var(--live); }
+.rp-t thead th.rp-day  { font-family: var(--mono); letter-spacing: 0; font-size: 10px; }
+
+/* customer / date column — pinned while the day columns scroll */
+.rp-lead {
+  position: sticky; left: 0; z-index: 2;
+  background: var(--paper);
+  text-align: left;
   font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12px; font-weight: 500;
+  border-right: 1px solid var(--ash);
+  max-width: 220px; overflow: hidden; text-overflow: ellipsis;
 }
-.rp-tab.on { border-color: #ff8c00; color: #ff8c00; background: rgba(255,140,0,.09); }
-.rp-note {
-  font-size: 11px; color: var(--dim); margin: 8px 2px 0;
+.rp-lead .rp-codes { font-family: var(--mono); font-size: 9px; color: var(--mute); }
+
+/* figures */
+.rp-v { text-align: right; font-variant-numeric: tabular-nums; }
+.rp-v.rp-zero { color: var(--zero); }
+.rp-day  { color: var(--mute); font-size: 11px; }
+.rp-key  { font-weight: 600; }
+
+/* signature: load bar behind the on-date figure */
+.rp-on {
+  position: relative; color: var(--live); font-weight: 600;
+  border-left: 2px solid var(--live); border-right: 1px solid var(--ash);
 }
-.rp-warn {
-  font-size: 11px; color: #c0392b; margin: 8px 2px 0; font-weight: 600;
+.rp-on::before {
+  content: ''; position: absolute; left: 0; top: 2px; bottom: 2px;
+  width: var(--b, 0%); background: var(--live-bar); pointer-events: none;
 }
-.rp-tblwrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-/* ── Report tables (reference Google Sheet theme) ── */
-.rp-table {
-  border-collapse: collapse; font-family: var(--mono);
-  font-size: 11px; background: #ffffff; color: #000000;
-  border: 2px solid #000000; margin-bottom: 18px;
+.rp-on span { position: relative; }
+
+/* subtotal columns (e.g. Talcher Total) read as derived, not as data */
+.rp-t th.rp-sub, .rp-t td.rp-sub {
+  border-left: 1px dashed var(--ash);
+  color: var(--mute); font-style: italic;
 }
-.rp-table th, .rp-table td {
-  border: 1px solid #000000; padding: 3px 6px; white-space: nowrap;
+
+/* totals band */
+.rp-t tr.rp-sum td {
+  background: var(--band); color: var(--band-ink);
+  font-weight: 600; border-bottom: none;
 }
-.rp-table tr.rp-title th {
-  background: #00ffff; color: #000000; font-weight: 700;
-  font-size: 12px; text-align: center; letter-spacing: .3px;
+.rp-t tr.rp-sum td.rp-lead {
+  background: var(--band); color: var(--band-ink);
+  font-family: 'IBM Plex Sans Condensed', sans-serif;
+  letter-spacing: .06em; text-transform: uppercase; font-size: 11px;
+  border-right-color: var(--band);
 }
-.rp-table tr.rp-head th {
-  background: #fce4d6; color: #000000; font-weight: 700;
-  text-align: center; font-size: 10px;
+.rp-t tr.rp-sum td.rp-on { color: var(--band-ink); border-left-color: var(--live); }
+.rp-t tr.rp-sum td.rp-on::before { background: none; }
+.rp-t tr.rp-sum td.rp-sub { color: rgba(245,247,249,.62); }
+.rp-t tr.rp-avg td { background: var(--ash-soft); color: var(--ink); font-weight: 500; }
+.rp-t tr.rp-avg td.rp-lead {
+  background: var(--ash-soft);
+  font-family: 'IBM Plex Sans Condensed', sans-serif;
+  letter-spacing: .06em; text-transform: uppercase; font-size: 11px;
 }
-.rp-table td.rp-name {
-  text-align: left; background: #ead1dc; font-weight: 600;
-  font-family: 'IBM Plex Sans', sans-serif; font-size: 11px;
-  max-width: 230px; overflow: hidden; text-overflow: ellipsis;
+.rp-t tbody tr:hover td { background: var(--ash-soft); }
+.rp-t tbody tr:hover td.rp-lead { background: var(--ash-soft); }
+.rp-t tbody tr.rp-sum:hover td { background: var(--band); }
+
+.rp-foot {
+  padding: 7px 14px; font-family: var(--mono); font-size: 10px;
+  color: var(--mute); border-top: 1px solid var(--ash); letter-spacing: .03em;
 }
-.rp-table td.rp-date { text-align: center; background: #fce5cd; font-weight: 600; }
-.rp-table td.rp-num  { text-align: right; }
-.rp-table tr.rp-total td {
-  background: #d9ead3; color: #38761d; font-weight: 700;
-}
-.rp-table tr.rp-total td.rp-name, .rp-table tr.rp-total td.rp-date {
-  background: #d9ead3; color: #38761d;
-}
-.rp-table td.rp-sub  { background: #cfe2f3; color: #1155cc; font-weight: 700; }
-.rp-table th.rp-sub  { background: #cfe2f3; color: #1155cc; }
-.rp-table td.rp-live { box-shadow: inset 0 0 0 2px #ff8c00; font-weight: 700; }
-.rp-table td.rp-zero { color: #999999; }
+.rp-empty { padding: 22px 14px; text-align: center; color: var(--mute); font-size: 12px; }
 
 
+
+.rp-toggles { display:flex; flex-direction:column; gap:7px; }
+.rp-tgl { display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; color:var(--text); }
+.rp-tgl input { width:16px; height:16px; accent-color:#d97a06; cursor:pointer; flex-shrink:0; }
 /* ── merged code groups ── */
 .rp-badge {
   display:inline-block; margin-left:4px; padding:0 4px; border-radius:6px;
@@ -958,11 +1074,17 @@ body.dark {
 #drop-screen { display:flex; flex-direction:column; align-items:center; gap:12px; padding:16px; }
 #dashboard   { padding:12px; max-width:1200px; margin:0 auto; }
 .rp-asof {
-  display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;
-  background:#00ffff; color:#000; font-family:var(--mono);
-  font-size:11px; padding:6px 10px; border:1px solid #000; margin-bottom:10px;
+  display:flex; align-items:baseline; gap:9px; flex-wrap:wrap;
+  font-family:'IBM Plex Sans Condensed',sans-serif; font-size:11px;
+  text-transform:uppercase; letter-spacing:.11em; color:var(--dim);
+  padding:8px 0 10px; margin-bottom:2px;
+  border-bottom:1px solid var(--border);
 }
-.rp-asof strong { font-size:13px; }
+.rp-asof strong {
+  font-family:var(--mono); font-size:15px; font-weight:600;
+  letter-spacing:0; text-transform:none; color:#d97a06;
+}
+.rp-asof span:last-child { font-family:var(--mono); letter-spacing:.03em; text-transform:none; color:var(--mid); }
 .multiday-tabs-wrap { margin-bottom:10px; }
 
 </style>
@@ -975,7 +1097,7 @@ body.dark {
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B2-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B3-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1126,8 +1248,19 @@ body.dark {
       </div>
 
       <div class="stt-section">
+        <label class="stt-label">Day-by-day breakdown</label>
+        <div class="rp-toggles">
+          <label class="rp-tgl"><input type="checkbox" id="rp_r1Daywise"><span>Power sector report — show each day's column</span></label>
+          <label class="rp-tgl"><input type="checkbox" id="rp_r2Daywise"><span>Source-wise report — show each day's row</span></label>
+        </div>
+        <div class="stt-hint" style="margin-top:5px;">
+          Switch either off to show only the on-date figure, month to date, and average per day.
+        </div>
+      </div>
+
+      <div class="stt-section">
         <div class="stt-section-hdr">
-          <label class="stt-label">Parties</label>
+          <label class="stt-label">Customers</label>
           <span class="rp-count" id="rpCount"></span>
         </div>
         <div class="rp-toolbar">
@@ -1708,6 +1841,8 @@ function openRpSettings() {
     };
   });
   document.getElementById('rp_histPath').value = _rpDraft.historyPath;
+  document.getElementById('rp_r1Daywise').checked = pr.r1Daywise !== false;
+  document.getElementById('rp_r2Daywise').checked = pr.r2Daywise !== false;
   document.getElementById('rpSettingsStatus').textContent = '';
   document.getElementById('rpSearch').value = '';
   _rpChips = { recent: true, sel: false };
@@ -2014,7 +2149,12 @@ async function saveRpSettings() {
     }
   }
 
-  const newSettings = Object.assign({}, appSettings, { powerReport: { historyPath: histPath, parties } });
+  const newSettings = Object.assign({}, appSettings, { powerReport: {
+    historyPath: histPath,
+    r1Daywise: document.getElementById('rp_r1Daywise').checked,
+    r2Daywise: document.getElementById('rp_r2Daywise').checked,
+    parties,
+  } });
 
   try {
     // MERGE-ON-SAVE — settings.json is shared with ePassViewer, so re-read the
@@ -2319,6 +2459,18 @@ function rpSumPartyColl(pc, codes, colls) {
   return s;
 }
 
+function rpEsc(x) { return String(x == null ? '' : x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+function rpDayNum(d) { return String(d).padStart(2,'0'); }
+function rpOnLabel(md) {
+  if (!md.activeKey) return md.monLabel;
+  return rpDayNum(+md.activeKey.slice(8,10)) + ' ' + RP_MON[md.M-1].toUpperCase();
+}
+// is the day-by-day breakdown switched on for a report?
+function rpDaywise(which) {
+  const pr = appSettings.powerReport || {};
+  return pr[which === 1 ? 'r1Daywise' : 'r2Daywise'] !== false;
+}
+
 function renderRpReports() {
   const md = rpMonthData();
   const sub = document.getElementById('rpViewSub');
@@ -2326,188 +2478,217 @@ function renderRpReports() {
   const n1 = (pr.parties || []).filter(p => p.r1).length;
   const n2 = (pr.parties || []).filter(p => p.r2).length;
   sub.textContent = md
-    ? `${md.monLabel} · ${Object.keys(md.days).length} day(s) of data · ${n1} party rows · ${n2} source-wise block(s)`
+    ? `${md.monLabel} · ${Object.keys(md.days).length} day(s) of data · ${n1} customer rows · ${n2} source-wise block(s)`
     : 'No data yet — load a despatch file or save a day.';
   renderRp1(md);
   renderRp2(md);
   rpSwitch(_rpTab);
 }
 
+// ═══════════════════════════════════════════════════════
+//  REPORT 1 — Road despatch to power sector
+// ═══════════════════════════════════════════════════════
 function renderRp1(md) {
   const pane = document.getElementById('rpPane1');
   pane.innerHTML = '';
   const pr = appSettings.powerReport || {};
   const parties = (pr.parties || []).filter(p => p.r1);
   if (!parties.length) {
-    pane.innerHTML = '<div class="rp-note">No parties ticked for Report 1. Open ⚙ and tick <strong>R1</strong> against the parties you want as rows.</div>';
+    pane.innerHTML = '<div class="rp-card"><div class="rp-empty">No customers picked for this report yet. Open ⚙ and tick <strong>R1</strong> against the ones you want as rows.</div></div>';
     return;
   }
-  if (!md) { pane.innerHTML = '<div class="rp-note">No data available.</div>'; return; }
+  if (!md) { pane.innerHTML = '<div class="rp-card"><div class="rp-empty">Nothing to show. Load a despatch file, or reload the saved history.</div></div>'; return; }
 
+  const daywise = rpDaywise(1);
   const lastDay = md.lastDay || 0;
-  // per-party per-day totals
-  const rows = parties.map(p => {
+  const actD    = md.activeKey ? +md.activeKey.slice(8,10) : 0;
+
+  // day columns actually holding data
+  const dayCols = [];
+  for (let d = 1; d <= lastDay; d++) if (md.days[d]) dayCols.push(d);
+
+  let rows = parties.map(p => {
     const codes = rpCodesOf(p);
     const vals = {};
     let prog = 0, cnt = 0;
-    for (let d = 1; d <= lastDay; d++) {
-      if (!md.days[d]) continue;
+    dayCols.forEach(d => {
       const v = rpSumParty(md.days[d].pc, codes);
       vals[d] = v; prog += v; cnt++;
-    }
-    const actD = md.activeKey ? +md.activeKey.slice(8,10) : 0;
+    });
     return { name: p.name || codes[0], codes, vals, prog, cnt, today: vals[actD] || 0 };
-  }).sort((a,b) => b.prog - a.prog);
+  });
 
-  const actD = md.activeKey ? +md.activeKey.slice(8,10) : 0;
+  // customers with nothing lifted this month stay hidden
+  const hidden = rows.filter(r => r.prog <= 0).length;
+  rows = rows.filter(r => r.prog > 0).sort((a,b) => b.prog - a.prog);
+
+  const peak = rows.reduce((m,r) => Math.max(m, r.today), 0);
   const cut  = (md.days[actD] && md.days[actD].cut) || '';
-  const dayCount = Object.keys(md.days).length;
 
-  const t = document.createElement('table');
-  t.className = 'rp-table';
-  t.id = 'rpTable1';
-  const ncol = 4 + lastDay;
+  let head = '<tr><th class="rp-lead">Customer</th>' +
+             `<th class="rp-on">${rpOnLabel(md)}</th>` +
+             '<th>Month to date</th><th>Avg / day</th>';
+  if (daywise) dayCols.forEach(d => head += `<th class="rp-day">${rpDayNum(d)}</th>`);
+  head += '</tr>';
 
-  let html = `<tr class="rp-title"><th colspan="${ncol}">ROAD DESPATCH TO POWER SECTOR</th></tr>`;
-  html += '<tr class="rp-head">';
-  html += `<th>${md.activeKey ? rpActiveDMY() : md.monLabel}</th>`;
-  html += '<th>Today</th><th>Progressive Total</th><th>Avg. Daily despatch</th>';
-  for (let d = 1; d <= lastDay; d++) {
-    const on = !!md.days[d];
-    html += `<th${md.days[d] && md.days[d].live ? ' class="rp-sub"' : ''}>${String(d).padStart(2,'0')}/${String(md.M).padStart(2,'0')}/${String(md.Y).slice(2)}</th>`;
-    void on;
-  }
-  html += '</tr>';
-
+  let body = '';
   let tToday = 0, tProg = 0, tAvg = 0;
   const dayTotals = {};
   rows.forEach(r => {
     tToday += r.today; tProg += r.prog; tAvg += r.cnt ? r.prog / r.cnt : 0;
-    html += '<tr>';
-    html += `<td class="rp-name" title="${r.codes.join(', ')}">${r.name}${r.codes.length > 1 ? ` <span style="font-size:9px;opacity:.6;">(${r.codes.length} codes)</span>` : ''}</td>`;
-    html += `<td class="rp-num rp-live">${rpNum(r.today)}</td>`;
-    html += `<td class="rp-num">${rpNum(r.prog)}</td>`;
-    html += `<td class="rp-num">${rpNum(r.cnt ? r.prog / r.cnt : 0)}</td>`;
-    for (let d = 1; d <= lastDay; d++) {
-      const v = md.days[d] ? (r.vals[d] || 0) : null;
-      if (v !== null) dayTotals[d] = (dayTotals[d] || 0) + v;
-      html += `<td class="rp-num${v === 0 ? ' rp-zero' : ''}">${v === null ? '' : (v ? rpNum(v) : '0')}</td>`;
-    }
-    html += '</tr>';
+    const bar = peak > 0 ? Math.round((r.today / peak) * 100) : 0;
+    body += '<tr>';
+    body += `<td class="rp-lead" title="${rpEsc(r.codes.join(', '))}">${rpEsc(r.name)}` +
+            (r.codes.length > 1 ? ` <span class="rp-codes">${r.codes.length} codes</span>` : '') + '</td>';
+    body += `<td class="rp-v rp-on" style="--b:${bar}%"><span>${rpNum(r.today) || '—'}</span></td>`;
+    body += `<td class="rp-v rp-key">${rpNum(r.prog)}</td>`;
+    body += `<td class="rp-v">${rpNum(r.cnt ? r.prog / r.cnt : 0)}</td>`;
+    if (daywise) dayCols.forEach(d => {
+      const v = r.vals[d] || 0;
+      dayTotals[d] = (dayTotals[d] || 0) + v;
+      body += `<td class="rp-v rp-day${v === 0 ? ' rp-zero' : ''}">${v ? rpNum(v) : '·'}</td>`;
+    });
+    body += '</tr>';
   });
+  if (!daywise) dayCols.forEach(d => { dayTotals[d] = rows.reduce((s,r) => s + (r.vals[d]||0), 0); });
 
-  const dd = md.activeKey ? md.activeKey.slice(8,10) + '.' + md.activeKey.slice(5,7) + '.' + md.activeKey.slice(0,4) : '';
-  html += '<tr class="rp-total">';
-  html += `<td class="rp-name">TOTAL (${md.monLabel}${dd ? ' until ' + dd : ''}${cut ? ' -- ' + cut : ''})</td>`;
-  html += `<td class="rp-num">${rpNum(tToday)}</td><td class="rp-num">${rpNum(tProg)}</td><td class="rp-num">${rpNum(tAvg)}</td>`;
-  for (let d = 1; d <= lastDay; d++) html += `<td class="rp-num">${md.days[d] ? rpNum(dayTotals[d] || 0) : ''}</td>`;
-  html += '</tr>';
+  let foot = '<tr class="rp-sum"><td class="rp-lead">All customers</td>';
+  foot += `<td class="rp-v rp-on">${rpNum(tToday)}</td>`;
+  foot += `<td class="rp-v">${rpNum(tProg)}</td><td class="rp-v">${rpNum(tAvg)}</td>`;
+  if (daywise) dayCols.forEach(d => foot += `<td class="rp-v">${rpNum(dayTotals[d] || 0)}</td>`);
+  foot += '</tr>';
 
-  t.innerHTML = html;
-  pane.appendChild(t);
+  const card = document.createElement('div');
+  card.className = 'rp-card';
+  card.innerHTML =
+    `<div class="rp-cap">
+       <h3>Road despatch to power sector</h3>
+       <div class="rp-cap-meta">${md.monLabel} · as on <b>${rpEsc(rpOnLabel(md))}</b>${cut ? ' · cut-off ' + rpEsc(cut) : ''}</div>
+     </div>
+     <div class="rp-scrollx"><table class="rp-t"><thead>${head}</thead><tbody>${body}${foot}</tbody></table></div>
+     <div class="rp-foot">Tonnes${hidden ? ` · ${hidden} customer${hidden > 1 ? 's' : ''} hidden with no lifting this month` : ''}${daywise ? '' : ' · day-by-day columns switched off in settings'}</div>`;
+  pane.appendChild(card);
 
-  const note = document.createElement('div');
-  note.className = 'rp-note';
-  note.innerHTML = `Figures in tonnes. The <strong>Today</strong> column and the ${md.activeKey ? String(actD).padStart(2,'0') : '—'}/${String(md.M).padStart(2,'0')} column are live from the loaded file — everything else comes from the history database (${dayCount} day(s) stored this month). Tap <strong>Save Day</strong> to freeze today's figures.`;
-  pane.appendChild(note);
+  if (!rows.length) card.querySelector('.rp-scrollx').innerHTML =
+    '<div class="rp-empty">No lifting recorded against any of the picked customers this month.</div>';
 }
 
+// ═══════════════════════════════════════════════════════
+//  REPORT 2 — Source-wise daywise lifting
+// ═══════════════════════════════════════════════════════
 function renderRp2(md) {
   const pane = document.getElementById('rpPane2');
   pane.innerHTML = '';
   const pr = appSettings.powerReport || {};
   const parties = (pr.parties || []).filter(p => p.r2);
   if (!parties.length) {
-    pane.innerHTML = '<div class="rp-note">No parties ticked for Report 2. Open ⚙ and tick <strong>R2</strong>, then set the colliery columns.</div>';
+    pane.innerHTML = '<div class="rp-card"><div class="rp-empty">No customers picked for this report yet. Open ⚙, tick <strong>R2</strong>, then set the colliery columns.</div></div>';
     return;
   }
-  if (!md) { pane.innerHTML = '<div class="rp-note">No data available.</div>'; return; }
+  if (!md) { pane.innerHTML = '<div class="rp-card"><div class="rp-empty">Nothing to show. Load a despatch file, or reload the saved history.</div></div>'; return; }
 
-  const cutNow = rpCutLabel();
-  const head = document.createElement('div');
-  head.className = 'rp-note';
-  head.style.marginBottom = '8px';
-  head.innerHTML = `<strong>DAYWISE LIFTED QTY IN ROAD MODE of ${md.monLabel}${md.activeKey ? ' until ' + rpActiveDMY() : ''}${cutNow ? ' --- ' + cutNow : ''} (Figs. in Tonnes)</strong>`;
-  pane.appendChild(head);
+  const daywise = rpDaywise(2);
+  const actD = md.activeKey ? +md.activeKey.slice(8,10) : 0;
+  const splitCodes = c => (c.colCodes || '').split(',').map(x => x.trim()).filter(Boolean);
+
+  // days holding data, blanks skipped
+  const dayList = [];
+  for (let d = 1; d <= md.dim; d++) if (md.days[d]) dayList.push(d);
 
   parties.forEach(p => {
     const codes = rpCodesOf(p);
-    const code  = codes[0];
     const cols  = (p.cols || []);
-    const real = cols.filter(c => !c.isSubtotal);
-    const t = document.createElement('table');
-    t.className = 'rp-table';
-    const ncol = 2 + cols.length + 1;
+    const real  = cols.filter(c => !c.isSubtotal);
 
-    let html = `<tr class="rp-title"><th colspan="${ncol}">${p.name || code}</th></tr>`;
-    html += '<tr class="rp-head"><th>MONTH</th><th>DATE</th>';
-    cols.forEach(c => html += `<th${c.isSubtotal ? ' class="rp-sub"' : ''}>${c.label || c.colCodes}</th>`);
-    html += '<th>TOTAL</th></tr>';
+    let head = '<tr><th class="rp-lead">Date</th>';
+    cols.forEach(c => head += `<th${c.isSubtotal ? ' class="rp-sub"' : ''}>${rpEsc(c.label || c.colCodes)}</th>`);
+    head += '<th class="rp-on">Total</th></tr>';
 
-    const splitCodes = c => (c.colCodes || '').split(',').map(x => x.trim()).filter(Boolean);
+    const sums = cols.map(() => 0);
+    let gTot = 0;
+    const cellsFor = pc => {
+      const v = cols.map(c => rpSumPartyColl(pc, codes, splitCodes(c)));
+      const t = real.reduce((s,c) => s + rpSumPartyColl(pc, codes, splitCodes(c)), 0);
+      return { v, t };
+    };
 
-    // previous month summary
+    // accumulate over every day with data, whether or not the rows are shown
+    dayList.forEach(d => {
+      const { v, t } = cellsFor(md.days[d].pc);
+      v.forEach((x,i) => sums[i] += x);
+      gTot += t;
+    });
+    const peak = dayList.reduce((m,d) => Math.max(m, cellsFor(md.days[d].pc).t), 0);
+
+    let body = '';
+    const rowFor = (label, d) => {
+      const { v, t } = cellsFor(md.days[d].pc);
+      const bar = peak > 0 ? Math.round((t / peak) * 100) : 0;
+      let h = `<tr><td class="rp-lead">${rpEsc(label)}</td>`;
+      v.forEach((x,i) => h += `<td class="rp-v${cols[i].isSubtotal ? ' rp-sub' : ''}${x === 0 ? ' rp-zero' : ''}">${x ? rpNum(x) : '·'}</td>`);
+      h += `<td class="rp-v rp-on" style="--b:${bar}%"><span>${rpNum(t) || '—'}</span></td></tr>`;
+      return h;
+    };
+
+    if (daywise) {
+      dayList.forEach(d => body += rowFor(`${rpDayNum(d)} ${RP_MON[md.M-1]}`, d));
+    } else if (md.days[actD]) {
+      body += rowFor(rpOnLabel(md), actD);
+    }
+
+    let foot = '<tr class="rp-sum"><td class="rp-lead">Month to date</td>';
+    sums.forEach((v,i) => foot += `<td class="rp-v${cols[i].isSubtotal ? ' rp-sub' : ''}">${rpNum(v)}</td>`);
+    foot += `<td class="rp-v rp-on">${rpNum(gTot)}</td></tr>`;
+
+    const n = dayList.length;
+    foot += '<tr class="rp-avg"><td class="rp-lead">Avg / day</td>';
+    sums.forEach((v,i) => foot += `<td class="rp-v${cols[i].isSubtotal ? ' rp-sub' : ''}">${rpNum(n ? v / n : 0)}</td>`);
+    foot += `<td class="rp-v">${rpNum(n ? gTot / n : 0)}</td></tr>`;
+
+    // previous month, when history reaches back that far
+    let prevRows = '';
     if (md.prev.days) {
       const pv = cols.map(c => rpSumPartyColl(md.prev.pc, codes, splitCodes(c)));
       const pt = real.reduce((s,c) => s + rpSumPartyColl(md.prev.pc, codes, splitCodes(c)), 0);
-      html += `<tr><td class="rp-date">${md.prev.label}</td><td class="rp-date">TOTAL</td>`;
-      pv.forEach((v,i) => html += `<td class="rp-num${cols[i].isSubtotal ? ' rp-sub' : ''}">${rpNum(v)}</td>`);
-      html += `<td class="rp-num">${rpNum(pt)}</td></tr>`;
-      html += `<tr><td class="rp-date"></td><td class="rp-date">Avg/day</td>`;
-      pv.forEach((v,i) => html += `<td class="rp-num${cols[i].isSubtotal ? ' rp-sub' : ''}">${rpNum(v / md.prev.days)}</td>`);
-      html += `<td class="rp-num">${rpNum(pt / md.prev.days)}</td></tr>`;
+      prevRows += `<tr class="rp-avg"><td class="rp-lead">${rpEsc(md.prev.label)} total</td>`;
+      pv.forEach((v,i) => prevRows += `<td class="rp-v${cols[i].isSubtotal ? ' rp-sub' : ''}">${rpNum(v)}</td>`);
+      prevRows += `<td class="rp-v">${rpNum(pt)}</td></tr>`;
+      prevRows += `<tr class="rp-avg"><td class="rp-lead">${rpEsc(md.prev.label)} avg / day</td>`;
+      pv.forEach((v,i) => prevRows += `<td class="rp-v${cols[i].isSubtotal ? ' rp-sub' : ''}">${rpNum(v / md.prev.days)}</td>`);
+      prevRows += `<td class="rp-v">${rpNum(pt / md.prev.days)}</td></tr>`;
     }
 
-    const sums = cols.map(() => 0);
-    let gTot = 0, nDays = 0;
-    for (let d = 1; d <= md.dim; d++) {
-      const rec = md.days[d];
-      const dl = `${String(d).padStart(2,'0')}/${String(md.M).padStart(2,'0')}/${String(md.Y).slice(2)}`;
-      html += `<tr${rec && rec.live ? ' style="outline:2px solid #ff8c00;"' : ''}>`;
-      html += `<td class="rp-date">${d === 1 ? md.monLabel : ''}</td><td class="rp-date">${dl}</td>`;
-      if (!rec) {
-        cols.forEach(c => html += `<td class="rp-num${c.isSubtotal ? ' rp-sub' : ''}"></td>`);
-        html += '<td class="rp-num"></td></tr>';
-        continue;
-      }
-      nDays++;
-      let rowTot = 0;
-      cols.forEach((c, i) => {
-        const v = rpSumPartyColl(rec.pc, codes, splitCodes(c));
-        sums[i] += v;
-        if (!c.isSubtotal) rowTot += v;
-        html += `<td class="rp-num${c.isSubtotal ? ' rp-sub' : ''}${v === 0 ? ' rp-zero' : ''}">${v ? rpNum(v) : '0'}</td>`;
-      });
-      gTot += rowTot;
-      html += `<td class="rp-num">${rpNum(rowTot)}</td></tr>`;
-    }
-
-    html += '<tr class="rp-total"><td class="rp-date"></td><td class="rp-date">TOTAL</td>';
-    sums.forEach(v => html += `<td class="rp-num">${rpNum(v)}</td>`);
-    html += `<td class="rp-num">${rpNum(gTot)}</td></tr>`;
-    html += '<tr class="rp-total"><td class="rp-date"></td><td class="rp-date">Avg/day</td>';
-    sums.forEach(v => html += `<td class="rp-num">${rpNum(nDays ? v / nDays : 0)}</td>`);
-    html += `<td class="rp-num">${rpNum(nDays ? gTot / nDays : 0)}</td></tr>`;
-
-    t.innerHTML = html;
-    pane.appendChild(t);
+    const card = document.createElement('div');
+    card.className = 'rp-card';
+    card.innerHTML =
+      `<div class="rp-cap">
+         <h3>${rpEsc(p.name || codes[0])}</h3>
+         <div class="rp-cap-meta">Source-wise · ${md.monLabel} · as on <b>${rpEsc(rpOnLabel(md))}</b></div>
+       </div>
+       <div class="rp-scrollx"><table class="rp-t"><thead>${head}</thead><tbody>${prevRows}${body}${foot}</tbody></table></div>
+       <div class="rp-foot">Tonnes · ${n} day${n === 1 ? '' : 's'} lifted${daywise ? '' : ' · day-by-day rows switched off in settings'}</div>`;
+    pane.appendChild(card);
   });
 }
 
 // ── Share the visible report as an image ────────────────
 async function shareRpReport() {
   const pane = document.getElementById(_rpTab === 1 ? 'rpPane1' : 'rpPane2');
-  const tbl  = pane.querySelector('table');
-  if (!tbl) { alert('Nothing to share yet.'); return; }
+  if (!pane.querySelector('.rp-t')) { alert('Nothing to share yet — the report is empty.'); return; }
   const holder = document.createElement('div');
-  holder.style.cssText = 'position:fixed;left:-10000px;top:0;background:#ffffff;padding:24px 18px 30px;';
-  const strip = () => { const s = document.createElement('div'); s.style.cssText = 'height:8px;background:#00ffff;'; return s; };
-  holder.appendChild(strip());
-  pane.querySelectorAll('table').forEach(x => holder.appendChild(x.cloneNode(true)));
-  holder.appendChild(strip());
+  holder.className = 'rp-light';
+  holder.style.cssText = 'position:fixed;left:-10000px;top:0;background:#f5f7f9;padding:26px 20px 32px;display:inline-block;';
+  pane.querySelectorAll('.rp-card').forEach(x => {
+    const c = x.cloneNode(true);
+    // unpin the sticky column and let the table run full width in the image
+    c.querySelectorAll('.rp-lead').forEach(el => { el.style.position = 'static'; });
+    const sx = c.querySelector('.rp-scrollx');
+    if (sx) sx.style.overflow = 'visible';
+    holder.appendChild(c);
+  });
   document.body.appendChild(holder);
   try {
-    const canvas = await html2canvas(holder, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false });
+    const canvas = await html2canvas(holder, { backgroundColor: '#f5f7f9', scale: 2, useCORS: true, logging: false });
     const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
     const fname = `Road_Power_Report_${(rpActiveDMY() || '').replace(/-/g,'_')}.png`;
     const file = new File([blob], fname, { type: 'image/png' });
