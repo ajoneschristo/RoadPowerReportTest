@@ -1070,6 +1070,23 @@ body.dark .rp-card {
   .rp-sw-track, .rp-sw-knob { transition:none; }
 }
 
+/* saved-days list */
+.rp-dgrp {
+  padding:6px 10px; background:var(--bg); font-family:'IBM Plex Sans Condensed',sans-serif;
+  font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--dim);
+  border-top:1px solid var(--border);
+}
+.rp-drow {
+  display:grid; grid-template-columns:22px 62px 1fr 92px 66px; gap:6px; align-items:center;
+  padding:7px 10px; border-top:1px solid var(--border); cursor:pointer;
+}
+.rp-drow:active { background:var(--amber-lo); }
+.rp-drow input { width:16px; height:16px; accent-color:var(--red); cursor:pointer; }
+.rp-ddate { font-family:var(--mono); font-size:12px; font-weight:600; color:var(--text); }
+.rp-dcut  { font-family:var(--mono); font-size:10px; color:var(--dim); }
+.rp-dtot  { font-family:var(--mono); font-size:12px; text-align:right; color:var(--text); }
+.rp-dpairs{ font-family:var(--mono); font-size:10px; text-align:right; color:var(--dim); }
+
 .rp-toggles { display:flex; flex-direction:column; gap:7px; }
 .rp-tgl { display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; color:var(--text); }
 .rp-tgl input { width:16px; height:16px; accent-color:#d97a06; cursor:pointer; flex-shrink:0; }
@@ -1123,7 +1140,7 @@ body.dark .rp-card {
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B4-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B5-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1243,6 +1260,7 @@ body.dark .rp-card {
     <span style="flex:1"></span>
     <button class="rp-mini-btn" id="rpSaveDayBtn" onclick="saveRpDay()">💾 Save Day</button>
     <button class="rp-mini-btn" onclick="loadRpHistory(true).then(renderRpReports)">↻ Reload</button>
+    <button class="rp-mini-btn" onclick="openRpDays()">Saved days</button>
     <button class="rp-mini-btn" onclick="shareRpReport()">Share</button>
   </div>
 
@@ -1279,18 +1297,6 @@ body.dark .rp-card {
       </div>
 
       <div class="stt-section">
-        <label class="stt-label">Day-by-day breakdown</label>
-        <div class="rp-toggles">
-          <label class="rp-tgl"><input type="checkbox" id="rp_r1Daywise"><span>Power sector report — show each day's column</span></label>
-          <label class="rp-tgl"><input type="checkbox" id="rp_r2Daywise"><span>Source-wise report — show each day's row</span></label>
-        </div>
-        <div class="stt-hint" style="margin-top:5px;">
-          Off shows only the on-date figure, month to date, and average per day.
-          The same switch sits above each report, and either place remembers your choice.
-        </div>
-      </div>
-
-      <div class="stt-section">
         <div class="stt-section-hdr">
           <label class="stt-label">Customers</label>
           <span class="rp-count" id="rpCount"></span>
@@ -1322,13 +1328,15 @@ body.dark .rp-card {
 
       <div class="stt-section">
         <div class="stt-section-hdr">
-          <label class="stt-label">Report 2 — Colliery Columns per Party</label>
+          <label class="stt-label">Source-wise Report — Customers &amp; Columns</label>
+          <button class="stt-add-btn" onclick="openRpAddR2()">+ Add customer</button>
         </div>
         <div id="rpR2Body"></div>
         <div class="stt-hint">
           Codes: comma-separated colliery codes (e.g. 5046 or 5046,5075,5077).
-          Tick <strong>Sub</strong> for a subtotal column such as “Talcher Total” — subtotal columns are excluded from the row TOTAL.
-          A TOTAL column is added automatically.
+          Leave <strong>In total</strong> ticked for an ordinary colliery column.
+          Untick it for a roll-up column such as “Talcher Total”, which already contains other columns and would otherwise be counted twice.
+          At least one column must stay ticked, or the Total has nothing to add.
         </div>
       </div>
 
@@ -1873,8 +1881,6 @@ function openRpSettings() {
     };
   });
   document.getElementById('rp_histPath').value = _rpDraft.historyPath;
-  document.getElementById('rp_r1Daywise').checked = pr.r1Daywise !== false;
-  document.getElementById('rp_r2Daywise').checked = pr.r2Daywise !== false;
   document.getElementById('rpSettingsStatus').textContent = '';
   document.getElementById('rpSearch').value = '';
   _rpChips = { recent: true, sel: false };
@@ -1981,6 +1987,46 @@ function renderRpParties() {
     more.textContent = 'Narrow the search to see the rest.';
     body.appendChild(more);
   }
+}
+
+// ── Add a customer to the source-wise report ──────────────────────────
+function openRpAddR2() {
+  document.getElementById('rpAddSearch').value = '';
+  renderRpAddR2();
+  document.getElementById('rpAddOverlay').style.display = 'block';
+}
+function closeRpAddR2() {
+  document.getElementById('rpAddOverlay').style.display = 'none';
+  renderRpParties(); renderRpR2();
+}
+function renderRpAddR2() {
+  const idx = rpBuildPartyIndex();
+  const memberOf = rpMemberOf();
+  const q = (document.getElementById('rpAddSearch').value || '').trim().toUpperCase();
+  const cand = Object.values(idx).filter(p => {
+    if (memberOf[p.code]) return false;                       // merged into another row
+    if ((_rpDraft.sel[p.code] || {}).r2) return false;         // already in the report
+    if (q) return p.name.toUpperCase().includes(q) || p.code.includes(q);
+    return rpIsSel(p.code);                                    // otherwise offer the picked ones
+  }).sort((a,b) => a.name.localeCompare(b.name)).slice(0, 120);
+
+  const list = document.getElementById('rpAddList');
+  list.innerHTML = cand.length
+    ? cand.map(c => `<div class="rp-mrow" data-c="${c.code}"><span class="rp-pcode">${c.code}</span><span class="rp-pname">${rpEsc(c.name)}</span><span class="rp-add">+ add</span></div>`).join('')
+    : '<div class="rp-count" style="padding:10px;">Everyone matching is already in the report — search a name or code to find more.</div>';
+  list.querySelectorAll('.rp-mrow').forEach(r => {
+    r.onclick = () => { rpAddR2(r.dataset.c); closeRpAddR2(); };
+  });
+}
+function rpAddR2(code) {
+  code = String(code);
+  const idx = rpBuildPartyIndex();
+  if (!_rpDraft.sel[code]) {
+    _rpDraft.sel[code] = { name: (idx[code]||{}).name || code, power: true, r1: false, r2: false, members: [], cols: [] };
+  }
+  const s = _rpDraft.sel[code];
+  s.r2 = true; s.power = true;
+  if (!s.cols || !s.cols.length) rpAutoCols(code, true);   // seed from the collieries it actually lifts from
 }
 
 // ── Code merging ──────────────────────────────────────────────────────
@@ -2101,7 +2147,7 @@ function renderRpR2() {
   wrap.innerHTML = '';
   const codes = Object.keys(_rpDraft.sel).filter(c => _rpDraft.sel[c].r2);
   if (!codes.length) {
-    wrap.innerHTML = '<div class="rp-count" style="padding:4px 2px;">Tick <strong>R2</strong> against a party above to configure its colliery columns.</div>';
+    wrap.innerHTML = '<div class="rp-count" style="padding:4px 2px;">No customers here yet. Tap <strong>+ Add customer</strong>, or tick <strong>R2</strong> against anyone in the list above.</div>';
     return;
   }
   codes.forEach(code => {
@@ -2118,13 +2164,18 @@ function renderRpR2() {
          <div style="display:flex;gap:4px;">
            <button class="rp-mini-btn" data-a="auto">Auto-fill</button>
            <button class="rp-mini-btn" data-a="add">+ Column</button>
+           <button class="rp-mini-btn" data-a="rm" style="color:var(--red);border-color:var(--red);">Remove</button>
          </div>
        </div>
        <div class="rp-col-head">
-         <span>Column Label</span><span>Colliery Code(s)</span><span class="c">Sub</span><span></span>
+         <span>Column Label</span><span>Colliery Code(s)</span><span class="c">In total</span><span></span>
        </div>`;
     box.querySelector('[data-a="auto"]').onclick = () => rpAutoCols(code);
     box.querySelector('[data-a="add"]').onclick  = () => { s.cols.push({label:'',colCodes:'',isSubtotal:false}); renderRpR2(); };
+    box.querySelector('[data-a="rm"]').onclick  = () => {
+      if (!confirm(`Take "${s.name || code}" out of the source-wise report?\n\nIts colliery columns are forgotten. The customer stays in the power sector report.`)) return;
+      s.r2 = false; renderRpParties(); renderRpR2();
+    };
 
     (s.cols || []).forEach((c, ci) => {
       const row = document.createElement('div');
@@ -2132,11 +2183,11 @@ function renderRpR2() {
       row.innerHTML =
         `<input class="stt-cell-input" value="${(c.label||'').replace(/"/g,'&quot;')}" data-k="label">` +
         `<input class="stt-cell-input mono" value="${(c.colCodes||'').replace(/"/g,'&quot;')}" data-k="colCodes">` +
-        `<div class="c"><input type="checkbox" ${c.isSubtotal?'checked':''} data-k="isSubtotal" style="width:15px;height:15px;accent-color:var(--amber);"></div>` +
+        `<div class="c"><input type="checkbox" ${c.isSubtotal?'':'checked'} data-k="isSubtotal" title="Tick to add this column into the Total" style="width:15px;height:15px;accent-color:#d97a06;"></div>` +
         `<button class="stt-del-btn" title="Delete column">✕</button>`;
       row.querySelector('[data-k="label"]').oninput    = e => c.label = e.target.value;
       row.querySelector('[data-k="colCodes"]').oninput = e => c.colCodes = e.target.value;
-      row.querySelector('[data-k="isSubtotal"]').onchange = e => c.isSubtotal = e.target.checked;
+      row.querySelector('[data-k="isSubtotal"]').onchange = e => { c.isSubtotal = !e.target.checked; renderRpR2(); };
       row.querySelector('.stt-del-btn').onclick = () => { s.cols.splice(ci,1); renderRpR2(); };
       box.appendChild(row);
     });
@@ -2176,15 +2227,20 @@ async function saveRpSettings() {
   });
   for (const p of parties) {
     if (p.r2 && (!p.cols || !p.cols.length)) {
-      status.textContent = `"${p.name || p.code}" is ticked R2 but has no colliery columns.`;
+      status.textContent = `"${p.name || p.code}" is in the source-wise report but has no colliery columns.`;
+      status.style.color = '#e05'; return;
+    }
+    if (p.r2 && !p.cols.some(c => !c.isSubtotal)) {
+      status.textContent = `"${p.name || p.code}": every column is unticked under "In total", so the Total column would be blank. Tick at least one.`;
       status.style.color = '#e05'; return;
     }
   }
 
+  const pr0 = appSettings.powerReport || {};
   const newSettings = Object.assign({}, appSettings, { powerReport: {
     historyPath: histPath,
-    r1Daywise: document.getElementById('rp_r1Daywise').checked,
-    r2Daywise: document.getElementById('rp_r2Daywise').checked,
+    r1Daywise: pr0.r1Daywise !== false,   // owned by the switch above the report
+    r2Daywise: pr0.r2Daywise !== false,
     parties,
   } });
 
@@ -2403,6 +2459,91 @@ async function saveRpAllDays() {
     rpSetStatus('Bulk save failed: ' + e.message, true);
   } finally {
     btn.textContent = old; btn.disabled = false;
+  }
+}
+
+// ── Saved days: review what is stored, clear any of it ────────────────
+async function openRpDays() {
+  document.getElementById('rpDaysOverlay').style.display = 'block';
+  document.getElementById('rpDaysList').innerHTML = '<div class="rp-count" style="padding:14px;">Loading…</div>';
+  await loadRpHistory(true);
+  renderRpDays();
+}
+function closeRpDays() {
+  document.getElementById('rpDaysOverlay').style.display = 'none';
+  renderRpReports();
+}
+
+function renderRpDays() {
+  const days = (rpHist && rpHist.days) || {};
+  const keys = Object.keys(days).sort().reverse();
+  const list = document.getElementById('rpDaysList');
+  document.getElementById('rpDaysCount').textContent =
+    keys.length ? `${keys.length} day(s) stored in ${RP_GH.path}` : '';
+
+  if (!keys.length) {
+    list.innerHTML = '<div class="rp-count" style="padding:14px;">Nothing stored yet. Load a despatch file and tap Save Day.</div>';
+    return;
+  }
+
+  let html = '', lastMon = '';
+  keys.forEach(k => {
+    const mon = RP_MON[+k.slice(5,7) - 1] + ' ' + k.slice(0,4);
+    if (mon !== lastMon) { html += `<div class="rp-dgrp">${mon}</div>`; lastMon = mon; }
+    const rec = days[k];
+    const tot = Object.values(rec.pc || {}).reduce((a,b) => a+b, 0);
+    const pairs = Object.keys(rec.pc || {}).length;
+    html += `<label class="rp-drow">
+      <input type="checkbox" value="${k}">
+      <span class="rp-ddate">${k.slice(8,10)} ${RP_MON[+k.slice(5,7)-1]}</span>
+      <span class="rp-dcut">${rpEsc(rec.cut || '—')}</span>
+      <span class="rp-dtot">${rpNum(tot) || '0'} T</span>
+      <span class="rp-dpairs">${pairs} rows</span>
+    </label>`;
+  });
+  list.innerHTML = html;
+  list.querySelectorAll('input').forEach(cb => cb.onchange = rpDaysSyncBtn);
+  rpDaysSyncBtn();
+}
+
+function rpDaysChecked() {
+  return [...document.querySelectorAll('#rpDaysList input:checked')].map(x => x.value);
+}
+function rpDaysSyncBtn() {
+  const n = rpDaysChecked().length;
+  const btn = document.getElementById('rpDaysDelBtn');
+  btn.disabled = n === 0;
+  btn.style.opacity = n ? '1' : '.4';
+  btn.textContent = n ? `Clear ${n} day${n > 1 ? 's' : ''}` : 'Clear selected days';
+}
+
+async function rpClearDays() {
+  const keys = rpDaysChecked();
+  if (!keys.length) return;
+  const tot = keys.reduce((a,k) => a + Object.values(rpHist.days[k].pc || {}).reduce((x,y) => x+y, 0), 0);
+  if (!confirm(`Clear ${keys.length} day(s) from the history?\n\n${keys.join(', ')}\n\nThat removes ${rpNum(tot)} T of stored figures. You can put a day back by loading its despatch file and saving it again.`)) return;
+
+  const st = document.getElementById('rpDaysStatus');
+  st.textContent = 'Clearing…'; st.style.color = 'var(--mid)';
+  try {
+    await loadRpHistory(true);                 // fresh SHA, and someone else may have written
+    keys.forEach(k => { delete rpHist.days[k]; });
+    rpHist.updated = new Date().toISOString();
+
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(rpHist))));
+    const body = { message: `Road power history — cleared ${keys.length} day(s)`, content, branch: RP_GH.branch };
+    if (_rpHistSha) body.sha = _rpHistSha;
+    const res = await fetch(
+      `${RP_GH.api}/repos/${RP_GH.owner}/${RP_GH.repo}/contents/${RP_GH.path}`,
+      { method: 'PUT', headers: { Authorization: 'token ' + RP_GH.token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+    );
+    if (!res.ok) throw new Error('GitHub ' + res.status);
+    const resp = await res.json();
+    _rpHistSha = resp.content.sha;
+    st.textContent = `✓ Cleared ${keys.length} day(s)`; st.style.color = 'var(--green)';
+    renderRpDays();
+  } catch(e) {
+    st.textContent = 'Could not clear: ' + e.message; st.style.color = '#e05';
   }
 }
 
@@ -2840,6 +2981,27 @@ let appSettings = {
 let _settingsSha = null;
 let codeToMine = {};   // collieryCode → { label, collieryName }
 
+// Repair for settings written before "In total" replaced the old "Sub" tick:
+// if every column of a party is marked as a roll-up, the Total has nothing to
+// add. Keep only genuine roll-ups (multi-code columns) marked, and restore the
+// rest. Runs in memory, so the next save makes it permanent.
+function rpNormalizeCols() {
+  const pr = appSettings.powerReport;
+  if (!pr || !pr.parties) return 0;
+  let fixed = 0;
+  pr.parties.forEach(p => {
+    const cols = p.cols || [];
+    if (!cols.length) return;
+    if (cols.some(c => !c.isSubtotal)) return;      // already has real columns
+    cols.forEach(c => {
+      const multi = (c.colCodes || '').includes(',');
+      if (!multi) { c.isSubtotal = false; fixed++; }
+    });
+    if (!cols.some(c => !c.isSubtotal)) { cols[0].isSubtotal = false; fixed++; }
+  });
+  return fixed;
+}
+
 function buildCodeToMine() {
   codeToMine = {};
   (appSettings.mines || []).forEach(m => {
@@ -2867,6 +3029,8 @@ async function loadSettingsFromGitHub() {
     console.warn('Settings load failed:', e);
     rpSetStatus('⚠ Could not load settings — ' + e.message, true);
   }
+  const fixed = rpNormalizeCols();
+  if (fixed) rpSetStatus(`Repaired ${fixed} source-wise column(s) that were all marked as roll-ups, which left the Total blank. Open ⚙ and save to keep the fix.`, true);
   buildCodeToMine();
 }
 
@@ -3111,6 +3275,54 @@ loadDbFromGitHub();
     </div>
     <div class="stt-footer">
       <button class="stt-btn-save" onclick="closeRpMerge()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ADD CUSTOMER TO SOURCE-WISE ═══════════ -->
+<div id="rpAddOverlay" class="stt-overlay" onclick="if(event.target===this)closeRpAddR2()">
+  <div class="stt-panel" style="max-width:560px;">
+    <div class="stt-header">
+      <div>
+        <div class="stt-title">Add a customer</div>
+        <div class="stt-title-sub">Gets its own source-wise block, with columns filled from the collieries it lifts from</div>
+      </div>
+      <button class="stt-close" onclick="closeRpAddR2()">✕</button>
+    </div>
+    <div class="stt-body" style="grid-template-columns:1fr;">
+      <div class="stt-section">
+        <input id="rpAddSearch" class="rp-search" type="search" placeholder="Search any customer name or code…" oninput="renderRpAddR2()" style="margin-bottom:6px;">
+        <div class="rp-list-wrap"><div class="rp-scroll" id="rpAddList"></div></div>
+      </div>
+    </div>
+    <div class="stt-footer">
+      <button class="stt-btn-save" onclick="closeRpAddR2()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SAVED DAYS ═══════════ -->
+<div id="rpDaysOverlay" class="stt-overlay" onclick="if(event.target===this)closeRpDays()">
+  <div class="stt-panel" style="max-width:600px;">
+    <div class="stt-header">
+      <div>
+        <div class="stt-title">Saved days</div>
+        <div class="stt-title-sub" id="rpDaysCount">—</div>
+      </div>
+      <button class="stt-close" onclick="closeRpDays()">✕</button>
+    </div>
+    <div class="stt-body" style="grid-template-columns:1fr;">
+      <div class="stt-section">
+        <div class="rp-list-wrap"><div class="rp-scroll" id="rpDaysList" style="max-height:400px;"></div></div>
+        <div class="stt-hint" style="margin-top:6px;">
+          Clearing a day removes its figures from both reports. Load that day's despatch file and save it again to put it back.
+        </div>
+      </div>
+    </div>
+    <div id="rpDaysStatus" class="stt-status"></div>
+    <div class="stt-footer">
+      <button class="stt-btn-cancel" onclick="closeRpDays()">Close</button>
+      <button class="stt-btn-save" id="rpDaysDelBtn" onclick="rpClearDays()" style="background:var(--red);border-color:var(--red);">Clear selected days</button>
     </div>
   </div>
 </div>
