@@ -1166,7 +1166,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B8-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B9-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1287,7 +1287,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <button class="rp-mini-btn" id="rpSaveDayBtn" onclick="saveRpDay()">💾 Save Day</button>
     <button class="rp-mini-btn" onclick="loadRpHistory(true).then(renderRpReports)">↻ Reload</button>
     <button class="rp-mini-btn" onclick="openRpDays()">Saved days</button>
-    <button class="rp-mini-btn" onclick="shareRpReport()">Share</button>
+    <button class="rp-mini-btn" id="rpShareBtn" onclick="shareRpReport()">Share</button>
     <button class="rp-mini-btn" id="rpPdfBtn" onclick="rpExportPdf()">PDF</button>
     <button class="rp-mini-btn" id="rpXlsBtn" onclick="rpExportXlsx()">Excel</button>
   </div>
@@ -2890,8 +2890,9 @@ function renderRpReports() {
 }
 
 function rpSyncExportBtns() {
+  if (_rpBusy) return;
   const on = _rpTables.length > 0;
-  ['rpPdfBtn','rpXlsBtn'].forEach(id => {
+  ['rpShareBtn','rpPdfBtn','rpXlsBtn'].forEach(id => {
     const b = document.getElementById(id);
     if (b) { b.disabled = !on; b.style.opacity = on ? '1' : '.4'; }
   });
@@ -3053,8 +3054,10 @@ function renderRp2(md) {
 
 // ── Share the visible report as an image ────────────────
 async function shareRpReport() {
+  if (_rpBusy) return;
   const pane = document.getElementById(_rpTab === 1 ? 'rpPane1' : 'rpPane2');
   if (!pane.querySelector('.rp-t')) { alert('Nothing to share yet — the report is empty.'); return; }
+  rpLockBtns(true, 'rpShareBtn', 'Rendering…');
   const holder = document.createElement('div');
   holder.className = 'rp-light';
   holder.style.cssText = 'position:fixed;left:-10000px;top:0;background:#f5f7f9;padding:26px 20px 32px;display:inline-block;';
@@ -3072,9 +3075,11 @@ async function shareRpReport() {
     const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
     await rpShareOrSave(blob, `Road_Power_Report_${rpStamp()}.png`, 'image/png', 'Road Power Report');
   } catch(e) {
+    rpSetStatus('Could not build the image: ' + e.message, true);
     alert('Could not build the image: ' + e.message);
   } finally {
     holder.remove();
+    rpLockBtns(false);
   }
 }
 function _buildZip(files) {
@@ -3124,25 +3129,54 @@ function rpSaveBlob(blob, fname) {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
-// One delivery per call: hand it to the share sheet, or download it — never
-// both, and never twice if the button is tapped again mid-flight.
-let _rpSharing = false;
+// Exporting is slow on a phone — a second tap while one is running used to
+// start a whole second export, which is how two copies ended up attached to
+// the same message. One operation at a time, every button locked for its
+// duration.
+let _rpBusy = false;
+const RP_BTNS = ['rpShareBtn','rpPdfBtn','rpXlsBtn','rpSaveDayBtn'];
+function rpLockBtns(on, activeId, activeText) {
+  _rpBusy = on;
+  RP_BTNS.forEach(id => {
+    const b = document.getElementById(id);
+    if (!b) return;
+    if (on) {
+      if (!b.dataset.label) b.dataset.label = b.textContent;
+      b.disabled = true;
+      b.style.opacity = '.45';
+      if (id === activeId && activeText) { b.textContent = activeText; b.style.opacity = '1'; }
+    } else {
+      b.disabled = false;
+      b.style.opacity = '1';
+      if (b.dataset.label) { b.textContent = b.dataset.label; delete b.dataset.label; }
+    }
+  });
+}
+function rpProgress(id, text) {
+  const b = document.getElementById(id);
+  if (b) b.textContent = text;
+}
+
+// One delivery per call: the share sheet, or a download — never both.
 async function rpShareOrSave(blob, fname, type, title) {
-  if (_rpSharing) return;
-  _rpSharing = true;
-  try {
-    const file = new File([blob], fname, { type });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title });   // shared, or cancelled — either way we are done
+  const file = new File([blob], fname, { type });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title });
+      rpSetStatus(`Shared ${fname}`, false);
+      return;
+    } catch(e) {
+      if (e && e.name === 'AbortError') { rpSetStatus('Sharing cancelled.', false); return; }
+      // Anything else — an unsupported type, or the tap gesture having expired
+      // while the file was being built — means sharing never happened, so the
+      // file still has to reach the user.
+      rpSaveBlob(blob, fname);
+      rpSetStatus(`Couldn't open the share sheet (${e && e.name ? e.name : 'error'}) — saved ${fname} to Downloads instead.`, true);
       return;
     }
-    rpSaveBlob(blob, fname);
-  } catch(e) {
-    if (e && (e.name === 'AbortError' || e.name === 'NotAllowedError')) return;
-    rpSaveBlob(blob, fname);                             // sharing genuinely failed, fall back once
-  } finally {
-    setTimeout(() => { _rpSharing = false; }, 600);
   }
+  rpSaveBlob(blob, fname);
+  rpSetStatus(`Saved ${fname} to Downloads.`, false);
 }
 
 // ── every report card, rendered off-screen in the light palette ────────
@@ -3248,12 +3282,11 @@ function rpBuildPdf(pages, title) {
 }
 
 async function rpExportPdf() {
-  const btn = document.getElementById('rpPdfBtn');
+  if (_rpBusy) return;
   if (!_rpTables.length) { alert('Nothing to export yet — the reports are empty.'); return; }
-  const label = btn.textContent; btn.disabled = true;
+  rpLockBtns(true, 'rpPdfBtn', 'Rendering…');
   try {
-    btn.textContent = 'Rendering…';
-    const shots = await rpSnapCards((i,n) => btn.textContent = `Page ${i}/${n}…`);
+    const shots = await rpSnapCards((i,n) => rpProgress('rpPdfBtn', `Page ${i}/${n}…`));
     if (!shots.length) { alert('Nothing to export yet — the reports are empty.'); return; }
 
     const MAXW = 1500, MAXH = 2000;   // points
@@ -3264,14 +3297,14 @@ async function rpExportPdf() {
       return { w: Math.round(w), h: Math.round(h), pw: cv.width, ph: cv.height, jpeg: rpJpegBytes(cv) };
     });
 
-    btn.textContent = 'Building…';
+    rpProgress('rpPdfBtn', 'Building…');
     const blob = rpBuildPdf(pages, 'Road Power Report');
     await rpShareOrSave(blob, `Road_Power_Report_${rpStamp()}.pdf`, 'application/pdf', 'Road Power Report');
-    rpSetStatus(`PDF ready — ${pages.length} page${pages.length > 1 ? 's' : ''}.`, false);
   } catch(e) {
     rpSetStatus('Could not build the PDF: ' + e.message, true);
+    alert('Could not build the PDF: ' + e.message);
   } finally {
-    btn.disabled = false; btn.textContent = label;
+    rpLockBtns(false);
   }
 }
 
@@ -3405,10 +3438,10 @@ function rpStylesXml() {
   '</styleSheet>';
 }
 
-function rpExportXlsx() {
+async function rpExportXlsx() {
+  if (_rpBusy) return;
   if (!_rpTables.length) { alert('Nothing to export yet — the reports are empty.'); return; }
-  const btn = document.getElementById('rpXlsBtn');
-  const label = btn.textContent; btn.disabled = true; btn.textContent = 'Building…';
+  rpLockBtns(true, 'rpXlsBtn', 'Building…');
   try {
     const t1 = _rpTables.filter(t => t.sheet === 'Power sector');
     const t2 = _rpTables.filter(t => t.sheet === 'Source-wise');
@@ -3444,13 +3477,13 @@ function rpExportXlsx() {
       'xl/worksheets/sheet2.xml': enc.encode(rpSheetXml(t2)),
     };
     const blob = _buildZip(files);
-    rpShareOrSave(blob, `Road_Power_Report_${rpStamp()}.xlsx`,
+    await rpShareOrSave(blob, `Road_Power_Report_${rpStamp()}.xlsx`,
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Road Power Report');
-    rpSetStatus('Workbook ready — Power Sector and Source-wise on separate tabs.', false);
   } catch(e) {
     rpSetStatus('Could not build the workbook: ' + e.message, true);
+    alert('Could not build the workbook: ' + e.message);
   } finally {
-    btn.disabled = false; btn.textContent = label;
+    rpLockBtns(false);
   }
 }
 
