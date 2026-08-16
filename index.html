@@ -1180,7 +1180,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B10-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B13-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1304,7 +1304,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <button class="rp-mini-btn" id="rpShareBtn" onclick="shareRpReport()">Share</button>
     <button class="rp-mini-btn" id="rpPdfBtn" onclick="rpExportPdf()">PDF</button>
     <button class="rp-mini-btn" id="rpXlsBtn" onclick="rpExportXlsx()">Excel</button>
-    <button class="rp-mini-btn" id="rpCsvBtn" onclick="rpExportCsv()">CSV</button>
+    <button class="rp-mini-btn" id="rpHtmlBtn" onclick="rpExportHtml()">HTML</button>
   </div>
 
   <div class="rp-note" id="rpViewSub">—</div>
@@ -2667,17 +2667,6 @@ function rpSetStatus(txt, isWarn) {
   el.textContent = txt || '';
   el.className = isWarn ? 'rp-warn' : 'rp-note';
 }
-function rpSetStatusAction(txt, label, fn, isWarn) {
-  const el = document.getElementById('rpStatus');
-  el.className = isWarn ? 'rp-warn' : 'rp-note';
-  el.textContent = txt + ' ';
-  const b = document.createElement('button');
-  b.className = 'rp-mini-btn';
-  b.style.cssText = 'margin-left:6px;vertical-align:middle;';
-  b.textContent = label;
-  b.onclick = fn;
-  el.appendChild(b);
-}
 
 // ═══════════════════════════════════════════════════════
 //  REPORT VIEWS
@@ -2918,7 +2907,7 @@ function renderRpReports() {
 function rpSyncExportBtns() {
   if (_rpBusy) return;
   const on = _rpTables.length > 0;
-  ['rpShareBtn','rpPdfBtn','rpXlsBtn','rpCsvBtn'].forEach(id => {
+  ['rpShareBtn','rpPdfBtn','rpXlsBtn','rpHtmlBtn'].forEach(id => {
     const b = document.getElementById(id);
     if (b) { b.disabled = !on; b.style.opacity = on ? '1' : '.4'; }
   });
@@ -3148,7 +3137,13 @@ function rpStamp() {
   const d = rpActiveDMY();
   return d ? String(d).replace(/[^\w]+/g, '_') : 'no_data';
 }
+// Guard against a second save of the same file — a stray double-fire used to
+// land two copies in Downloads.
+let _rpLastSave = { name: '', at: 0 };
 function rpSaveBlob(blob, fname) {
+  const now = Date.now();
+  if (_rpLastSave.name === fname && now - _rpLastSave.at < 3000) return;
+  _rpLastSave = { name: fname, at: now };
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = fname;
@@ -3160,7 +3155,7 @@ function rpSaveBlob(blob, fname) {
 // the same message. One operation at a time, every button locked for its
 // duration.
 let _rpBusy = false;
-const RP_BTNS = ['rpShareBtn','rpPdfBtn','rpXlsBtn','rpCsvBtn','rpSaveDayBtn'];
+const RP_BTNS = ['rpShareBtn','rpPdfBtn','rpXlsBtn','rpHtmlBtn','rpSaveDayBtn'];
 function rpLockBtns(on, activeId, activeText) {
   _rpBusy = on;
   RP_BTNS.forEach(id => {
@@ -3335,38 +3330,151 @@ async function rpExportPdf() {
   }
 }
 
-// ── CSV ────────────────────────────────────────────────────────────────
-// Android's share sheet only accepts PDF, images and text types — Office
-// files are refused outright. CSV is text/csv, so it goes through, and it
-// still opens straight into Excel or Sheets at the other end.
-function rpCsvCell(v) {
-  if (v == null || v === '') return '';
-  if (typeof v === 'number' && isFinite(v)) return String(Math.round(v * 100) / 100);
-  const t = String(v);
-  return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
-}
-function rpBuildCsv() {
-  const lines = [];
-  _rpTables.forEach((t, i) => {
-    if (i) lines.push('');
-    lines.push(rpCsvCell(t.title));
-    lines.push(rpCsvCell(t.meta));
-    lines.push(t.head.map(h => rpCsvCell(h.t)).join(','));
-    t.rows.forEach(r => lines.push(r.cells.map(c => rpCsvCell(c.v)).join(',')));
-    lines.push(rpCsvCell(t.foot || ''));
-  });
-  // BOM so Excel opens it as UTF-8 without mangling the customer names
-  return new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv' });
+
+// ── HTML ───────────────────────────────────────────────────────────────
+// A self-contained themed table. text/html is on Android's shareable list,
+// so this goes to WhatsApp like the PDF does, and Excel opens .html tables
+// keeping the borders and colours.
+const RP_H = {
+  paper: '#f5f7f9', ink: '#151a21', ash: '#ccd4dd', soft: '#e6ebf0',
+  mute: '#74808e', live: '#b8620a', band: '#212a35', bandInk: '#f5f7f9',
+  zero: '#a9b3be', avg: '#123a8a', avgBand: '#9cc4ff', liveBand: '#f5a742',
+};
+
+function rpHtmlCellStyle(kind, rowKind) {
+  const b = `border:1px solid ${RP_H.ash};padding:5px 9px;white-space:nowrap;`;
+  const mono = "font-family:'IBM Plex Mono',Consolas,monospace;font-size:12px;";
+  const cond = "font-family:'IBM Plex Sans Condensed','IBM Plex Sans',Arial,sans-serif;";
+
+  if (rowKind === 'sum') {
+    const base = `${b}${mono}background:${RP_H.band};font-weight:700;text-align:right;`;
+    if (kind === 'lead') return `${b}${cond}background:${RP_H.band};color:${RP_H.bandInk};font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;text-align:left;`;
+    if (kind === 'on')   return `${base}color:${RP_H.liveBand};`;
+    if (kind === 'avg')  return `${base}color:${RP_H.avgBand};`;
+    if (kind === 'sub')  return `${base}color:rgba(245,247,249,.55);font-style:italic;`;
+    return `${base}color:${RP_H.bandInk};`;
+  }
+  if (rowKind === 'avg' || rowKind === 'ref') {
+    const col = rowKind === 'avg' ? RP_H.avg : RP_H.ink;
+    if (kind === 'lead') return `${b}${cond}background:${RP_H.soft};color:${col};font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;text-align:left;`;
+    return `${b}${mono}background:${RP_H.soft};color:${col};font-weight:700;text-align:right;${kind === 'sub' ? 'font-style:italic;' : ''}`;
+  }
+  if (kind === 'lead') return `${b}font-family:'IBM Plex Sans',Arial,sans-serif;font-size:12px;font-weight:500;color:${RP_H.ink};background:${RP_H.paper};text-align:left;`;
+  if (kind === 'on')   return `${b}${mono}color:${RP_H.live};font-weight:700;text-align:right;border-left:2px solid ${RP_H.live};`;
+  if (kind === 'key')  return `${b}${mono}color:${RP_H.ink};font-weight:700;text-align:right;`;
+  if (kind === 'avg')  return `${b}${mono}color:${RP_H.avg};font-weight:700;text-align:right;`;
+  if (kind === 'sub')  return `${b}${mono}color:${RP_H.mute};font-style:italic;text-align:right;border-left:1px dashed ${RP_H.mute};`;
+  if (kind === 'day')  return `${b}${mono}color:${RP_H.mute};font-size:11px;text-align:right;`;
+  return `${b}${mono}color:${RP_H.ink};text-align:right;`;
 }
 
-async function rpExportCsv() {
+function rpHtmlCard(t) {
+  const cond = "font-family:'IBM Plex Sans Condensed','IBM Plex Sans',Arial,sans-serif;";
+  let head = '<tr>';
+  t.head.forEach(c => {
+    const align = c.k === 'lead' ? 'left' : 'right';
+    const col = c.k === 'on' ? RP_H.live : c.k === 'avg' ? RP_H.avg : RP_H.mute;
+    head += `<th style="border:1px solid ${RP_H.ash};padding:8px 9px;${cond}font-size:10px;font-weight:700;` +
+            `letter-spacing:.1em;text-transform:uppercase;color:${col};background:${RP_H.paper};text-align:${align};` +
+            `${c.k === 'sub' ? 'font-style:italic;border-left:1px dashed ' + RP_H.mute + ';' : ''}` +
+            `${c.k === 'on' ? 'border-left:2px solid ' + RP_H.live + ';' : ''}">${rpEsc(c.t)}</th>`;
+  });
+  head += '</tr>';
+
+  let rows = '';
+  t.rows.forEach(r => {
+    rows += '<tr>';
+    r.cells.forEach((c, i) => {
+      const k = t.head[i] ? t.head[i].k : 'num';
+      const isNum = typeof c.v === 'number' && isFinite(c.v);
+      const txt = isNum ? (c.v ? rpNum(c.v) : (r.k === 'data' ? '·' : '0')) : rpEsc(c.v);
+      // x:num carries the raw figure so Excel reads a number, not the
+      // grouped text; browsers ignore the attribute
+      const xn = isNum ? ` x:num="${Math.round(c.v * 100) / 100}"` : '';
+      const zero = (isNum && c.v === 0 && r.k === 'data') ? `color:${RP_H.zero};` : '';
+      rows += `<td style="${rpHtmlCellStyle(k, r.k)}${zero}"${xn}>${txt}</td>`;
+    });
+    rows += '</tr>';
+  });
+
+  return `<div style="margin:0 0 22px;border:1px solid ${RP_H.ash};background:${RP_H.paper};">
+       <div style="padding:12px 15px 10px;border-bottom:2px solid ${RP_H.ink};">
+         <div style="${cond}font-size:15px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:${RP_H.ink};">${rpEsc(t.title)}</div>
+         <div style="font-family:'IBM Plex Mono',Consolas,monospace;font-size:10px;color:${RP_H.mute};margin-top:4px;">${rpEsc(t.meta || '')}</div>
+       </div>
+       <div style="overflow-x:auto;"><table cellspacing="0" cellpadding="0" style="border-collapse:collapse;width:100%;">${head}${rows}</table></div>
+       <div style="padding:7px 15px;font-family:'IBM Plex Mono',Consolas,monospace;font-size:10px;color:${RP_H.mute};border-top:1px solid ${RP_H.ash};">${rpEsc(t.foot || '')}</div>
+     </div>`;
+}
+
+function rpBuildHtml() {
+  const cond = "font-family:'IBM Plex Sans Condensed','IBM Plex Sans',Arial,sans-serif;";
+  const groups = [
+    { id: 'p1', label: 'Power Sector', tables: _rpTables.filter(t => t.sheet === 'Power sector') },
+    { id: 'p2', label: 'Source-wise',  tables: _rpTables.filter(t => t.sheet === 'Source-wise')  },
+  ].filter(g => g.tables.length);
+
+  // Tabs are pure CSS — a checked radio reveals its panel. No script, so the
+  // file works wherever it is opened, and both tables stay in the document
+  // for Excel to pick up.
+  const radios = groups.map((g, i) =>
+    `<input type="radio" name="rptab" id="rt_${g.id}"${i === 0 ? ' checked' : ''} style="position:absolute;opacity:0;pointer-events:none;">`
+  ).join('');
+
+  const tabBar = groups.length > 1
+    ? `<div class="rp-tabbar">` + groups.map(g =>
+        `<label for="rt_${g.id}" class="rp-tab">${rpEsc(g.label)}</label>`).join('') + `</div>`
+    : '';
+
+  const panels = groups.map(g =>
+    `<div class="rp-panel ${g.id}">${g.tables.map(rpHtmlCard).join('')}</div>`).join('');
+
+  const rules = groups.map(g =>
+    `#rt_${g.id}:checked ~ #rp_wrap .${g.id}{display:block}\n` +
+    `#rt_${g.id}:checked ~ #rp_wrap .rp-tabbar label[for="rt_${g.id}"]{color:${RP_H.live};border-color:${RP_H.live};background:rgba(217,122,6,.09)}`
+  ).join('\n');
+
+  const html =
+`<!DOCTYPE html>
+<html xmlns:x="urn:schemas-microsoft-com:office:excel">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Road Power Report ${rpEsc(rpActiveDMY() || '')}</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;700&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;padding:20px;background:${RP_H.soft};-webkit-text-size-adjust:100%}
+#rp_wrap{max-width:1600px;margin:0 auto}
+.rp-tabbar{display:flex;gap:6px;margin:0 0 14px;flex-wrap:wrap}
+.rp-tab{padding:7px 14px;cursor:pointer;border:1px solid ${RP_H.ash};background:transparent;
+ color:${RP_H.mute};${cond}font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em}
+.rp-panel{display:none}
+${rules}
+@media print{.rp-tabbar{display:none}.rp-panel{display:block !important}}
+</style>
+</head>
+<body>
+${radios}
+<div id="rp_wrap">
+${tabBar}
+${panels}
+<div style="${cond}font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:${RP_H.mute};padding:2px 2px 10px;">MCL road despatch · generated ${rpEsc(new Date().toLocaleString('en-IN'))}</div>
+</div>
+</body>
+</html>`;
+
+  return new Blob([html], { type: 'text/html' });
+}
+
+async function rpExportHtml() {
   if (_rpBusy) return;
   if (!_rpTables.length) { alert('Nothing to export yet — the reports are empty.'); return; }
-  rpLockBtns(true, 'rpCsvBtn', 'Building…');
+  rpLockBtns(true, 'rpHtmlBtn', 'Building…');
   try {
-    await rpShareOrSave(rpBuildCsv(), `Road_Power_Report_${rpStamp()}.csv`, 'text/csv', 'Road Power Report');
+    await rpShareOrSave(rpBuildHtml(), `Road_Power_Report_${rpStamp()}.html`, 'text/html', 'Road Power Report');
   } catch(e) {
-    rpSetStatus('Could not build the CSV: ' + e.message, true);
+    rpSetStatus('Could not build the HTML: ' + e.message, true);
+    alert('Could not build the HTML: ' + e.message);
   } finally {
     rpLockBtns(false);
   }
@@ -3544,9 +3652,8 @@ async function rpExportXlsx() {
     const fname = `Road_Power_Report_${rpStamp()}.xlsx`;
     await rpShareOrSave(blob, fname,
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Road Power Report',
-      () => rpSetStatusAction(
-        `Android won't put a spreadsheet through the share sheet, so ${fname} went to Downloads — attach it from there, or send a CSV instead:`,
-        'Share as CSV', rpExportCsv, true));
+      () => rpSetStatus(
+        `Android won't put a spreadsheet through the share sheet, so ${fname} is in Downloads — attach it from there, or use HTML to share straight to WhatsApp.`, true));
   } catch(e) {
     rpSetStatus('Could not build the workbook: ' + e.message, true);
     alert('Could not build the workbook: ' + e.message);
