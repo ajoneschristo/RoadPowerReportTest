@@ -824,8 +824,8 @@ body.dark {
 .rp-list-wrap { border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; }
 .rp-list-head, .rp-party-row {
   display: grid;
-  grid-template-columns: 92px 1fr 48px 40px 40px;
-  align-items: center; gap: 4px; padding: 0 6px;
+  grid-template-columns: 92px 1fr 30px 44px 34px 34px;
+  align-items: center; gap: 3px; padding: 0 6px;
 }
 .rp-list-head {
   background: var(--bg); border-bottom: 1px solid var(--border);
@@ -930,6 +930,30 @@ body.dark {
 .rp-table td.rp-live { box-shadow: inset 0 0 0 2px #ff8c00; font-weight: 700; }
 .rp-table td.rp-zero { color: #999999; }
 
+
+/* ── merged code groups ── */
+.rp-badge {
+  display:inline-block; margin-left:4px; padding:0 4px; border-radius:6px;
+  background:#ff8c00; color:#fff; font-size:9px; font-weight:700; vertical-align:middle;
+}
+.rp-merge-btn {
+  background:none; border:none; cursor:pointer; color:var(--dim);
+  font-size:13px; padding:2px; line-height:1;
+}
+.rp-merge-btn:active { color:#ff8c00; }
+.rp-members { padding:0 6px 6px 98px; display:flex; flex-wrap:wrap; gap:4px; background:var(--amber-lo); }
+.rp-chipm {
+  display:inline-flex; align-items:center; gap:5px;
+  background:var(--surface); border:1px solid var(--border); border-radius:10px;
+  padding:2px 7px; font-size:10px; font-family:var(--mono); color:var(--mid);
+}
+.rp-chipm b { cursor:pointer; color:var(--red); font-size:11px; }
+.rp-mrow {
+  display:grid; grid-template-columns:92px 1fr 74px; gap:4px; align-items:center;
+  padding:7px 6px; border-top:1px solid var(--border); cursor:pointer;
+}
+.rp-mrow:active { background:var(--amber-lo); }
+.rp-add { font-size:10px; font-weight:700; color:#ff8c00; text-align:right; }
 /* ── Road Power standalone extras ── */
 #drop-screen { display:flex; flex-direction:column; align-items:center; gap:12px; padding:16px; }
 #dashboard   { padding:12px; max-width:1200px; margin:0 auto; }
@@ -951,7 +975,7 @@ body.dark {
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B1-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B2-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1110,11 +1134,13 @@ body.dark {
           <input id="rpSearch" class="rp-search" type="search" placeholder="Search party name or code…" oninput="renderRpParties()">
           <button class="rp-chip on" id="rpChipRecent" onclick="rpToggleChip('recent')">Recent</button>
           <button class="rp-chip"    id="rpChipSel"    onclick="rpToggleChip('sel')">Selected</button>
+          <button class="rp-chip"    onclick="rpResetMerges()" title="Ungroup every merged code">Reset merges</button>
         </div>
         <div class="rp-list-wrap">
           <div class="rp-list-head">
             <span>Party Code</span>
             <span>Party Name</span>
+            <span class="c">⛓</span>
             <span class="c">Power</span>
             <span class="c">R1</span>
             <span class="c">R2</span>
@@ -1612,11 +1638,16 @@ function rpKeyFromDMY(s) { return rpKey(rpParseDMY(s)); }
 
 // The date the loaded despatch file is currently showing
 function rpActiveDMY() { return activeTabDate || maxGWDateStr || ''; }
+// true when the consolidated "All days" tab is selected on a multi-day file
+let allDaysMode = false;
 function rpActiveKey() { return rpKeyFromDMY(rpActiveDMY()); }
 
 // Cut-off label — this app has no time filter, so it is always the latest
 // gross-weight time present in the file for the active date.
-function rpCutLabel() { return tabMaxTimeStr || maxGWTimeStr || ''; }
+function rpCutLabel() {
+  const m = allRows.length ? rpFileDayMaps()[rpActiveKey()] : null;
+  return (m && m.cut) || tabMaxTimeStr || maxGWTimeStr || '';
+}
 
 // ── Party index built from the DO database ──────────────
 // Some names arrive HTML-escaped from the MHTML parser ("SARDA ENERGY &amp; ...")
@@ -1666,12 +1697,14 @@ function openRpSettings() {
   const pr = appSettings.powerReport || rpDefaults();
   _rpDraft = { historyPath: pr.historyPath || 'roadpower-history-test.json', sel: {} };
   (pr.parties || []).forEach(p => {
-    _rpDraft.sel[String(p.code)] = {
-      name:  p.name || '',
-      power: p.power !== false,
-      r1:    !!p.r1,
-      r2:    !!p.r2,
-      cols:  (p.cols || []).map(c => ({ label: c.label || '', colCodes: c.colCodes || '', isSubtotal: !!c.isSubtotal })),
+    const codes = rpCodesOf(p);
+    _rpDraft.sel[codes[0]] = {
+      name:    p.name || '',
+      power:   p.power !== false,
+      r1:      !!p.r1,
+      r2:      !!p.r2,
+      members: codes.slice(1),
+      cols:    (p.cols || []).map(c => ({ label: c.label || '', colCodes: c.colCodes || '', isSubtotal: !!c.isSubtotal })),
     };
   });
   document.getElementById('rp_histPath').value = _rpDraft.historyPath;
@@ -1695,8 +1728,20 @@ function rpToggleChip(which) {
   renderRpParties();
 }
 
+// memberCode → primary code it has been merged into
+function rpMemberOf() {
+  const m = {};
+  for (const c in _rpDraft.sel) (_rpDraft.sel[c].members || []).forEach(x => m[x] = c);
+  return m;
+}
+function rpIsSel(c) {
+  const e = _rpDraft.sel[c];
+  return !!(e && (e.power || e.r1 || e.r2));
+}
+
 function renderRpParties() {
   const body = document.getElementById('rpPartyBody');
+  const memberOf = rpMemberOf();
   const idx  = rpBuildPartyIndex();
   const q    = (document.getElementById('rpSearch').value || '').trim().toUpperCase();
   const cut  = Date.now() - 550 * 24 * 3600 * 1000; // ~18 months
@@ -1708,8 +1753,8 @@ function renderRpParties() {
   }
 
   let list = Object.values(all).filter(p => {
-    const sel = _rpDraft.sel[p.code];
-    const anyFlag = sel && (sel.power || sel.r1 || sel.r2);
+    if (memberOf[p.code]) return false;          // merged away — shown under its parent
+    const anyFlag = rpIsSel(p.code);
     if (_rpChips.sel && !anyFlag) return false;
     if (_rpChips.recent && !anyFlag && p.last < cut) return false;
     if (q && !(p.name.toUpperCase().includes(q) || p.code.includes(q))) return false;
@@ -1718,8 +1763,7 @@ function renderRpParties() {
 
   // selected first, then alphabetical
   list.sort((a,b) => {
-    const sa = _rpDraft.sel[a.code] && (_rpDraft.sel[a.code].power || _rpDraft.sel[a.code].r1 || _rpDraft.sel[a.code].r2) ? 0 : 1;
-    const sb = _rpDraft.sel[b.code] && (_rpDraft.sel[b.code].power || _rpDraft.sel[b.code].r1 || _rpDraft.sel[b.code].r2) ? 0 : 1;
+    const sa = rpIsSel(a.code) ? 0 : 1, sb = rpIsSel(b.code) ? 0 : 1;
     if (sa !== sb) return sa - sb;
     return a.name.localeCompare(b.name);
   });
@@ -1731,19 +1775,35 @@ function renderRpParties() {
 
   const frag = document.createDocumentFragment();
   list.slice(0, 400).forEach(p => {
-    const sel = _rpDraft.sel[p.code] || { power:false, r1:false, r2:false };
+    const sel = _rpDraft.sel[p.code] || { power:false, r1:false, r2:false, members: [] };
+    const members = sel.members || [];
+    const shownName = (sel.name && members.length) ? sel.name : p.name;
     const row = document.createElement('div');
-    row.className = 'rp-party-row' + ((sel.power||sel.r1||sel.r2) ? ' sel' : '');
+    row.className = 'rp-party-row' + (rpIsSel(p.code) ? ' sel' : '');
     row.innerHTML =
-      `<div class="rp-pcode">${p.code}</div>` +
-      `<div class="rp-pname" title="${(p.name||'').replace(/"/g,'&quot;')}">${p.name || '—'}</div>` +
+      `<div class="rp-pcode">${p.code}${members.length ? `<span class="rp-badge">+${members.length}</span>` : ''}</div>` +
+      `<div class="rp-pname" title="${(shownName||'').replace(/"/g,'&quot;')}">${shownName || '—'}</div>` +
+      `<div class="c"><button class="rp-merge-btn" title="Merge codes">⛓</button></div>` +
       `<div class="c"><input type="checkbox" data-f="power" ${sel.power?'checked':''}></div>` +
       `<div class="c"><input type="checkbox" data-f="r1" ${sel.r1?'checked':''}></div>` +
       `<div class="c"><input type="checkbox" data-f="r2" ${sel.r2?'checked':''}></div>`;
-    row.querySelectorAll('input').forEach(cb => {
+    row.querySelectorAll('input[type="checkbox"]').forEach(cb => {
       cb.onchange = () => rpSetFlag(p.code, p.name, cb.dataset.f, cb.checked);
     });
+    row.querySelector('.rp-merge-btn').onclick = () => openRpMerge(p.code);
     frag.appendChild(row);
+
+    if (members.length) {
+      const chips = document.createElement('div');
+      chips.className = 'rp-members';
+      chips.innerHTML = members.map(m =>
+        `<span class="rp-chipm" data-m="${m}">${m} · ${((rpBuildPartyIndex()[m]||{}).name || '?').slice(0,26)} <b>✕</b></span>`
+      ).join('');
+      chips.querySelectorAll('.rp-chipm b').forEach(x => {
+        x.onclick = () => rpUnmerge(x.parentElement.dataset.m);
+      });
+      frag.appendChild(chips);
+    }
   });
   body.innerHTML = '';
   body.appendChild(frag);
@@ -1756,9 +1816,109 @@ function renderRpParties() {
   }
 }
 
+// ── Code merging ──────────────────────────────────────────────────────
+let _rpMergeFor = null;
+
+function openRpMerge(code) {
+  _rpMergeFor = String(code);
+  document.getElementById('rpMergeSearch').value = '';
+  renderRpMerge();
+  document.getElementById('rpMergeOverlay').style.display = 'block';
+}
+function closeRpMerge() {
+  document.getElementById('rpMergeOverlay').style.display = 'none';
+  _rpMergeFor = null;
+  renderRpParties(); renderRpR2();
+}
+
+function renderRpMerge() {
+  const code = _rpMergeFor;
+  const idx  = rpBuildPartyIndex();
+  const memberOf = rpMemberOf();
+  const self = _rpDraft.sel[code] || { members: [] };
+  const selfName = (self.name && (self.members||[]).length) ? self.name : ((idx[code]||{}).name || code);
+
+  document.getElementById('rpMergeTitle').textContent = selfName;
+  document.getElementById('rpMergeSub').textContent = code +
+    ((self.members||[]).length ? ` · ${self.members.length} merged code(s)` : '');
+
+  // group name (only meaningful once it holds more than one code)
+  const nameIn = document.getElementById('rpMergeName');
+  nameIn.value = self.name || (idx[code]||{}).name || '';
+  nameIn.oninput = () => {
+    if (!_rpDraft.sel[code]) _rpDraft.sel[code] = { name:'', power:true, r1:false, r2:false, members:[], cols:[] };
+    _rpDraft.sel[code].name = nameIn.value;
+  };
+
+  // current members
+  const mem = document.getElementById('rpMergeMembers');
+  const members = self.members || [];
+  mem.innerHTML = members.length
+    ? members.map(m => `<span class="rp-chipm" data-m="${m}">${m} · ${((idx[m]||{}).name || '?').slice(0,30)} <b>✕</b></span>`).join('')
+    : '<span class="rp-count">No other codes merged in yet.</span>';
+  mem.querySelectorAll('.rp-chipm b').forEach(x => {
+    x.onclick = () => { rpUnmerge(x.parentElement.dataset.m); renderRpMerge(); };
+  });
+
+  // candidates to pull in
+  const q = (document.getElementById('rpMergeSearch').value || '').trim().toUpperCase();
+  const cand = Object.values(idx).filter(p => {
+    if (p.code === code) return false;
+    if (memberOf[p.code]) return false;
+    if ((_rpDraft.sel[p.code] || {}).members && _rpDraft.sel[p.code].members.length) return false; // a group itself
+    if (q) return p.name.toUpperCase().includes(q) || p.code.includes(q);
+    return rpIsSel(p.code);   // with no search, offer the already-selected parties
+  }).sort((a,b) => a.name.localeCompare(b.name)).slice(0, 120);
+
+  const list = document.getElementById('rpMergeList');
+  list.innerHTML = cand.length
+    ? cand.map(c => `<div class="rp-mrow" data-c="${c.code}"><span class="rp-pcode">${c.code}</span><span class="rp-pname">${c.name}</span><span class="rp-add">+ merge in</span></div>`).join('')
+    : '<div class="rp-count" style="padding:10px;">Nothing to merge — search a party name or code above.</div>';
+  list.querySelectorAll('.rp-mrow').forEach(r => {
+    r.onclick = () => { rpMerge(code, r.dataset.c); renderRpMerge(); };
+  });
+}
+
+// merge `from` into `into` — `from` disappears from the list and its despatch
+// is counted under `into`
+function rpMerge(into, from) {
+  into = String(into); from = String(from);
+  if (into === from) return;
+  const idx = rpBuildPartyIndex();
+  if (!_rpDraft.sel[into]) {
+    _rpDraft.sel[into] = { name: (idx[into]||{}).name || into, power: true, r1: false, r2: false, members: [], cols: [] };
+  }
+  const t = _rpDraft.sel[into];
+  t.members = t.members || [];
+  // if `from` was itself a group, absorb its members too
+  const sub = _rpDraft.sel[from];
+  if (sub && sub.members && sub.members.length) sub.members.forEach(m => { if (!t.members.includes(m)) t.members.push(m); });
+  if (!t.members.includes(from)) t.members.push(from);
+  delete _rpDraft.sel[from];
+  t.power = true;
+}
+
+function rpUnmerge(member) {
+  member = String(member);
+  const memberOf = rpMemberOf();
+  const parent = memberOf[member];
+  if (!parent) return;
+  const t = _rpDraft.sel[parent];
+  t.members = (t.members || []).filter(m => m !== member);
+  renderRpParties(); renderRpR2();
+}
+
+function rpResetMerges() {
+  const n = Object.values(_rpDraft.sel).reduce((a, e) => a + ((e.members||[]).length), 0);
+  if (!n) { alert('No merged codes to reset.'); return; }
+  if (!confirm(`Ungroup all ${n} merged code(s)?\n\nEach code goes back to its own row. Power / R1 / R2 ticks are kept on the parent rows; the codes that come back out will be untouched.`)) return;
+  Object.values(_rpDraft.sel).forEach(e => e.members = []);
+  renderRpParties(); renderRpR2();
+}
+
 function rpSetFlag(code, name, field, val) {
   code = String(code);
-  if (!_rpDraft.sel[code]) _rpDraft.sel[code] = { name: name || '', power:false, r1:false, r2:false, cols: [] };
+  if (!_rpDraft.sel[code]) _rpDraft.sel[code] = { name: name || '', power:false, r1:false, r2:false, members: [], cols: [] };
   const s = _rpDraft.sel[code];
   if (name) s.name = name;
   s[field] = val;
@@ -1779,13 +1939,14 @@ function renderRpR2() {
   }
   codes.forEach(code => {
     const s = _rpDraft.sel[code];
+    const nCodes = 1 + (s.members || []).length;
     const box = document.createElement('div');
     box.className = 'rp-r2-party';
     box.innerHTML =
       `<div class="rp-r2-hdr">
          <div>
            <div class="rp-r2-name">${s.name || code}</div>
-           <div class="rp-r2-sub">${code}</div>
+           <div class="rp-r2-sub">${code}${nCodes > 1 ? ` +${nCodes - 1} merged` : ''}</div>
          </div>
          <div style="display:flex;gap:4px;">
            <button class="rp-mini-btn" data-a="auto">Auto-fill</button>
@@ -1841,7 +2002,7 @@ async function saveRpSettings() {
   Object.keys(_rpDraft.sel).forEach(code => {
     const s = _rpDraft.sel[code];
     if (!s.power && !s.r1 && !s.r2) return;
-    const e = { code, name: s.name || '', power: !!s.power, r1: !!s.r1, r2: !!s.r2 };
+    const e = { code, codes: [code, ...(s.members || [])], name: s.name || '', power: !!s.power, r1: !!s.r1, r2: !!s.r2 };
     if (s.r2) e.cols = (s.cols || []).filter(c => c.label || c.colCodes)
                                      .map(c => ({ label: c.label.trim(), colCodes: c.colCodes.replace(/\s/g,''), isSubtotal: !!c.isSubtotal }));
     parties.push(e);
@@ -1881,6 +2042,7 @@ async function saveRpSettings() {
     const resp = await res.json();
     _settingsSha = resp.content.sha;
     appSettings = Object.assign({}, appSettings, { powerReport: newSettings.powerReport });
+    rpResetFileMaps();
     status.textContent = '✓ Saved'; status.style.color = 'var(--green)';
     renderRpReports();
     setTimeout(closeRpSettings, 1000);
@@ -1920,27 +2082,47 @@ async function loadRpHistory(force) {
   return rpHist;
 }
 
-// Live party×colliery map from the loaded despatch file, for the active date + time filter
-function rpLiveMap(powerOnly) {
+// Every date present in the loaded file → { 'YYYY-MM-DD': { cut, pc } }
+// Built once per file/DB/settings change; the reports and both save paths read it.
+let _rpFileMaps = null;
+function rpResetFileMaps() { _rpFileMaps = null; }
+
+function rpFileDayMaps(force) {
+  if (_rpFileMaps && !force) return _rpFileMaps;
   const pr = appSettings.powerReport || {};
-  const powerSet = new Set((pr.parties || []).filter(p => p.power).map(p => String(p.code)));
-  const usePower = powerOnly !== false && powerSet.size > 0;
-  const acc = {};
+  const powerSet = new Set();
+  (pr.parties || []).filter(p => p.power).forEach(p => rpCodesOf(p).forEach(c => powerSet.add(c)));
+  const usePower = powerSet.size > 0;
+
+  const out = {};
   for (let i = 0; i < rowGross.length; i++) {
-    if (activeTabDate && rowGWDate[i] !== activeTabDate) continue;
+    const key = rpKeyFromDMY(rowGWDate[i]);
+    if (!key) continue;
+    let e = out[key];
+    if (!e) e = out[key] = { cut: '', mins: -1, pc: {} };
+    if (rowMins[i] > e.mins) {
+      e.mins = rowMins[i];
+      e.cut  = (idxGWTime >= 0 && allRows[i][idxGWTime]) ? allRows[i][idxGWTime].trim() : '';
+    }
     const rec = mclhoDB[rowDO[i]];
     if (!rec) continue;
     const pc = String(rec.partyCode || '').trim();
     if (!pc) continue;
     if (usePower && !powerSet.has(pc)) continue;
-    const cc = String(rec.collieryCode || '').trim();
-    const net = rowGross[i] - rowTar[i];
-    const k = pc + '|' + cc;
-    acc[k] = (acc[k] || 0) + net;
+    const k = pc + '|' + String(rec.collieryCode || '').trim();
+    e.pc[k] = (e.pc[k] || 0) + (rowGross[i] - rowTar[i]);
   }
   // round to 2dp to keep the stored file small
-  for (const k in acc) acc[k] = Math.round(acc[k] * 100) / 100;
-  return acc;
+  for (const d in out) for (const k in out[d].pc) out[d].pc[k] = Math.round(out[d].pc[k] * 100) / 100;
+  _rpFileMaps = out;
+  return out;
+}
+
+// party×colliery map for one date from the loaded file
+function rpLiveMap(dateKey) {
+  const k = dateKey || rpActiveKey();
+  const m = rpFileDayMaps()[k];
+  return m ? m.pc : {};
 }
 
 async function saveRpDay() {
@@ -1954,9 +2136,10 @@ async function saveRpDay() {
     alert('No power parties selected yet. Open ⚙ and tick some parties first.'); return;
   }
 
-  const pc = rpLiveMap();
+  const fmk = rpFileDayMaps()[key];
+  const pc  = fmk ? fmk.pc : {};
   const tot = Object.values(pc).reduce((a,b) => a+b, 0);
-  const cut = rpCutLabel();
+  const cut = (fmk && fmk.cut) || rpCutLabel();
   const existing = rpHist && rpHist.days && rpHist.days[key];
   let msg = `Save ${rpActiveDMY()} (cut-off ${cut || '—'}) — ${rpNum(tot)} T across ${Object.keys(pc).length} party/colliery pairs?`;
   if (existing) {
@@ -1987,6 +2170,65 @@ async function saveRpDay() {
     renderRpReports();
   } catch(e) {
     rpSetStatus('Save failed: ' + e.message, true);
+  } finally {
+    btn.textContent = old; btn.disabled = false;
+  }
+}
+
+// Save every date present in the loaded file in one write
+async function saveRpAllDays() {
+  if (!allRows.length) { alert('Load a despatch file first.'); return; }
+  if (mclhoCount === 0) { alert('DO database is not loaded — party figures would all be zero.'); return; }
+  const pr = appSettings.powerReport || {};
+  if (!(pr.parties || []).some(p => p.power)) {
+    alert('No power parties selected yet. Open ⚙ and tick some parties first.'); return;
+  }
+
+  const fm = rpFileDayMaps();
+  const keys = Object.keys(fm).sort();
+  if (!keys.length) { alert('No dated rows found in this file.'); return; }
+
+  await loadRpHistory(true);   // fresh copy + fresh SHA before comparing
+
+  let grand = 0, overwrite = 0, lower = [];
+  keys.forEach(k => {
+    const t = Object.values(fm[k].pc).reduce((a,b) => a+b, 0);
+    grand += t;
+    const ex = rpHist.days[k];
+    if (ex) {
+      overwrite++;
+      const ot = Object.values(ex.pc || {}).reduce((a,b) => a+b, 0);
+      if (t < ot * 0.95) lower.push(`${k}: ${rpNum(t)} vs ${rpNum(ot)} stored`);
+    }
+  });
+
+  let msg = `Save ${keys.length} day(s) — ${keys[0]} to ${keys[keys.length-1]}\nTotal ${rpNum(grand)} T.`;
+  if (overwrite) msg += `\n\n${overwrite} of these are already stored and will be overwritten.`;
+  if (lower.length) msg += `\n\n⚠ LOWER than what is stored:\n` + lower.slice(0,8).join('\n') +
+                           (lower.length > 8 ? `\n… and ${lower.length - 8} more` : '') +
+                           `\n\nThat usually means this file is a partial extract for those dates.`;
+  if (!confirm(msg)) return;
+
+  const btn = document.getElementById('rpSaveDayBtn');
+  const old = btn.textContent; btn.textContent = 'Saving…'; btn.disabled = true;
+  try {
+    keys.forEach(k => { rpHist.days[k] = { cut: fm[k].cut, pc: fm[k].pc }; });
+    rpHist.updated = new Date().toISOString();
+
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(rpHist))));
+    const body = { message: `Road power history — bulk ${keys[0]}…${keys[keys.length-1]} (${keys.length} days)`, content, branch: RP_GH.branch };
+    if (_rpHistSha) body.sha = _rpHistSha;
+    const res = await fetch(
+      `${RP_GH.api}/repos/${RP_GH.owner}/${RP_GH.repo}/contents/${RP_GH.path}`,
+      { method: 'PUT', headers: { Authorization: 'token ' + RP_GH.token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+    );
+    if (!res.ok) throw new Error('GitHub ' + res.status);
+    const resp = await res.json();
+    _rpHistSha = resp.content.sha;
+    rpSetStatus(`✓ ${keys.length} day(s) saved to ${RP_GH.path}`, false);
+    renderRpReports();
+  } catch(e) {
+    rpSetStatus('Bulk save failed: ' + e.message, true);
   } finally {
     btn.textContent = old; btn.disabled = false;
   }
@@ -2027,16 +2269,19 @@ function rpMonthData() {
     if (!ks.length) return null;
     Y = +ks[ks.length-1].slice(0,4); M = +ks[ks.length-1].slice(5,7);
   }
-  const dim  = new Date(Y, M, 0).getDate();
-  const live = key && allRows.length ? rpLiveMap() : null;
+  const dim = new Date(Y, M, 0).getDate();
+  const fm  = allRows.length ? rpFileDayMaps() : {};
   const days = {};
   let lastDay = 0;
   for (let d = 1; d <= dim; d++) {
     const k = `${Y}-${String(M).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    let pc = null, cut = '';
-    if (key === k && live) { pc = live; cut = rpCutLabel(); }
+    // the file wins over history for the active date, and for every date in
+    // the file when the consolidated tab is on
+    const useFile = fm[k] && (allDaysMode || key === k);
+    let pc = null, cut = '', live = false;
+    if (useFile) { pc = fm[k].pc; cut = fm[k].cut; live = true; }
     else if (rpHist && rpHist.days[k]) { pc = rpHist.days[k].pc || {}; cut = rpHist.days[k].cut || ''; }
-    if (pc) { days[d] = { pc, cut, live: key === k && !!live }; lastDay = d; }
+    if (pc) { days[d] = { pc, cut, live }; lastDay = d; }
   }
   // previous month totals (for the Report-2 header block)
   const pm = M === 1 ? { Y: Y-1, M: 12 } : { Y, M: M-1 };
@@ -2053,16 +2298,24 @@ function rpMonthData() {
            monLabel: RP_MON[M-1] + '-' + Y };
 }
 
-// sum a day map for one party (all its collieries)
-function rpSumParty(pc, code) {
-  let s = 0; const pre = code + '|';
-  for (const k in pc) if (k.startsWith(pre)) s += pc[k];
+// every party code belonging to one report row
+function rpCodesOf(p) {
+  if (p.codes && p.codes.length) return p.codes.map(String);
+  return [String(p.code)];
+}
+// sum a day map for one party row (all its codes, all collieries)
+function rpSumParty(pc, codes) {
+  let s = 0;
+  for (const code of codes) {
+    const pre = code + '|';
+    for (const k in pc) if (k.startsWith(pre)) s += pc[k];
+  }
   return s;
 }
-// sum a day map for one party restricted to a set of colliery codes
-function rpSumPartyColl(pc, code, codes) {
+// sum a day map for one party row restricted to a set of colliery codes
+function rpSumPartyColl(pc, codes, colls) {
   let s = 0;
-  for (const cc of codes) { const v = pc[code + '|' + cc]; if (v) s += v; }
+  for (const code of codes) for (const cc of colls) { const v = pc[code + '|' + cc]; if (v) s += v; }
   return s;
 }
 
@@ -2094,16 +2347,16 @@ function renderRp1(md) {
   const lastDay = md.lastDay || 0;
   // per-party per-day totals
   const rows = parties.map(p => {
-    const code = String(p.code);
+    const codes = rpCodesOf(p);
     const vals = {};
     let prog = 0, cnt = 0;
     for (let d = 1; d <= lastDay; d++) {
       if (!md.days[d]) continue;
-      const v = rpSumParty(md.days[d].pc, code);
+      const v = rpSumParty(md.days[d].pc, codes);
       vals[d] = v; prog += v; cnt++;
     }
     const actD = md.activeKey ? +md.activeKey.slice(8,10) : 0;
-    return { name: p.name || code, code, vals, prog, cnt, today: vals[actD] || 0 };
+    return { name: p.name || codes[0], codes, vals, prog, cnt, today: vals[actD] || 0 };
   }).sort((a,b) => b.prog - a.prog);
 
   const actD = md.activeKey ? +md.activeKey.slice(8,10) : 0;
@@ -2131,7 +2384,7 @@ function renderRp1(md) {
   rows.forEach(r => {
     tToday += r.today; tProg += r.prog; tAvg += r.cnt ? r.prog / r.cnt : 0;
     html += '<tr>';
-    html += `<td class="rp-name" title="${r.code}">${r.name}</td>`;
+    html += `<td class="rp-name" title="${r.codes.join(', ')}">${r.name}${r.codes.length > 1 ? ` <span style="font-size:9px;opacity:.6;">(${r.codes.length} codes)</span>` : ''}</td>`;
     html += `<td class="rp-num rp-live">${rpNum(r.today)}</td>`;
     html += `<td class="rp-num">${rpNum(r.prog)}</td>`;
     html += `<td class="rp-num">${rpNum(r.cnt ? r.prog / r.cnt : 0)}</td>`;
@@ -2178,8 +2431,9 @@ function renderRp2(md) {
   pane.appendChild(head);
 
   parties.forEach(p => {
-    const code = String(p.code);
-    const cols = (p.cols || []);
+    const codes = rpCodesOf(p);
+    const code  = codes[0];
+    const cols  = (p.cols || []);
     const real = cols.filter(c => !c.isSubtotal);
     const t = document.createElement('table');
     t.className = 'rp-table';
@@ -2194,8 +2448,8 @@ function renderRp2(md) {
 
     // previous month summary
     if (md.prev.days) {
-      const pv = cols.map(c => rpSumPartyColl(md.prev.pc, code, splitCodes(c)));
-      const pt = real.reduce((s,c) => s + rpSumPartyColl(md.prev.pc, code, splitCodes(c)), 0);
+      const pv = cols.map(c => rpSumPartyColl(md.prev.pc, codes, splitCodes(c)));
+      const pt = real.reduce((s,c) => s + rpSumPartyColl(md.prev.pc, codes, splitCodes(c)), 0);
       html += `<tr><td class="rp-date">${md.prev.label}</td><td class="rp-date">TOTAL</td>`;
       pv.forEach((v,i) => html += `<td class="rp-num${cols[i].isSubtotal ? ' rp-sub' : ''}">${rpNum(v)}</td>`);
       html += `<td class="rp-num">${rpNum(pt)}</td></tr>`;
@@ -2219,7 +2473,7 @@ function renderRp2(md) {
       nDays++;
       let rowTot = 0;
       cols.forEach((c, i) => {
-        const v = rpSumPartyColl(rec.pc, code, splitCodes(c));
+        const v = rpSumPartyColl(rec.pc, codes, splitCodes(c));
         sums[i] += v;
         if (!c.isSubtotal) rowTot += v;
         html += `<td class="rp-num${c.isSubtotal ? ' rp-sub' : ''}${v === 0 ? ' rp-zero' : ''}">${v ? rpNum(v) : '0'}</td>`;
@@ -2367,6 +2621,7 @@ document.getElementById('mclhoInput').addEventListener('change', e => {
 
 function finishLoad() {
   if (!headers.length || !allRows.length) { alert('Could not parse data.'); return; }
+  rpResetFileMaps();
 
   idxGross  = ci('gross weight');
   idxTar    = ci('tar weight');
@@ -2411,24 +2666,36 @@ function finishLoad() {
       new Date(a.replace(/(\d+)-(\w+)-(\d+)/, '$2 $1 $3')) -
       new Date(b.replace(/(\d+)-(\w+)-(\d+)/, '$2 $1 $3'))
     );
-    activeTabDate = activeDates[activeDates.length - 1] || null;
+    allDaysMode = true;
+    activeTabDate = null;
     buildDateTabs();
     document.getElementById('multiDaySection').style.display = 'block';
   } else {
     activeDates = null;
     activeTabDate = null;
+    allDaysMode = false;
     document.getElementById('multiDaySection').style.display = 'none';
   }
 
   updateStats();
 }
 
+const RP_ALL_TAB = 'All days';
+
 function buildDateTabs() {
   const bar = document.getElementById('multiDayTabs');
   bar.innerHTML = '';
+  // consolidated tab first — only ever shown for a multi-day file
+  const all = document.createElement('button');
+  all.className = 'multiday-tab' + (allDaysMode ? ' active' : '');
+  all.textContent = RP_ALL_TAB;
+  all.style.fontWeight = '700';
+  all.onclick = () => switchTab(RP_ALL_TAB);
+  bar.appendChild(all);
+
   for (const date of activeDates) {
     const btn = document.createElement('button');
-    btn.className = 'multiday-tab' + (date === activeTabDate ? ' active' : '');
+    btn.className = 'multiday-tab' + (!allDaysMode && date === activeTabDate ? ' active' : '');
     btn.textContent = date;
     btn.onclick = () => switchTab(date);
     bar.appendChild(btn);
@@ -2436,9 +2703,15 @@ function buildDateTabs() {
 }
 
 function switchTab(date) {
-  activeTabDate = date;
+  if (date === RP_ALL_TAB) {
+    allDaysMode = true;
+    activeTabDate = null;
+  } else {
+    allDaysMode = false;
+    activeTabDate = date;
+  }
   document.querySelectorAll('.multiday-tab').forEach(btn => {
-    const isActive = btn.textContent === date;
+    const isActive = (btn.textContent === RP_ALL_TAB) ? allDaysMode : (!allDaysMode && btn.textContent === date);
     btn.classList.toggle('active', isActive);
     if (isActive) btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   });
@@ -2450,6 +2723,7 @@ function switchTab(date) {
 // ═══════════════════════════════════════════════════════
 function updateStats() {
   const n = rowGross.length;
+  rpResetFileMaps();
 
   // latest gross-weight time on the active date → the report cut-off
   let tabMaxMins = -1; tabMaxTimeStr = '';
@@ -2485,9 +2759,22 @@ function updateStats() {
     banner.onclick = null;
   }
 
-  // as-of bar
-  document.getElementById('asofDate').textContent = rpActiveDMY() || '—';
-  document.getElementById('asofTime').textContent = tabMaxTimeStr || '—';
+  // as-of bar + save button mode
+  const btn = document.getElementById('rpSaveDayBtn');
+  if (allDaysMode) {
+    const fm = rpFileDayMaps();
+    const ks = Object.keys(fm).sort();
+    document.getElementById('asofDate').textContent =
+      ks.length ? `${ks.length} days · ${activeDates[0]} → ${activeDates[activeDates.length-1]}` : '—';
+    document.getElementById('asofTime').textContent = 'Consolidated';
+    btn.textContent = `💾 Save all ${ks.length} days`;
+    btn.onclick = saveRpAllDays;
+  } else {
+    document.getElementById('asofDate').textContent = rpActiveDMY() || '—';
+    document.getElementById('asofTime').textContent = tabMaxTimeStr || '—';
+    btn.textContent = '💾 Save Day';
+    btn.onclick = saveRpDay;
+  }
 
   renderRpReports();
 }
@@ -2519,5 +2806,40 @@ loadSettingsFromGitHub()
 loadDbFromGitHub();
 
 </script>
+<!-- ═══════════ MERGE CODES ═══════════ -->
+<div id="rpMergeOverlay" class="stt-overlay" onclick="if(event.target===this)closeRpMerge()">
+  <div class="stt-panel" style="max-width:560px;">
+    <div class="stt-header">
+      <div>
+        <div class="stt-title" id="rpMergeTitle">—</div>
+        <div class="stt-title-sub" id="rpMergeSub">—</div>
+      </div>
+      <button class="stt-close" onclick="closeRpMerge()">✕</button>
+    </div>
+    <div class="stt-body" style="grid-template-columns:1fr;">
+      <div class="stt-section">
+        <label class="stt-label">Name shown on the report</label>
+        <input id="rpMergeName" class="stt-input" type="text" placeholder="Customer name">
+      </div>
+      <div class="stt-section">
+        <label class="stt-label">Codes merged into this row</label>
+        <div id="rpMergeMembers" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
+      </div>
+      <div class="stt-section">
+        <label class="stt-label">Add another code</label>
+        <input id="rpMergeSearch" class="rp-search" type="search" placeholder="Search any party name or code…" oninput="renderRpMerge()" style="margin-bottom:6px;">
+        <div class="rp-list-wrap"><div class="rp-scroll" id="rpMergeList"></div></div>
+        <div class="stt-hint" style="margin-top:6px;">
+          The code you add disappears from the main list and its despatch is counted under this row.
+          History is stored per raw code, so merging and un-merging re-reads past days correctly — nothing needs re-saving.
+        </div>
+      </div>
+    </div>
+    <div class="stt-footer">
+      <button class="stt-btn-save" onclick="closeRpMerge()">Done</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
