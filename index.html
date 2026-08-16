@@ -899,6 +899,8 @@ body.dark {
 
 /* ── tokens ── */
 .rp-card {
+  border-radius: 3px;
+  box-shadow: 0 1px 2px rgba(20,26,33,.06);
   --paper:    #f5f7f9;
   --ink:      #151a21;
   --ash:      #ccd4dd;
@@ -910,6 +912,8 @@ body.dark {
   --band-ink: #f5f7f9;
   --zero:     #a9b3be;
   --avg:      #123a8a;
+  --avg-band: #9cc4ff;      /* averages sitting on the dark totals band */
+  --live-band:#f5a742;
 
   background: var(--paper);
   border: 1px solid var(--ash);
@@ -928,6 +932,8 @@ body.dark .rp-card {
   --band-ink: #e7edf4;
   --zero:     #4a5665;
   --avg:      #7fa8f5;
+  --avg-band: #9cc4ff;
+  --live-band:#f5a742;
 }
 /* snapshots always render light, whatever the app theme is */
 .rp-light .rp-card, .rp-light .rp-card * { color-scheme: light; }
@@ -935,15 +941,16 @@ body.dark .rp-card {
   --paper:#f5f7f9; --ink:#151a21; --ash:#ccd4dd; --ash-soft:#e6ebf0;
   --mute:#74808e; --live:#b8620a; --live-bar:rgba(217,122,6,.17);
   --band:#212a35; --band-ink:#f5f7f9; --zero:#a9b3be; --avg:#123a8a;
+  --avg-band:#9cc4ff; --live-band:#f5a742;
 }
 
 /* ── caption ── */
 .rp-cap {
   display: flex; align-items: baseline; justify-content: space-between;
   gap: 10px; flex-wrap: wrap;
-  padding: 11px 14px 9px;
+  padding: 12px 15px 10px;
   border-bottom: 2px solid var(--ink);
-  background: var(--paper);
+  background: linear-gradient(var(--paper), var(--ash-soft));
 }
 .rp-cap h3 {
   font-family: 'IBM Plex Sans Condensed', sans-serif;
@@ -1019,9 +1026,12 @@ body.dark .rp-card {
   font-family: 'IBM Plex Sans Condensed', sans-serif;
   letter-spacing: .06em; text-transform: uppercase; font-size: 11px;
 }
-.rp-t tr.rp-sum td.rp-on { color: var(--band-ink); border-left-color: var(--live); }
+/* on the dark band the ink flips — dark blue and burnt orange both vanish
+   against #212a35, so both get their lifted counterparts */
+.rp-t tr.rp-sum td.rp-on   { color: var(--live-band); border-left-color: var(--live-band) !important; }
+.rp-t tr.rp-sum td.rp-avgc { color: var(--avg-band) !important; }
+.rp-t tr.rp-sum td.rp-sub  { color: rgba(245,247,249,.55); }
 .rp-t tr.rp-sum td.rp-on::before { background: none; }
-.rp-t tr.rp-sum td.rp-sub { color: rgba(245,247,249,.62); }
 /* averages read as a distinct measure, not another tonnage */
 .rp-avgc, .rp-t th.rp-avgc { color: var(--avg) !important; font-weight: 700; }
 .rp-t tr.rp-avg td { background: var(--ash-soft); color: var(--avg); font-weight: 700; }
@@ -1039,6 +1049,10 @@ body.dark .rp-card {
 .rp-t tbody tr:hover td { background: var(--ash-soft); }
 .rp-t tbody tr:hover td.rp-lead { background: var(--ash-soft); }
 .rp-t tbody tr.rp-sum:hover td { background: var(--band); }
+/* every other row gets a whisper of tone so a wide month stays trackable */
+.rp-t tbody tr:nth-child(even):not(.rp-sum):not(.rp-avg):not(.rp-ref) td { background: rgba(20,26,33,.022); }
+body.dark .rp-t tbody tr:nth-child(even):not(.rp-sum):not(.rp-avg):not(.rp-ref) td { background: rgba(255,255,255,.022); }
+.rp-t tbody tr:nth-child(even):not(.rp-sum):not(.rp-avg):not(.rp-ref) td.rp-lead { background: var(--paper); }
 
 .rp-foot {
   padding: 7px 14px; font-family: var(--mono); font-size: 10px;
@@ -1166,7 +1180,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B9-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B10-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1290,6 +1304,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <button class="rp-mini-btn" id="rpShareBtn" onclick="shareRpReport()">Share</button>
     <button class="rp-mini-btn" id="rpPdfBtn" onclick="rpExportPdf()">PDF</button>
     <button class="rp-mini-btn" id="rpXlsBtn" onclick="rpExportXlsx()">Excel</button>
+    <button class="rp-mini-btn" id="rpCsvBtn" onclick="rpExportCsv()">CSV</button>
   </div>
 
   <div class="rp-note" id="rpViewSub">—</div>
@@ -2652,6 +2667,17 @@ function rpSetStatus(txt, isWarn) {
   el.textContent = txt || '';
   el.className = isWarn ? 'rp-warn' : 'rp-note';
 }
+function rpSetStatusAction(txt, label, fn, isWarn) {
+  const el = document.getElementById('rpStatus');
+  el.className = isWarn ? 'rp-warn' : 'rp-note';
+  el.textContent = txt + ' ';
+  const b = document.createElement('button');
+  b.className = 'rp-mini-btn';
+  b.style.cssText = 'margin-left:6px;vertical-align:middle;';
+  b.textContent = label;
+  b.onclick = fn;
+  el.appendChild(b);
+}
 
 // ═══════════════════════════════════════════════════════
 //  REPORT VIEWS
@@ -2892,7 +2918,7 @@ function renderRpReports() {
 function rpSyncExportBtns() {
   if (_rpBusy) return;
   const on = _rpTables.length > 0;
-  ['rpShareBtn','rpPdfBtn','rpXlsBtn'].forEach(id => {
+  ['rpShareBtn','rpPdfBtn','rpXlsBtn','rpCsvBtn'].forEach(id => {
     const b = document.getElementById(id);
     if (b) { b.disabled = !on; b.style.opacity = on ? '1' : '.4'; }
   });
@@ -3134,7 +3160,7 @@ function rpSaveBlob(blob, fname) {
 // the same message. One operation at a time, every button locked for its
 // duration.
 let _rpBusy = false;
-const RP_BTNS = ['rpShareBtn','rpPdfBtn','rpXlsBtn','rpSaveDayBtn'];
+const RP_BTNS = ['rpShareBtn','rpPdfBtn','rpXlsBtn','rpCsvBtn','rpSaveDayBtn'];
 function rpLockBtns(on, activeId, activeText) {
   _rpBusy = on;
   RP_BTNS.forEach(id => {
@@ -3158,7 +3184,7 @@ function rpProgress(id, text) {
 }
 
 // One delivery per call: the share sheet, or a download — never both.
-async function rpShareOrSave(blob, fname, type, title) {
+async function rpShareOrSave(blob, fname, type, title, onBlocked) {
   const file = new File([blob], fname, { type });
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
@@ -3171,7 +3197,8 @@ async function rpShareOrSave(blob, fname, type, title) {
       // while the file was being built — means sharing never happened, so the
       // file still has to reach the user.
       rpSaveBlob(blob, fname);
-      rpSetStatus(`Couldn't open the share sheet (${e && e.name ? e.name : 'error'}) — saved ${fname} to Downloads instead.`, true);
+      if (onBlocked) onBlocked(e);
+      else rpSetStatus(`Couldn't open the share sheet (${e && e.name ? e.name : 'error'}) — saved ${fname} to Downloads instead.`, true);
       return;
     }
   }
@@ -3303,6 +3330,43 @@ async function rpExportPdf() {
   } catch(e) {
     rpSetStatus('Could not build the PDF: ' + e.message, true);
     alert('Could not build the PDF: ' + e.message);
+  } finally {
+    rpLockBtns(false);
+  }
+}
+
+// ── CSV ────────────────────────────────────────────────────────────────
+// Android's share sheet only accepts PDF, images and text types — Office
+// files are refused outright. CSV is text/csv, so it goes through, and it
+// still opens straight into Excel or Sheets at the other end.
+function rpCsvCell(v) {
+  if (v == null || v === '') return '';
+  if (typeof v === 'number' && isFinite(v)) return String(Math.round(v * 100) / 100);
+  const t = String(v);
+  return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+}
+function rpBuildCsv() {
+  const lines = [];
+  _rpTables.forEach((t, i) => {
+    if (i) lines.push('');
+    lines.push(rpCsvCell(t.title));
+    lines.push(rpCsvCell(t.meta));
+    lines.push(t.head.map(h => rpCsvCell(h.t)).join(','));
+    t.rows.forEach(r => lines.push(r.cells.map(c => rpCsvCell(c.v)).join(',')));
+    lines.push(rpCsvCell(t.foot || ''));
+  });
+  // BOM so Excel opens it as UTF-8 without mangling the customer names
+  return new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv' });
+}
+
+async function rpExportCsv() {
+  if (_rpBusy) return;
+  if (!_rpTables.length) { alert('Nothing to export yet — the reports are empty.'); return; }
+  rpLockBtns(true, 'rpCsvBtn', 'Building…');
+  try {
+    await rpShareOrSave(rpBuildCsv(), `Road_Power_Report_${rpStamp()}.csv`, 'text/csv', 'Road Power Report');
+  } catch(e) {
+    rpSetStatus('Could not build the CSV: ' + e.message, true);
   } finally {
     rpLockBtns(false);
   }
@@ -3477,8 +3541,12 @@ async function rpExportXlsx() {
       'xl/worksheets/sheet2.xml': enc.encode(rpSheetXml(t2)),
     };
     const blob = _buildZip(files);
-    await rpShareOrSave(blob, `Road_Power_Report_${rpStamp()}.xlsx`,
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Road Power Report');
+    const fname = `Road_Power_Report_${rpStamp()}.xlsx`;
+    await rpShareOrSave(blob, fname,
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Road Power Report',
+      () => rpSetStatusAction(
+        `Android won't put a spreadsheet through the share sheet, so ${fname} went to Downloads — attach it from there, or send a CSV instead:`,
+        'Share as CSV', rpExportCsv, true));
   } catch(e) {
     rpSetStatus('Could not build the workbook: ' + e.message, true);
     alert('Could not build the workbook: ' + e.message);
