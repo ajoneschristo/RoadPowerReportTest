@@ -1036,6 +1036,15 @@ body.dark .rp-card {
 .rp-avgc, .rp-t th.rp-avgc { color: var(--avg) !important; font-weight: 700; }
 .rp-t tr.rp-avg td { background: var(--ash-soft); color: var(--avg); font-weight: 700; }
 .rp-t tr.rp-ref td { background: var(--ash-soft); color: var(--ink); font-weight: 600; }
+/* a column keeps its meaning down the whole table — the month rows carry the
+   same accents as the daily rows rather than flattening to one colour */
+.rp-t tr.rp-ref td.rp-on   { color: var(--live); }
+.rp-t tr.rp-ref td.rp-avgc { color: var(--avg); }
+.rp-t tr.rp-ref td.rp-sub,
+.rp-t tr.rp-avg td.rp-sub  { color: var(--mute); font-style: italic; }
+.rp-t tr.rp-ref td.rp-zero,
+.rp-t tr.rp-avg td.rp-zero { color: var(--zero); font-weight: 500; }
+.rp-t tr.rp-sum td.rp-zero { color: rgba(245,247,249,.4); }
 .rp-t tr.rp-ref td.rp-lead {
   background: var(--ash-soft); color: var(--ink);
   font-family: 'IBM Plex Sans Condensed', sans-serif;
@@ -1180,7 +1189,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B13-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B14-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -2865,9 +2874,10 @@ function rpTableHTML(t) {
     h += `<tr${r.k === 'sum' ? ' class="rp-sum"' : r.k === 'avg' ? ' class="rp-avg"' : r.k === 'ref' ? ' class="rp-ref"' : ''}>`;
     r.cells.forEach((c, i) => {
       const k = t.head[i] ? t.head[i].k : 'num';
-      const zero = (k !== 'lead' && r.k === 'data' && c.v === 0) ? ' rp-zero' : '';
-      void zero;
-      const txt  = c.txt != null ? c.txt : (typeof c.v === 'number' ? (c.v ? rpNum(c.v) : (r.k === 'data' ? '·' : '')) : c.v);
+      const isNum = typeof c.v === 'number' && isFinite(c.v);
+      const isZero = isNum && Math.round(c.v) === 0;
+      const zero = (k !== 'lead' && isZero) ? ' rp-zero' : '';
+      const txt  = c.txt != null ? c.txt : (isNum ? (isZero ? '·' : rpNum(c.v)) : c.v);
       const tip  = c.title ? ` title="${rpEsc(c.title)}"` : '';
       if (k === 'lead') h += `<td class="rp-lead"${tip}><span class="rp-nm">${c.html || rpEsc(txt)}</span></td>`;
       else if (k === 'on') h += `<td class="${rpCellCls(k)}${zero}"><span>${rpEsc(txt) || '—'}</span></td>`;
@@ -3137,12 +3147,13 @@ function rpStamp() {
   const d = rpActiveDMY();
   return d ? String(d).replace(/[^\w]+/g, '_') : 'no_data';
 }
-// Guard against a second save of the same file — a stray double-fire used to
-// land two copies in Downloads.
+// A file leaves the app exactly once. The latch is per delivery rather than
+// per filename, so nothing downstream can fire a second copy.
+let _rpDeliverId = 0;
 let _rpLastSave = { name: '', at: 0 };
 function rpSaveBlob(blob, fname) {
   const now = Date.now();
-  if (_rpLastSave.name === fname && now - _rpLastSave.at < 3000) return;
+  if (_rpLastSave.name === fname && now - _rpLastSave.at < 5000) return;
   _rpLastSave = { name: fname, at: now };
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -3180,24 +3191,33 @@ function rpProgress(id, text) {
 
 // One delivery per call: the share sheet, or a download — never both.
 async function rpShareOrSave(blob, fname, type, title, onBlocked) {
+  const id = ++_rpDeliverId;
+  let done = false;
+  const save = () => {
+    if (done || id !== _rpDeliverId) return;   // already delivered, or superseded
+    done = true;
+    rpSaveBlob(blob, fname);
+  };
+
   const file = new File([blob], fname, { type });
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title });
+      done = true;
       rpSetStatus(`Shared ${fname}`, false);
       return;
     } catch(e) {
-      if (e && e.name === 'AbortError') { rpSetStatus('Sharing cancelled.', false); return; }
+      if (e && e.name === 'AbortError') { done = true; rpSetStatus('Sharing cancelled.', false); return; }
       // Anything else — an unsupported type, or the tap gesture having expired
       // while the file was being built — means sharing never happened, so the
       // file still has to reach the user.
-      rpSaveBlob(blob, fname);
+      save();
       if (onBlocked) onBlocked(e);
       else rpSetStatus(`Couldn't open the share sheet (${e && e.name ? e.name : 'error'}) — saved ${fname} to Downloads instead.`, true);
       return;
     }
   }
-  rpSaveBlob(blob, fname);
+  save();
   rpSetStatus(`Saved ${fname} to Downloads.`, false);
 }
 
@@ -3368,70 +3388,113 @@ function rpHtmlCellStyle(kind, rowKind) {
   return `${b}${mono}color:${RP_H.ink};text-align:right;`;
 }
 
-function rpHtmlCard(t) {
+function rpHtmlCard(t, idx) {
   const cond = "font-family:'IBM Plex Sans Condensed','IBM Plex Sans',Arial,sans-serif;";
-  let head = '<tr>';
-  t.head.forEach(c => {
+  const tid = 'rpt' + idx;
+
+  let head = '<thead><tr>';
+  t.head.forEach((c, i) => {
     const align = c.k === 'lead' ? 'left' : 'right';
     const col = c.k === 'on' ? RP_H.live : c.k === 'avg' ? RP_H.avg : RP_H.mute;
-    head += `<th style="border:1px solid ${RP_H.ash};padding:8px 9px;${cond}font-size:10px;font-weight:700;` +
-            `letter-spacing:.1em;text-transform:uppercase;color:${col};background:${RP_H.paper};text-align:${align};` +
+    head += `<th data-i="${i}" data-k="${c.k}" style="border:1px solid ${RP_H.ash};padding:8px 9px;${cond}font-size:10px;font-weight:700;` +
+            `letter-spacing:.1em;text-transform:uppercase;color:${col};background:${RP_H.paper};text-align:${align};cursor:pointer;` +
             `${c.k === 'sub' ? 'font-style:italic;border-left:1px dashed ' + RP_H.mute + ';' : ''}` +
             `${c.k === 'on' ? 'border-left:2px solid ' + RP_H.live + ';' : ''}">${rpEsc(c.t)}</th>`;
   });
-  head += '</tr>';
+  head += '</tr></thead>';
 
-  let rows = '';
-  t.rows.forEach(r => {
-    rows += '<tr>';
+  const rowHtml = r => {
+    let h = `<tr data-k="${r.k}">`;
     r.cells.forEach((c, i) => {
       const k = t.head[i] ? t.head[i].k : 'num';
       const isNum = typeof c.v === 'number' && isFinite(c.v);
-      const txt = isNum ? (c.v ? rpNum(c.v) : (r.k === 'data' ? '·' : '0')) : rpEsc(c.v);
-      // x:num carries the raw figure so Excel reads a number, not the
-      // grouped text; browsers ignore the attribute
-      const xn = isNum ? ` x:num="${Math.round(c.v * 100) / 100}"` : '';
-      const zero = (isNum && c.v === 0 && r.k === 'data') ? `color:${RP_H.zero};` : '';
-      rows += `<td style="${rpHtmlCellStyle(k, r.k)}${zero}"${xn}>${txt}</td>`;
+      const isZero = isNum && Math.round(c.v) === 0;
+      const txt = isNum ? (isZero ? '·' : rpNum(c.v)) : rpEsc(c.v);
+      // x:num for Excel, data-v for the sort — browsers ignore the first
+      const attrs = isNum ? ` x:num="${Math.round(c.v * 100) / 100}" data-v="${Math.round(c.v * 100) / 100}"` : '';
+      const zero = isZero ? `color:${r.k === 'sum' ? 'rgba(245,247,249,.4)' : RP_H.zero};` : '';
+      h += `<td data-k="${k}" style="${rpHtmlCellStyle(k, r.k)}${zero}"${attrs}>${txt}</td>`;
     });
-    rows += '</tr>';
-  });
+    return h + '</tr>';
+  };
 
-  return `<div style="margin:0 0 22px;border:1px solid ${RP_H.ash};background:${RP_H.paper};">
-       <div style="padding:12px 15px 10px;border-bottom:2px solid ${RP_H.ink};">
-         <div style="${cond}font-size:15px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:${RP_H.ink};">${rpEsc(t.title)}</div>
-         <div style="font-family:'IBM Plex Mono',Consolas,monospace;font-size:10px;color:${RP_H.mute};margin-top:4px;">${rpEsc(t.meta || '')}</div>
+  const refRows  = t.rows.filter(r => r.k === 'ref').map(rowHtml).join('');
+  const dataRows = t.rows.filter(r => r.k === 'data').map(rowHtml).join('');
+  const footRows = t.rows.filter(r => r.k === 'sum' || r.k === 'avg').map(rowHtml).join('');
+
+  // headline figures, read off the summary rows
+  const sum = t.rows.find(r => r.k === 'sum');
+  const avg = t.rows.filter(r => r.k === 'avg').slice(-1)[0];
+  const nData = t.rows.filter(r => r.k === 'data').length;
+  const kpis = [];
+  const pick = (row, kind) => {
+    if (!row) return null;
+    const i = t.head.findIndex(h => h.k === kind);
+    return i >= 0 && row.cells[i] ? row.cells[i].v : null;
+  };
+  const push = (label, val) => { if (val != null && val !== '') kpis.push([label, typeof val === 'number' ? rpNum(val) : val]); };
+  const onLab = (t.head.find(h => h.k === 'on') || {}).t || '';
+  if (t.sheet === 'Power sector') {
+    push(onLab, pick(sum, 'on'));
+    push('Month to date', pick(sum, 'key'));
+    push('Avg / day', pick(sum, 'avg'));
+    kpis.push(['Customers', String(nData)]);
+  } else {
+    push('Month to date', pick(sum, 'on'));
+    push('Avg / day', pick(avg, 'on'));
+    kpis.push(['Days lifted', String(nData)]);
+  }
+
+  const kpiHtml = `<div class="kpis">` + kpis.map(([l, v]) =>
+    `<div class="kpi"><span>${rpEsc(l)}</span><b>${rpEsc(v)}</b></div>`).join('') + `</div>`;
+
+  const hasDays = t.head.some(h => h.k === 'day');
+  const controls =
+    `<div class="ctl">
+       <input type="search" placeholder="Filter ${t.sheet === 'Power sector' ? 'customers' : 'dates'}…" data-search="${tid}">
+       ${hasDays ? `<button data-days="${tid}" data-on="1">Hide day-by-day</button>` : ''}
+       <span class="hint">Tap a column heading to sort</span>
+     </div>`;
+
+  return `<div class="card">
+       <div class="cap">
+         <div class="cap-t">${rpEsc(t.title)}</div>
+         <div class="cap-m">${rpEsc(t.meta || '')}</div>
        </div>
-       <div style="overflow-x:auto;"><table cellspacing="0" cellpadding="0" style="border-collapse:collapse;width:100%;">${head}${rows}</table></div>
-       <div style="padding:7px 15px;font-family:'IBM Plex Mono',Consolas,monospace;font-size:10px;color:${RP_H.mute};border-top:1px solid ${RP_H.ash};">${rpEsc(t.foot || '')}</div>
+       ${kpiHtml}
+       ${controls}
+       <div class="scroll"><table id="${tid}" class="rpt" cellspacing="0" cellpadding="0" style="border-collapse:collapse;width:100%;">
+         ${head}
+         <tbody class="rpt-ref">${refRows}</tbody>
+         <tbody class="rpt-body">${dataRows}</tbody>
+         <tbody class="rpt-foot">${footRows}</tbody>
+       </table></div>
+       <div class="foot">${rpEsc(t.foot || '')}</div>
      </div>`;
 }
 
 function rpBuildHtml() {
   const cond = "font-family:'IBM Plex Sans Condensed','IBM Plex Sans',Arial,sans-serif;";
+  const mono = "font-family:'IBM Plex Mono',Consolas,monospace;";
+  let n = 0;
   const groups = [
     { id: 'p1', label: 'Power Sector', tables: _rpTables.filter(t => t.sheet === 'Power sector') },
     { id: 'p2', label: 'Source-wise',  tables: _rpTables.filter(t => t.sheet === 'Source-wise')  },
   ].filter(g => g.tables.length);
 
-  // Tabs are pure CSS — a checked radio reveals its panel. No script, so the
-  // file works wherever it is opened, and both tables stay in the document
-  // for Excel to pick up.
+  // Tabs stay pure CSS so they still work if scripts are blocked; the sorting,
+  // filtering and column toggle are progressive enhancements on top.
   const radios = groups.map((g, i) =>
     `<input type="radio" name="rptab" id="rt_${g.id}"${i === 0 ? ' checked' : ''} style="position:absolute;opacity:0;pointer-events:none;">`
   ).join('');
-
   const tabBar = groups.length > 1
-    ? `<div class="rp-tabbar">` + groups.map(g =>
-        `<label for="rt_${g.id}" class="rp-tab">${rpEsc(g.label)}</label>`).join('') + `</div>`
+    ? `<div class="tabbar">` + groups.map(g => `<label for="rt_${g.id}">${rpEsc(g.label)}</label>`).join('') + `</div>`
     : '';
-
   const panels = groups.map(g =>
-    `<div class="rp-panel ${g.id}">${g.tables.map(rpHtmlCard).join('')}</div>`).join('');
-
+    `<div class="panel ${g.id}">${g.tables.map(t => rpHtmlCard(t, n++)).join('')}</div>`).join('');
   const rules = groups.map(g =>
-    `#rt_${g.id}:checked ~ #rp_wrap .${g.id}{display:block}\n` +
-    `#rt_${g.id}:checked ~ #rp_wrap .rp-tabbar label[for="rt_${g.id}"]{color:${RP_H.live};border-color:${RP_H.live};background:rgba(217,122,6,.09)}`
+    `#rt_${g.id}:checked ~ #wrap .${g.id}{display:block}\n` +
+    `#rt_${g.id}:checked ~ #wrap .tabbar label[for="rt_${g.id}"]{color:${RP_H.live};border-color:${RP_H.live};background:rgba(217,122,6,.09)}`
   ).join('\n');
 
   const html =
@@ -3443,23 +3506,101 @@ function rpBuildHtml() {
 <title>Road Power Report ${rpEsc(rpActiveDMY() || '')}</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;700&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <style>
-body{margin:0;padding:20px;background:${RP_H.soft};-webkit-text-size-adjust:100%}
-#rp_wrap{max-width:1600px;margin:0 auto}
-.rp-tabbar{display:flex;gap:6px;margin:0 0 14px;flex-wrap:wrap}
-.rp-tab{padding:7px 14px;cursor:pointer;border:1px solid ${RP_H.ash};background:transparent;
- color:${RP_H.mute};${cond}font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em}
-.rp-panel{display:none}
+body{margin:0;padding:18px;background:${RP_H.soft};-webkit-text-size-adjust:100%}
+#wrap{max-width:1600px;margin:0 auto}
+.tabbar{display:flex;gap:6px;margin:0 0 14px;flex-wrap:wrap}
+.tabbar label{padding:7px 14px;cursor:pointer;border:1px solid ${RP_H.ash};color:${RP_H.mute};${cond}font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em}
+.panel{display:none}
+.card{margin:0 0 22px;border:1px solid ${RP_H.ash};background:${RP_H.paper}}
+.cap{padding:12px 15px 10px;border-bottom:2px solid ${RP_H.ink}}
+.cap-t{${cond}font-size:15px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:${RP_H.ink}}
+.cap-m{${mono}font-size:10px;color:${RP_H.mute};margin-top:4px}
+.kpis{display:flex;flex-wrap:wrap;gap:1px;background:${RP_H.ash};border-bottom:1px solid ${RP_H.ash}}
+.kpi{flex:1 1 130px;background:${RP_H.paper};padding:10px 14px}
+.kpi span{display:block;${cond}font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${RP_H.mute}}
+.kpi b{display:block;${mono}font-size:19px;font-weight:700;color:${RP_H.ink};margin-top:3px}
+.kpi:first-child b{color:${RP_H.live}}
+.ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:9px 14px;border-bottom:1px solid ${RP_H.ash}}
+.ctl input{flex:1 1 170px;min-width:130px;padding:6px 9px;border:1px solid ${RP_H.ash};background:#fff;color:${RP_H.ink};${mono}font-size:11px;outline:none}
+.ctl input:focus{border-color:${RP_H.live}}
+.ctl button{padding:6px 11px;cursor:pointer;border:1px solid ${RP_H.ash};background:transparent;color:${RP_H.mute};${cond}font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.ctl button[data-on="0"]{color:${RP_H.live};border-color:${RP_H.live}}
+.ctl .hint{${mono}font-size:9px;color:${RP_H.mute}}
+.scroll{overflow-x:auto}
+.rpt tbody.rpt-body tr:nth-child(even) td{background:rgba(20,26,33,.022)}
+.rpt tbody.rpt-body tr.pin td{background:rgba(217,122,6,.11)}
+.rpt th .ar{color:${RP_H.live};font-size:9px}
+.foot{padding:7px 15px;${mono}font-size:10px;color:${RP_H.mute};border-top:1px solid ${RP_H.ash}}
+.stamp{${cond}font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:${RP_H.mute};padding:2px 2px 10px}
 ${rules}
-@media print{.rp-tabbar{display:none}.rp-panel{display:block !important}}
+@media print{.tabbar,.ctl{display:none}.panel{display:block !important}}
 </style>
 </head>
 <body>
 ${radios}
-<div id="rp_wrap">
+<div id="wrap">
 ${tabBar}
 ${panels}
-<div style="${cond}font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:${RP_H.mute};padding:2px 2px 10px;">MCL road despatch · generated ${rpEsc(new Date().toLocaleString('en-IN'))}</div>
+<div class="stamp">MCL road despatch · generated ${rpEsc(new Date().toLocaleString('en-IN'))}</div>
 </div>
+<scr` + `ipt>
+(function(){
+  var num = function(td){ var v = td.getAttribute('data-v'); return v === null ? null : parseFloat(v); };
+
+  // sort the data rows only — month totals and averages stay put
+  [].forEach.call(document.querySelectorAll('table.rpt'), function(tb){
+    var body = tb.querySelector('.rpt-body');
+    if (!body) return;
+    [].forEach.call(tb.querySelectorAll('thead th'), function(th, i){
+      th.onclick = function(){
+        var dir = th.getAttribute('data-dir') === 'desc' ? 'asc' : 'desc';
+        [].forEach.call(tb.querySelectorAll('thead th'), function(x){
+          x.removeAttribute('data-dir');
+          var a = x.querySelector('.ar'); if (a) a.parentNode.removeChild(a);
+        });
+        th.setAttribute('data-dir', dir);
+        var rows = [].slice.call(body.rows);
+        rows.sort(function(a,b){
+          var an = num(a.cells[i]), bn = num(b.cells[i]);
+          if (an !== null && bn !== null) return dir === 'desc' ? bn - an : an - bn;
+          var at = a.cells[i].textContent, bt = b.cells[i].textContent;
+          return dir === 'desc' ? bt.localeCompare(at) : at.localeCompare(bt);
+        });
+        rows.forEach(function(r){ body.appendChild(r); });
+        th.insertAdjacentHTML('beforeend', ' <span class="ar">' + (dir === 'desc' ? '\\u25BC' : '\\u25B2') + '</span>');
+      };
+    });
+    // tap a row to hold it while scanning across a wide month
+    [].forEach.call(body.rows, function(r){
+      r.onclick = function(){ r.className = r.className ? '' : 'pin'; };
+    });
+  });
+
+  // filter
+  [].forEach.call(document.querySelectorAll('[data-search]'), function(inp){
+    inp.oninput = function(){
+      var tb = document.getElementById(inp.getAttribute('data-search'));
+      var q = inp.value.trim().toUpperCase();
+      [].forEach.call(tb.querySelectorAll('.rpt-body tr'), function(r){
+        r.style.display = (!q || r.cells[0].textContent.toUpperCase().indexOf(q) > -1) ? '' : 'none';
+      });
+    };
+  });
+
+  // collapse the day columns down to the summary figures
+  [].forEach.call(document.querySelectorAll('[data-days]'), function(btn){
+    btn.onclick = function(){
+      var tb = document.getElementById(btn.getAttribute('data-days'));
+      var on = btn.getAttribute('data-on') === '1';
+      btn.setAttribute('data-on', on ? '0' : '1');
+      btn.textContent = (on ? 'Show' : 'Hide') + ' day-by-day';
+      [].forEach.call(tb.querySelectorAll('[data-k="day"]'), function(el){
+        el.style.display = on ? 'none' : '';
+      });
+    };
+  });
+})();
+<\/script>
 </body>
 </html>`;
 
