@@ -1025,6 +1025,12 @@ body.dark .rp-card {
 /* averages read as a distinct measure, not another tonnage */
 .rp-avgc, .rp-t th.rp-avgc { color: var(--avg) !important; font-weight: 700; }
 .rp-t tr.rp-avg td { background: var(--ash-soft); color: var(--avg); font-weight: 700; }
+.rp-t tr.rp-ref td { background: var(--ash-soft); color: var(--ink); font-weight: 600; }
+.rp-t tr.rp-ref td.rp-lead {
+  background: var(--ash-soft); color: var(--ink);
+  font-family: 'IBM Plex Sans Condensed', sans-serif;
+  letter-spacing: .06em; text-transform: uppercase; font-size: 11px;
+}
 .rp-t tr.rp-avg td.rp-lead {
   background: var(--ash-soft); color: var(--avg);
   font-family: 'IBM Plex Sans Condensed', sans-serif;
@@ -1065,10 +1071,19 @@ body.dark .rp-card {
   .rp-sw-track, .rp-sw-knob { transition:none; }
 }
 
+
+.rp-pin {
+  padding:4px 9px; border-radius:6px; cursor:pointer; white-space:nowrap;
+  border:1px solid var(--border); background:transparent; color:var(--dim);
+  font-family:'IBM Plex Sans Condensed',sans-serif; font-size:10px; font-weight:700;
+  letter-spacing:.07em; text-transform:uppercase;
+}
+.rp-pin.on { border-color:#d97a06; color:#d97a06; background:rgba(217,122,6,.1); }
+.rp-pin:active { opacity:.7; }
 /* saved-days list */
 .rp-dgrp {
-  display:grid; grid-template-columns:22px 1fr auto auto auto; gap:8px; align-items:center;
-  padding:8px 10px; background:var(--bg); cursor:pointer;
+  display:grid; grid-template-columns:22px 1fr auto auto auto auto; gap:8px; align-items:center;
+  padding:8px 10px; background:var(--bg);
   border-top:2px solid var(--border);
 }
 .rp-dgrp input { width:16px; height:16px; accent-color:#d97a06; cursor:pointer; }
@@ -1151,7 +1166,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B7-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B8-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -2254,6 +2269,7 @@ async function saveRpSettings() {
     historyPath: histPath,
     r1Daywise: pr0.r1Daywise !== false,   // owned by the switch above the report
     r2Daywise: pr0.r2Daywise !== false,
+    r2Months:  pr0.r2Months || [],        // owned by the Saved days view
     parties,
   } });
 
@@ -2476,7 +2492,12 @@ async function saveRpAllDays() {
 }
 
 // ── Saved days: review what is stored, clear any of it ────────────────
+// Months whose Total and Avg / day appear in the source-wise report.
+let _rpPins = new Set();
+
 async function openRpDays() {
+  const pr = appSettings.powerReport || {};
+  _rpPins = new Set(pr.r2Months || []);
   document.getElementById('rpDaysOverlay').style.display = 'block';
   document.getElementById('rpDaysList').innerHTML = '<div class="rp-count" style="padding:14px;">Loading…</div>';
   await loadRpHistory(true);
@@ -2484,7 +2505,12 @@ async function openRpDays() {
 }
 function closeRpDays() {
   document.getElementById('rpDaysOverlay').style.display = 'none';
+  const pr = appSettings.powerReport = appSettings.powerReport || {};
+  const chosen = [..._rpPins].sort();
+  const changed = JSON.stringify(chosen) !== JSON.stringify((pr.r2Months || []).slice().sort());
+  pr.r2Months = chosen;
   renderRpReports();
+  if (changed) rpPersistPrefs();
 }
 
 function rpDayTotal(rec) {
@@ -2517,13 +2543,15 @@ function renderRpDays() {
     const tot = mk.reduce((a,k) => a + rpDayTotal(days[k]), 0);
     const avg = tot / mk.length;
     const label = RP_MON[+m.slice(5,7) - 1] + ' ' + m.slice(0,4);
-    html += `<label class="rp-dgrp" data-mon="${m}">
-      <input type="checkbox" data-mon-cb="${m}">
+    const pinned = _rpPins.has(m);
+    html += `<div class="rp-dgrp" data-mon="${m}">
+      <input type="checkbox" data-mon-cb="${m}" title="Select every day in ${label}">
       <span class="rp-dmon">${label}</span>
       <span class="rp-dmeta">${mk.length} day${mk.length > 1 ? 's' : ''}</span>
       <span class="rp-dmtot">Total ${rpNum(tot) || '0'}</span>
       <span class="rp-dmavg">Avg / day ${rpNum(avg) || '0'}</span>
-    </label>`;
+      <button class="rp-pin${pinned ? ' on' : ''}" data-pin="${m}" title="Show this month's Total and Avg / day in the source-wise report">${pinned ? '★ Shown' : '☆ Show'}</button>
+    </div>`;
     mk.forEach(k => {
       const rec = days[k];
       html += `<label class="rp-drow" data-mon="${m}">
@@ -2546,6 +2574,14 @@ function renderRpDays() {
     };
   });
   list.querySelectorAll('.rp-drow input').forEach(cb => cb.onchange = () => { rpDaysSyncMonths(); rpDaysSyncBtn(); });
+  list.querySelectorAll('[data-pin]').forEach(b => {
+    b.onclick = e => {
+      e.preventDefault(); e.stopPropagation();
+      const m = b.dataset.pin;
+      if (_rpPins.has(m)) _rpPins.delete(m); else _rpPins.add(m);
+      renderRpDays();
+    };
+  });
   rpDaysSyncMonths();
   rpDaysSyncBtn();
 }
@@ -2662,6 +2698,7 @@ async function rpPersistPrefs() {
       powerReport: Object.assign({}, onDisk.powerReport || {}, {
         r1Daywise: pr.r1Daywise !== false,
         r2Daywise: pr.r2Daywise !== false,
+        r2Months:  pr.r2Months || [],
       }),
     });
     const put = await fetch(
@@ -2739,6 +2776,29 @@ function rpCodesOf(p) {
   if (p.codes && p.codes.length) return p.codes.map(String);
   return [String(p.code)];
 }
+// Roll every stored day of one month ("2026-07") into a single map.
+function rpAggMonth(mk) {
+  const out = { key: mk, days: 0, pc: {},
+                label: RP_MON[+mk.slice(5,7) - 1] + '-' + mk.slice(0,4) };
+  const src = (rpHist && rpHist.days) || {};
+  Object.keys(src).forEach(k => {
+    if (k.slice(0,7) !== mk) return;
+    out.days++;
+    const pc = src[k].pc || {};
+    for (const kk in pc) out.pc[kk] = (out.pc[kk] || 0) + pc[kk];
+  });
+  return out;
+}
+
+// Months pinned in the Saved days view, shown as comparison rows.
+// Nothing pinned → fall back to the month before the one on screen.
+function rpRefMonths(md) {
+  const pr = appSettings.powerReport || {};
+  const pinned = (pr.r2Months || []).slice().sort();
+  if (pinned.length) return pinned.map(rpAggMonth).filter(a => a.days);
+  return md.prev.days ? [md.prev] : [];
+}
+
 // sum a day map for one party row (all its codes, all collieries)
 function rpSumParty(pc, codes) {
   let s = 0;
@@ -2787,10 +2847,11 @@ function rpTableHTML(t) {
   t.head.forEach(c => h += `<th class="${c.k === 'lead' ? 'rp-lead' : c.k === 'on' ? 'rp-on' : c.k === 'sub' ? 'rp-sub' : c.k === 'day' ? 'rp-day' : c.k === 'avg' ? 'rp-avgc' : ''}">${rpEsc(c.t)}</th>`);
   h += '</tr></thead><tbody>';
   t.rows.forEach(r => {
-    h += `<tr${r.k === 'sum' ? ' class="rp-sum"' : r.k === 'avg' ? ' class="rp-avg"' : ''}>`;
+    h += `<tr${r.k === 'sum' ? ' class="rp-sum"' : r.k === 'avg' ? ' class="rp-avg"' : r.k === 'ref' ? ' class="rp-ref"' : ''}>`;
     r.cells.forEach((c, i) => {
       const k = t.head[i] ? t.head[i].k : 'num';
       const zero = (k !== 'lead' && r.k === 'data' && c.v === 0) ? ' rp-zero' : '';
+      void zero;
       const txt  = c.txt != null ? c.txt : (typeof c.v === 'number' ? (c.v ? rpNum(c.v) : (r.k === 'data' ? '·' : '')) : c.v);
       const tip  = c.title ? ` title="${rpEsc(c.title)}"` : '';
       if (k === 'lead') h += `<td class="rp-lead"${tip}><span class="rp-nm">${c.html || rpEsc(txt)}</span></td>`;
@@ -2933,6 +2994,7 @@ function renderRp2(md) {
 
   const dayList = [];
   for (let d = 1; d <= md.dim; d++) if (md.days[d]) dayList.push(d);
+  const refMonths = rpRefMonths(md);
 
   parties.forEach(p => {
     const codes = rpCodesOf(p);
@@ -2958,12 +3020,12 @@ function renderRp2(md) {
     });
 
     const outRows = [];
-    if (md.prev.days) {
-      const pv = cols.map(c => rpSumPartyColl(md.prev.pc, codes, splitCodes(c)));
-      const pt = real.reduce((s,c) => s + rpSumPartyColl(md.prev.pc, codes, splitCodes(c)), 0);
-      outRows.push({ k: 'avg', cells: [{ v: md.prev.label + ' total' }, ...pv.map(v => ({ v })), { v: pt }] });
-      outRows.push({ k: 'avg', cells: [{ v: md.prev.label + ' avg / day' }, ...pv.map(v => ({ v: v / md.prev.days })), { v: pt / md.prev.days }] });
-    }
+    refMonths.forEach(ref => {
+      const pv = cols.map(c => rpSumPartyColl(ref.pc, codes, splitCodes(c)));
+      const pt = real.reduce((s,c) => s + rpSumPartyColl(ref.pc, codes, splitCodes(c)), 0);
+      outRows.push({ k: 'ref', cells: [{ v: ref.label + ' total' }, ...pv.map(v => ({ v })), { v: pt }] });
+      outRows.push({ k: 'avg', cells: [{ v: ref.label + ' avg / day' }, ...pv.map(v => ({ v: v / ref.days })), { v: pt / ref.days }] });
+    });
 
     const dayRow = (label, d) => {
       const { v, t } = cellsFor(md.days[d].pc);
@@ -3226,7 +3288,7 @@ function rpColLetter(n) {           // 1 → A
 }
 
 // style ids written into styles.xml below
-const RP_S = { title:1, meta:2, head:3, lead:4, num:5, key:6, on:7, sub:8, sumLead:9, sum:10, avgLead:11, avg:12, avgCol:13 };
+const RP_S = { title:1, meta:2, head:3, lead:4, num:5, key:6, on:7, sub:8, sumLead:9, sum:10, avgLead:11, avg:12, avgCol:13, ref:14 };
 
 function rpSheetXml(tables) {
   let rowNo = 0, maxCols = 1;
@@ -3243,9 +3305,10 @@ function rpSheetXml(tables) {
       push(r.cells.map((c, i) => {
         const k = t.head[i] ? t.head[i].k : 'num';
         let s;
-        if (k === 'lead') s = r.k === 'sum' ? RP_S.sumLead : r.k === 'avg' ? RP_S.avgLead : RP_S.lead;
+        if (k === 'lead') s = r.k === 'sum' ? RP_S.sumLead : (r.k === 'avg' || r.k === 'ref') ? RP_S.avgLead : RP_S.lead;
         else if (r.k === 'sum') s = RP_S.sum;
         else if (r.k === 'avg') s = RP_S.avg;
+        else if (r.k === 'ref') s = RP_S.ref;
         else if (k === 'avg') s = RP_S.avgCol;
         else if (k === 'on')  s = RP_S.on;
         else if (k === 'key') s = RP_S.key;
@@ -3320,7 +3383,7 @@ function rpStylesXml() {
       '<top style="thin"><color rgb="FF9AA5B1"/></top><bottom style="thin"><color rgb="FF9AA5B1"/></bottom><diagonal/></border>' +
     '</borders>' +
     '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-    '<cellXfs count="14">' +
+    '<cellXfs count="15">' +
       '<xf xfId="0" numFmtId="0" fontId="0" fillId="0" borderId="0"/>' +                                                                                     // 0 normal
       '<xf xfId="0" numFmtId="0" fontId="1" fillId="0" borderId="1" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>' +   // 1 title
       '<xf xfId="0" numFmtId="0" fontId="2" fillId="0" borderId="1" applyFont="1" applyBorder="1"/>' +                                                       // 2 meta
@@ -3335,6 +3398,7 @@ function rpStylesXml() {
       '<xf xfId="0" numFmtId="0" fontId="7" fillId="4" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left"/></xf>' +  // 11 avgLead
       '<xf xfId="0" numFmtId="164" fontId="7" fillId="4" borderId="1" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>' +                 // 12 avg
       '<xf xfId="0" numFmtId="164" fontId="7" fillId="0" borderId="1" applyNumberFormat="1" applyFont="1" applyBorder="1"/>' +                                // 13 avg column
+      '<xf xfId="0" numFmtId="164" fontId="3" fillId="4" borderId="1" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>' +                  // 14 month total
     '</cellXfs>' +
     '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
     '<dxfs count="0"/>' +
@@ -3767,7 +3831,8 @@ loadDbFromGitHub();
       <div class="stt-section">
         <div class="rp-list-wrap"><div class="rp-scroll" id="rpDaysList" style="max-height:400px;"></div></div>
         <div class="stt-hint" style="margin-top:6px;">
-          Clearing a day removes its figures from both reports. Load that day's despatch file and save it again to put it back.
+          <strong>☆ Show</strong> puts that month's Total and Avg / day into the source-wise report as comparison rows — pin as many as you like.
+          The tick boxes are for selecting days to total or clear; clearing a day removes its figures from both reports, and you put it back by loading that day's despatch file and saving it again.
         </div>
       </div>
     </div>
