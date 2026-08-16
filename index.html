@@ -1,0 +1,2523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>[TEST] Road Power Report — MCL</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root {
+  /* Light theme (default) */
+  --bg:       #f0f2f5;
+  --surface:  #ffffff;
+  --raise:    #f7f8fa;
+  --edge:     #dde3ec;
+  --line:     #c8d2e0;
+  --amber:    #d4860a;
+  --amber-lo: #fff3d6;
+  --green:    #1a9e5c;
+  --green-lo: #e6f7ef;
+  --red:      #c0392b;
+  --blue:     #1a6fc4;
+  --dim:      #7a8fa8;
+  --mid:      #4a6080;
+  --text:     #1a2436;
+  --mono:     'IBM Plex Mono', monospace;
+  --sans:     'IBM Plex Sans', sans-serif;
+  --border:   #dde3ec;
+}
+body.dark {
+  --bg:       #0e1117;
+  --surface:  #161b24;
+  --raise:    #1c2333;
+  --edge:     #253047;
+  --line:     #2e3d56;
+  --amber:    #f0a500;
+  --amber-lo: #3a2800;
+  --green:    #2fc97e;
+  --green-lo: #0d2e1e;
+  --red:      #e05454;
+  --blue:     #4a9eff;
+  --dim:      #5a7299;
+  --mid:      #8ba3c2;
+  --text:     #dde6f4;
+  --border:   #253047;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { font-size:16px; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100svh;
+  -webkit-font-smoothing: antialiased;
+  transition: background .2s, color .2s;
+  overscroll-behavior-y: auto;
+}
+/* ── THEME TOGGLE ── */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.theme-toggle-label {
+  font-size: 10px;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  user-select: none;
+}
+.toggle-track {
+  width: 36px; height: 20px;
+  background: var(--line);
+  border-radius: 10px;
+  position: relative;
+  transition: background .2s;
+  flex-shrink: 0;
+}
+.toggle-track.on { background: var(--amber); }
+.toggle-thumb {
+  position: absolute;
+  width: 14px; height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  top: 3px; left: 3px;
+  transition: left .18s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+.toggle-track.on .toggle-thumb { left: 19px; }
+/* ── HEADER — shown only on drop screen ── */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--edge);
+}
+.app-header.hidden { display: none; }
+.mcl-badge {
+  width: 32px; height: 32px;
+  background: var(--amber);
+  color: #fff;
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 10px;
+  display: flex; align-items: center; justify-content: center;
+  letter-spacing: .5px;
+  flex-shrink: 0;
+  clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+}
+.app-name { flex: 1; min-width: 0; }
+.app-name h1 {
+  font-size: 14px; font-weight: 600; color: var(--text);
+  letter-spacing: .3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.app-name p {
+  font-size: 10px; color: var(--dim); letter-spacing: .5px;
+  text-transform: uppercase; margin-top: 1px;
+}
+.header-date {
+  font-family: var(--mono); font-size: 11px; color: var(--amber);
+  text-align: right; letter-spacing: .5px; flex-shrink: 0;
+  max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.header-date span { display: block; color: var(--dim); font-size: 10px; margin-top: 1px; }
+/* ── EMBEDDED THEME TOGGLE (in report-meta row) ── */
+.theme-icon-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--raise);
+  border: 1px solid var(--line);
+  padding: 6px 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color .15s;
+}
+.theme-icon-btn:active { border-color: var(--amber); }
+.theme-icon-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+/* ── UPLOAD ZONE ── */
+#drop-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100svh - 69px);
+  padding: 32px 20px;
+  gap: 24px;
+}
+.drop-box {
+  width: 100%;
+  max-width: 400px;
+  border: 1.5px dashed var(--line);
+  padding: 44px 32px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+.drop-box:hover, .drop-box.over {
+  border-color: var(--amber);
+  background: var(--amber-lo);
+}
+.drop-icon {
+  font-size: 40px;
+  margin-bottom: 14px;
+  display: block;
+}
+.drop-box h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.drop-box p {
+  font-size: 13px;
+  color: var(--dim);
+}
+.drop-tags {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  color: var(--mid);
+  letter-spacing: .4px;
+}
+.privacy-note {
+  font-size: 11px;
+  color: var(--edge);
+  letter-spacing: .3px;
+}
+/* ── MAIN DASHBOARD ── */
+#dashboard {
+  display: none;
+  padding: 10px 10px calc(env(safe-area-inset-bottom, 0px) + 20px) 8px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+/* ── REPORT META ── */
+.report-meta {
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.meta-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 3px; }
+.meta-val   { font-family: var(--mono); font-size: 13px; color: var(--text); }
+.open-new-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--mid);
+  font-family: var(--sans);
+  font-size: 12px;
+  padding: 7px 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color .15s, color .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.open-new-btn:hover { border-color: var(--amber); color: var(--amber); }
+.open-new-btn svg { width:13px; height:13px; }
+.section-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.section-label svg { width:13px; height:13px; color:var(--amber); }
+@keyframes slideUp { from { transform: translateY(100%); opacity:0; } to { transform: translateY(0); opacity:1; } }
+/* ── SHEET FOOTER ── */
+/* ── SETTINGS MODAL ──────────────────────────────── */
+/* ── Custom Time Picker ─────────────────────────── */
+.stt-time-btn {
+  width: 100%; padding: 6px 10px;
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 8px; cursor: pointer;
+  font-family: var(--mono); font-size: 13px; color: var(--text);
+  text-align: left; transition: border-color .15s;
+}
+.stt-time-btn:hover { border-color: var(--amber); }
+.stt-time-picker {
+  position: relative; display: inline-flex;
+  align-items: center; gap: 6px;
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 6px 10px; cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+  font-family: var(--mono); font-size: 13px;
+  color: var(--text); user-select: none;
+  width: 100%; box-sizing: border-box;
+}
+.stt-time-picker:hover { border-color: var(--mid); }
+.stt-time-picker.open { border-color: var(--amber); box-shadow: 0 0 0 3px var(--amber-lo); }
+.stt-time-picker-val { flex: 1; letter-spacing: .5px; }
+.stt-time-picker-icon { color: var(--border); font-size: 10px; flex-shrink: 0; }
+.stt-clock-popup {
+  display: none; position: fixed;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 16px; box-shadow: 0 16px 48px rgba(0,0,0,.28);
+  z-index: 10000; padding: 16px; width: 248px;
+}
+.stt-time-picker.open .stt-clock-popup { display: block; }
+.stt-clock-header {
+  display: flex; align-items: center;
+  gap: 8px; margin-bottom: 10px;
+}
+.stt-clock-display {
+  font-family: var(--mono); font-size: 28px; font-weight: 700;
+  color: var(--text); letter-spacing: 1px; flex: 1;
+}
+.stt-clock-display span.active { color: var(--amber); }
+.stt-clock-ampm { display: flex; flex-direction: column; gap: 4px; }
+.stt-ampm-btn {
+  background: none; border: 1.5px solid var(--border);
+  border-radius: 6px; font-size: 10px; font-weight: 700;
+  padding: 4px 7px; cursor: pointer; color: var(--dim);
+  transition: all .12s; letter-spacing: .5px;
+}
+.stt-ampm-btn.active { background: var(--amber); border-color: var(--amber); color: #fff; }
+.stt-clock-svg { display: block; margin: 0 auto; cursor: crosshair; }
+.stt-clock-face { fill: var(--bg); stroke: var(--border); stroke-width: 1.5; }
+.stt-clock-center { fill: var(--amber); }
+.stt-clock-hand-h { stroke: var(--text); stroke-width: 3.5; stroke-linecap: round; }
+.stt-clock-hand-m { stroke: var(--amber); stroke-width: 2.5; stroke-linecap: round; }
+.stt-clock-tick { stroke: var(--border); stroke-width: 1; }
+.stt-clock-tick.major { stroke: var(--dim); stroke-width: 1.5; }
+.stt-clock-num { font-size: 9px; fill: var(--dim); text-anchor: middle; dominant-baseline: central; font-family: var(--mono); font-weight: 600; }
+.stt-clock-mode { display: flex; gap: 4px; margin-top: 8px; justify-content: center; }
+.stt-clock-mode-btn {
+  font-size: 10px; font-weight: 700; letter-spacing: .5px;
+  padding: 3px 12px; border-radius: 5px; cursor: pointer;
+  border: 1.5px solid var(--border); color: var(--dim); background: none;
+  transition: all .12s;
+}
+.stt-clock-mode-btn.active { border-color: var(--amber); color: var(--amber); background: var(--amber-lo); }
+.stt-clock-ok {
+  margin-top: 8px; width: 100%; padding: 7px;
+  background: var(--green); color: #fff; border: none;
+  border-radius: 8px; font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: opacity .15s;
+}
+.stt-clock-ok:active { opacity: .8; }
+/* ═══════════════ SETTINGS MODAL ════════════════════ */
+.stt-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.65);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  overflow-y: auto;
+  padding: 24px 16px;
+  box-sizing: border-box;
+  align-items: flex-start;
+  justify-content: center;
+}
+.stt-panel {
+  background: var(--surface);
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1020px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 80px rgba(0,0,0,.25);
+  overflow: hidden;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+.stt-header {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.stt-title {
+  font-size: 15px; font-weight: 700;
+  color: var(--text); letter-spacing: .2px;
+}
+.stt-title-sub {
+  font-size: 11px; color: var(--dim);
+  font-weight: 400; margin-top: 1px;
+}
+.stt-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--dim); font-size: 20px; line-height: 1;
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s;
+}
+.stt-close:hover { background: var(--bg); color: var(--text); }
+.stt-body {
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 0 32px;
+}
+.stt-col-full { grid-column: 1 / -1; }
+.stt-section { margin-bottom: 20px; }
+.stt-section:last-child { margin-bottom: 0; }
+.stt-label {
+  display: block;
+  font-size: 11px; font-weight: 700;
+  color: var(--mid); text-transform: uppercase;
+  letter-spacing: .8px; margin-bottom: 6px;
+}
+.stt-input {
+  width: 100%; box-sizing: border-box;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  transition: border-color .15s, box-shadow .15s;
+  outline: none;
+}
+.stt-input:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px var(--amber-lo);
+}
+.stt-section-hdr {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.stt-section-hdr .stt-label { margin-bottom: 0; }
+.stt-add-btn {
+  font-size: 11px; font-weight: 700;
+  color: var(--green); background: var(--green-lo);
+  border: 1px solid var(--green);
+  border-radius: 6px; padding: 4px 10px;
+  cursor: pointer; letter-spacing: .3px;
+  transition: opacity .15s;
+  white-space: nowrap;
+}
+.stt-add-btn:active { opacity: .75; }
+/* ── Slots Table ── */
+.stt-slots-wrap {
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  overflow: visible;
+}
+.stt-slots-head {
+  display: grid;
+  grid-template-columns: 24px 1fr 72px 1fr 36px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0 4px;
+}
+.stt-slots-head span {
+  padding: 7px 8px;
+  font-size: 10px; font-weight: 700;
+  color: var(--dim); text-transform: uppercase; letter-spacing: .6px;
+}
+.stt-slot-row {
+  display: grid;
+  grid-template-columns: 24px 1fr 72px 1fr 36px;
+  align-items: center;
+  border-top: 1px solid var(--border);
+  padding: 5px 4px;
+  gap: 4px;
+  transition: transform .18s cubic-bezier(.25,.46,.45,.94);
+}
+.stt-slot-row:first-child { border-top: none; }
+.stt-slot-row:nth-child(even) { background: var(--bg); }
+/* ── Mines Table ── */
+.stt-mines-wrap {
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.stt-mines-head {
+  display: grid;
+  grid-template-columns: 24px 120px 90px 60px 1fr 36px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0 4px;
+}
+.stt-mines-head span {
+  padding: 7px 8px;
+  font-size: 10px; font-weight: 700;
+  color: var(--dim); text-transform: uppercase; letter-spacing: .6px;
+}
+.stt-mine-row {
+  display: grid;
+  grid-template-columns: 24px 120px 90px 60px 1fr 36px;
+  align-items: center;
+  border-top: 1px solid var(--border);
+  padding: 4px;
+  gap: 4px;
+  transition: transform .18s cubic-bezier(.25,.46,.45,.94);
+}
+.stt-mine-row:first-child { border-top: none; }
+.stt-mine-row:nth-child(even) { background: var(--bg); }
+.stt-mine-row.is-total { background: var(--amber-lo) !important; }
+/* shared input inside tables */
+.stt-cell-input {
+  width: 100%; box-sizing: border-box;
+  padding: 6px 8px;
+  border: 1.5px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  outline: none;
+  transition: border-color .15s, background .15s;
+}
+.stt-cell-input:focus {
+  border-color: var(--amber);
+  background: var(--surface);
+}
+.stt-cell-input.mono { font-family: var(--mono); }
+.stt-cell-input.center { text-align: center; text-transform: uppercase; }
+.stt-cell-input[type="number"] { text-align: center; font-family: var(--mono); }
+.stt-cell-input[type="time"] { font-family: var(--mono); font-size: 12px; }
+.stt-total-label {
+  padding: 6px 8px;
+  font-size: 12px; font-weight: 700;
+  color: var(--amber);
+}
+.stt-drag-handle {
+  display: flex; align-items: center; justify-content: center;
+  cursor: grab; color: var(--dim); font-size: 14px;
+  width: 24px; height: 100%; border-radius: 4px;
+  transition: color .12s; user-select: none; flex-shrink: 0;
+}
+.stt-drag-handle:hover { color: var(--amber); }
+.stt-row-dragging {
+  opacity: 0.25;
+  pointer-events: none;
+}
+.stt-row-drag-over {
+  border-top: 2.5px solid var(--amber) !important;
+}
+.stt-drag-ghost {
+  position: fixed; z-index: 9998;
+  pointer-events: none;
+  opacity: .88;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.22);
+  background: var(--surface);
+  border: 1.5px solid var(--amber);
+  transform: scale(1.02);
+  transition: transform .1s;
+  overflow: hidden;
+}
+.stt-del-btn {
+  background: none; border: none;
+  color: var(--dim); font-size: 13px;
+  cursor: pointer; width: 28px; height: 28px;
+  border-radius: 6px; margin: 0 auto; display: flex;
+  align-items: center; justify-content: center;
+  transition: background .15s, color .15s;
+}
+.stt-del-btn:hover { background: #fde8e8; color: #c0392b; }
+.stt-hint {
+  font-size: 11px; color: var(--dim);
+  margin-top: 6px; line-height: 1.4;
+}
+.stt-status {
+  font-size: 12px; color: var(--dim);
+  min-height: 16px; text-align: center;
+  padding: 0 24px 4px;
+}
+.stt-footer {
+  display: flex; gap: 10px; align-items: center;
+  padding: 14px 24px 18px;
+  border-top: 1px solid var(--border);
+  justify-content: flex-end;
+}
+.stt-btn-save {
+  padding: 10px 28px;
+  background: var(--green); color: #fff;
+  border: none; border-radius: 8px;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer; letter-spacing: .3px;
+  transition: opacity .15s;
+}
+.stt-btn-save:active { opacity: .8; }
+.stt-btn-cancel {
+  padding: 10px 18px;
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px; color: var(--mid);
+  cursor: pointer; transition: border-color .15s, color .15s;
+}
+.stt-btn-cancel:hover { border-color: var(--mid); color: var(--text); }
+/* ── MULTI-DAY SECTION ── */
+/* ── PROVISIONAL WATERMARK ── */
+.provisional-mark {
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--dim);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  padding: 8px 0 4px;
+  user-select: none;
+  opacity: .55;
+}
+.multiday-tabs-wrap {
+  margin-bottom: 12px;
+}
+.multiday-tabs-label {
+  font-size: 10px;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  font-family: var(--sans);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.multiday-tabs-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--edge);
+}
+.multiday-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.multiday-tabs::-webkit-scrollbar { display: none; }
+.multiday-tab {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 4px;
+  background: var(--raise);
+  color: var(--dim);
+  cursor: pointer;
+  white-space: nowrap;
+  letter-spacing: .4px;
+  -webkit-tap-highlight-color: transparent;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.multiday-tab:hover:not(.active) {
+  border-color: var(--mid);
+  color: var(--mid);
+}
+.multiday-tab.active {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #000;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+/* Compact buttons on mobile */
+@media (max-width: 480px) {
+  .share-btn { font-size: 10px !important; padding: 4px 6px !important; gap: 2px !important; }
+  .share-btn svg { width: 10px !important; height: 10px !important; }
+  .area-view-label, .trips-switch-label { font-size: 10px; }
+}
+/* Share button */
+.share-btn {
+  display: flex; align-items: center; gap: 4px;
+  background: none;
+  border: 1px solid var(--blue);
+  color: var(--blue);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 7px;
+  cursor: pointer;
+  letter-spacing: .2px;
+  transition: background .15s;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.share-btn svg { width: 11px; height: 11px; flex-shrink: 0; transition: width .1s, height .1s; }
+.share-btn:active { background: rgba(74,158,255,.1); }
+/* mclho upload / db section */
+.db-card {
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.db-info { flex: 1; min-width: 0; }
+.db-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 2px; }
+.db-val   { font-family: var(--mono); font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.db-val.none { color: var(--dim); font-style: italic; }
+.db-upload-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: none;
+  border: 1px solid var(--green);
+  color: var(--green);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 7px 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: background .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.db-upload-btn:active { background: var(--green-lo); }
+.db-upload-btn svg { width: 13px; height: 13px; }
+/* Unknown DO banner */
+.unknown-banner {
+  display: none;
+  background: rgba(192,57,43,.09);
+  border: 1px solid var(--red);
+  border-left: 4px solid var(--red);
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--red);
+  font-family: var(--sans);
+  line-height: 1.5;
+}
+.unknown-banner.show { display: block; }
+/* ══════════════════════════════════════════════════════
+   GSheet table — Material Design, pastel zebra
+   ══════════════════════════════════════════════════════ */
+
+/* Gemini-specified colour rules */
+:root {
+  --gs-surface:       #ffffff;
+  --gs-surface-2:     #ffffff;
+  --gs-text:          #000000;
+  --gs-text-dim:      #000000;
+  --gs-hover:         #e8f8f8;
+
+  /* Title row — cyan */
+  --gs-header-bg:     #00ffff;
+  --gs-header-text:   #000000;
+
+  /* Column headers — tan/cream */
+  --gs-col-header-bg: #fce4d6;
+
+  /* Borders — solid black */
+  --gs-divider:       #000000;
+  --gs-divider-h:     #000000;
+
+  /* IBCF/TCF/MCL total rows — green */
+  --gs-cf-bg:         #d9ead3;
+  --gs-cf-text:       #38761d;
+  --gs-cf-accent:     #38761d;
+
+  /* MCL total row — same green */
+  --gs-mcl-bg:        #d9ead3;
+  --gs-mcl-text:      #38761d;
+  --gs-mcl-accent:    #38761d;
+
+  /* Highest rows — blue */
+  --gs-highest-bg:    #cfe2f3;
+  --gs-highest-txt:   #000000;
+
+  /* Mine group A (IBCF section) — pink/mauve first col */
+  --gs-mine-a-bg:     #ead1dc;
+  /* Mine group B (TCF section) — peach/beige first col */
+  --gs-mine-b-bg:     #fce5cd;
+
+  --gs-col-balance:   #ffffff;
+  --gs-col-target:    #ffffff;
+}
+body.dark {
+  --gs-surface:       #1a1a1a;
+  --gs-surface-2:     #1a1a10;
+  --gs-text:          #ffffff;
+  --gs-text-dim:      #cccccc;
+  --gs-hover:         #1a2a1a;
+
+  --gs-header-bg:     #2d5a1b;
+  --gs-header-text:   #ffffff;
+
+  --gs-divider:       #555555;
+  --gs-divider-h:     #888888;
+
+  --gs-cf-bg:         #1a2e10;
+  --gs-cf-text:       #92d050;
+  --gs-cf-accent:     #70ad47;
+
+  --gs-mcl-bg:        #0a1e3a;
+  --gs-mcl-text:      #9dc3e6;
+  --gs-mcl-accent:    #2e75b6;
+
+  --gs-highest-bg:    #0a1a2e;
+  --gs-highest-txt:   #9dc3e6;
+
+  --gs-col-balance:   #1a1a1a;
+  --gs-col-target:    #1a1a1a;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (min-width: 480px) {
+  .modal-backdrop { align-items: center; }
+  .clock-sheet {
+    border: 1px solid var(--edge);
+    border-radius: 2px;
+    animation: fadeIn .18s ease;
+    max-height: 90svh;
+    overflow-y: auto;
+  }
+  @keyframes fadeIn { from { opacity:0; transform: scale(.97); } to { opacity:1; transform: scale(1); } }
+}
+/* ═══════════════════════════════════════════════════════
+   ROAD POWER REPORT — settings pane + report views
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Launcher button ── */
+.rp-open-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 5px 10px; border-radius: 7px; cursor: pointer;
+  border: 1.5px solid #ff8c00; color: #ff8c00;
+  background: transparent; font-size: 11px; font-weight: 700;
+  font-family: 'IBM Plex Sans', sans-serif; letter-spacing: .3px;
+  white-space: nowrap;
+}
+.rp-open-btn:active { opacity: .75; }
+.rp-open-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+/* ── Settings pane ── */
+.rp-toolbar {
+  display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.rp-search {
+  flex: 1; min-width: 160px; box-sizing: border-box;
+  padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 8px;
+  background: var(--bg); color: var(--text); font-size: 12px; outline: none;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+.rp-search:focus { border-color: var(--amber); }
+.rp-chip {
+  padding: 6px 10px; border-radius: 7px; cursor: pointer;
+  border: 1.5px solid var(--border); background: transparent;
+  color: var(--dim); font-size: 11px; font-weight: 700;
+  font-family: 'IBM Plex Sans', sans-serif; white-space: nowrap;
+}
+.rp-chip.on { border-color: var(--amber); color: var(--amber); background: var(--amber-lo); }
+.rp-list-wrap { border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; }
+.rp-list-head, .rp-party-row {
+  display: grid;
+  grid-template-columns: 92px 1fr 48px 40px 40px;
+  align-items: center; gap: 4px; padding: 0 6px;
+}
+.rp-list-head {
+  background: var(--bg); border-bottom: 1px solid var(--border);
+}
+.rp-list-head span {
+  padding: 7px 2px; font-size: 10px; font-weight: 700;
+  color: var(--dim); text-transform: uppercase; letter-spacing: .6px;
+}
+.rp-list-head span.c, .rp-party-row .c { text-align: center; }
+.rp-scroll { max-height: 340px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.rp-party-row { border-top: 1px solid var(--border); padding-top: 5px; padding-bottom: 5px; }
+.rp-party-row:first-child { border-top: none; }
+.rp-party-row:nth-child(even) { background: var(--bg); }
+.rp-party-row.sel { background: var(--amber-lo); }
+.rp-pcode { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+.rp-pname { font-size: 12px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rp-party-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--amber); cursor: pointer; }
+.rp-count { font-size: 10px; color: var(--dim); margin-top: 5px; }
+/* ── Report-2 column editor ── */
+.rp-r2-party {
+  border: 1.5px solid var(--border); border-radius: 10px;
+  margin-bottom: 10px; overflow: hidden;
+}
+.rp-r2-hdr {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  padding: 7px 10px; background: var(--bg); border-bottom: 1px solid var(--border);
+}
+.rp-r2-name { font-size: 12px; font-weight: 700; color: var(--text); }
+.rp-r2-sub  { font-size: 10px; color: var(--dim); font-family: var(--mono); }
+.rp-col-row {
+  display: grid; grid-template-columns: 1fr 96px 46px 30px;
+  align-items: center; gap: 4px; padding: 4px 6px;
+  border-top: 1px solid var(--border);
+}
+.rp-col-row:first-child { border-top: none; }
+.rp-col-head {
+  display: grid; grid-template-columns: 1fr 96px 46px 30px;
+  gap: 4px; padding: 0 6px; background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+.rp-col-head span {
+  padding: 5px 2px; font-size: 9px; font-weight: 700;
+  color: var(--dim); text-transform: uppercase; letter-spacing: .5px;
+}
+.rp-col-head span.c, .rp-col-row .c { text-align: center; }
+.rp-mini-btn {
+  padding: 4px 8px; border-radius: 6px; cursor: pointer;
+  border: 1.5px solid var(--border); background: transparent;
+  color: var(--mid); font-size: 10px; font-weight: 700;
+  font-family: 'IBM Plex Sans', sans-serif; white-space: nowrap;
+}
+.rp-mini-btn:active { opacity: .75; }
+/* ── Report view overlay ── */
+.rp-view-body { padding: 12px; }
+.rp-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.rp-tab {
+  padding: 7px 12px; border-radius: 8px; cursor: pointer;
+  border: 1.5px solid var(--border); background: transparent;
+  color: var(--dim); font-size: 11px; font-weight: 700;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+.rp-tab.on { border-color: #ff8c00; color: #ff8c00; background: rgba(255,140,0,.09); }
+.rp-note {
+  font-size: 11px; color: var(--dim); margin: 8px 2px 0;
+}
+.rp-warn {
+  font-size: 11px; color: #c0392b; margin: 8px 2px 0; font-weight: 600;
+}
+.rp-tblwrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+/* ── Report tables (reference Google Sheet theme) ── */
+.rp-table {
+  border-collapse: collapse; font-family: var(--mono);
+  font-size: 11px; background: #ffffff; color: #000000;
+  border: 2px solid #000000; margin-bottom: 18px;
+}
+.rp-table th, .rp-table td {
+  border: 1px solid #000000; padding: 3px 6px; white-space: nowrap;
+}
+.rp-table tr.rp-title th {
+  background: #00ffff; color: #000000; font-weight: 700;
+  font-size: 12px; text-align: center; letter-spacing: .3px;
+}
+.rp-table tr.rp-head th {
+  background: #fce4d6; color: #000000; font-weight: 700;
+  text-align: center; font-size: 10px;
+}
+.rp-table td.rp-name {
+  text-align: left; background: #ead1dc; font-weight: 600;
+  font-family: 'IBM Plex Sans', sans-serif; font-size: 11px;
+  max-width: 230px; overflow: hidden; text-overflow: ellipsis;
+}
+.rp-table td.rp-date { text-align: center; background: #fce5cd; font-weight: 600; }
+.rp-table td.rp-num  { text-align: right; }
+.rp-table tr.rp-total td {
+  background: #d9ead3; color: #38761d; font-weight: 700;
+}
+.rp-table tr.rp-total td.rp-name, .rp-table tr.rp-total td.rp-date {
+  background: #d9ead3; color: #38761d;
+}
+.rp-table td.rp-sub  { background: #cfe2f3; color: #1155cc; font-weight: 700; }
+.rp-table th.rp-sub  { background: #cfe2f3; color: #1155cc; }
+.rp-table td.rp-live { box-shadow: inset 0 0 0 2px #ff8c00; font-weight: 700; }
+.rp-table td.rp-zero { color: #999999; }
+
+/* ── Road Power standalone extras ── */
+#drop-screen { display:flex; flex-direction:column; align-items:center; gap:12px; padding:16px; }
+#dashboard   { padding:12px; max-width:1200px; margin:0 auto; }
+.rp-asof {
+  display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;
+  background:#00ffff; color:#000; font-family:var(--mono);
+  font-size:11px; padding:6px 10px; border:1px solid #000; margin-bottom:10px;
+}
+.rp-asof strong { font-size:13px; }
+.multiday-tabs-wrap { margin-bottom:10px; }
+
+</style>
+</head>
+<body>
+<header class="app-header" id="appHeader">
+  <div class="mcl-badge">⚡</div>
+  <div class="app-name">
+    <h1>Road Power Report</h1>
+    <p>MCL road despatch to the power sector</p>
+  </div>
+  <div class="header-date" id="headerDate"></div>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B1-test</span>
+  <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
+    <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
+      <circle cx="12" cy="12" r="4" stroke-width="2"/>
+      <path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+    </svg>
+    <svg id="iconMoonHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--mid);display:none">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+    </svg>
+    <div class="toggle-track" id="themeTrack"><div class="toggle-thumb"></div></div>
+  </button>
+  <button class="theme-icon-btn" onclick="openRpSettings()" title="Settings">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--mid)">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+    </svg>
+  </button>
+</header>
+
+<input type="file" id="fileInput"  accept=".xls,.xlsx,.htm,.html,.csv" style="display:none">
+<input type="file" id="mclhoInput" accept=".htm,.html,.mht,.mhtml,.xls,.txt" style="display:none">
+
+<!-- ══ DROP SCREEN ════════════════════════════════════ -->
+<div id="drop-screen">
+  <div class="drop-box" id="dropBox" onclick="document.getElementById('fileInput').click()">
+    <span class="drop-icon" style="font-size:64px">⚡</span>
+    <h2>Open ePass MCL Coalnet Report downloaded from i3MS</h2>
+    <p>Tap to browse or drop your file here</p>
+    <div class="drop-tags"><span class="tag">.XLS</span></div>
+  </div>
+
+  <div class="db-card" style="width:100%;max-width:400px;">
+    <div class="db-info">
+      <div class="db-label">DO Database</div>
+      <div class="db-val none" id="dbStatusDrop">Loading…</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-shrink:0;">
+      <button class="db-upload-btn" onclick="pasteFromClipboard()" style="border-color:var(--dim);color:var(--dim);">Paste</button>
+      <button class="db-upload-btn" onclick="document.getElementById('mclhoInput').click()">Upload</button>
+    </div>
+  </div>
+
+  <button class="rp-open-btn" onclick="showSavedReports()" style="padding:8px 14px;font-size:12px;">
+    View saved reports (no file needed)
+  </button>
+  <p class="privacy-note">Reports and party settings are shared with ePass Viewer.</p>
+</div>
+
+<!-- ══ DASHBOARD ══════════════════════════════════════ -->
+<div id="dashboard" style="display:none">
+
+  <div class="report-meta">
+    <div>
+      <div class="meta-label">Report Date</div>
+      <div class="meta-val" id="metaPeriod">—</div>
+    </div>
+    <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
+      <svg id="iconSun" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
+        <circle cx="12" cy="12" r="4" stroke-width="2"/>
+        <path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+      </svg>
+      <svg id="iconMoon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--mid);display:none">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+      </svg>
+      <div class="toggle-track" id="themeFabTrack"><div class="toggle-thumb"></div></div>
+    </button>
+    <button class="theme-icon-btn" onclick="openRpSettings()" title="Settings">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--mid)">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+    </button>
+    <button class="open-new-btn" onclick="document.getElementById('fileInput').click()">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+      </svg>
+      New File
+    </button>
+  </div>
+
+  <div class="db-card">
+    <div class="db-info">
+      <div class="db-label">DO Database</div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div class="db-val none" id="dbStatus">Loading…</div>
+        <span id="dbIndicator" style="display:none;flex-shrink:0;"></span>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;flex-shrink:0;">
+      <button class="db-upload-btn" onclick="pasteFromClipboard()" style="border-color:var(--dim);color:var(--dim);">Paste</button>
+      <button class="db-upload-btn" id="dbUpdateBtn" onclick="document.getElementById('mclhoInput').click()">Upload</button>
+    </div>
+  </div>
+
+  <div id="multiDaySection" style="display:none">
+    <div class="multiday-tabs-wrap">
+      <div class="multiday-tabs-label">Multi-day Report · Select Date</div>
+      <div class="multiday-tabs" id="multiDayTabs"></div>
+    </div>
+  </div>
+
+  <div class="unknown-banner" id="unknownBanner"></div>
+
+  <div class="rp-asof">
+    <span>Road despatch as of</span>
+    <strong id="asofTime">—</strong>
+    <span id="asofDate">—</span>
+  </div>
+
+  <div class="rp-tabs">
+    <button class="rp-tab on" id="rpTab1" onclick="rpSwitch(1)">Power Sector</button>
+    <button class="rp-tab"    id="rpTab2" onclick="rpSwitch(2)">Source-wise</button>
+    <span style="flex:1"></span>
+    <button class="rp-mini-btn" id="rpSaveDayBtn" onclick="saveRpDay()">💾 Save Day</button>
+    <button class="rp-mini-btn" onclick="loadRpHistory(true).then(renderRpReports)">↻ Reload</button>
+    <button class="rp-mini-btn" onclick="shareRpReport()">Share</button>
+  </div>
+
+  <div class="rp-note" id="rpViewSub">—</div>
+  <div id="rpStatus" class="rp-note"></div>
+  <div class="rp-tblwrap" id="rpPane1"></div>
+  <div class="rp-tblwrap" id="rpPane2" style="display:none;"></div>
+
+</div><!-- /dashboard -->
+
+<!-- ═══════════ SETTINGS PANE ═══════════ -->
+<div id="rpSettingsOverlay" class="stt-overlay" onclick="if(event.target===this)closeRpSettings()">
+  <div class="stt-panel">
+
+    <div class="stt-header">
+      <div>
+        <div class="stt-title">⚡ Road Power Report Settings</div>
+        <div class="stt-title-sub">Shared with ePass Viewer — only the party list is written back</div>
+      </div>
+      <button class="stt-close" onclick="closeRpSettings()">✕</button>
+    </div>
+
+    <div class="stt-body" style="grid-template-columns:1fr;">
+
+      <div class="stt-section">
+        <label class="stt-label">History Database File</label>
+        <input id="rp_histPath" class="stt-input" type="text"
+               placeholder="roadpower-history-test.json"
+               style="font-family:var(--mono);letter-spacing:.03em;">
+        <div class="stt-hint" style="margin-top:4px;">
+          JSON file inside the <strong>epass-db</strong> repo holding the day-wise history.
+          Keep the test app on a <em>different</em> filename from production.
+        </div>
+      </div>
+
+      <div class="stt-section">
+        <div class="stt-section-hdr">
+          <label class="stt-label">Parties</label>
+          <span class="rp-count" id="rpCount"></span>
+        </div>
+        <div class="rp-toolbar">
+          <input id="rpSearch" class="rp-search" type="search" placeholder="Search party name or code…" oninput="renderRpParties()">
+          <button class="rp-chip on" id="rpChipRecent" onclick="rpToggleChip('recent')">Recent</button>
+          <button class="rp-chip"    id="rpChipSel"    onclick="rpToggleChip('sel')">Selected</button>
+        </div>
+        <div class="rp-list-wrap">
+          <div class="rp-list-head">
+            <span>Party Code</span>
+            <span>Party Name</span>
+            <span class="c">Power</span>
+            <span class="c">R1</span>
+            <span class="c">R2</span>
+          </div>
+          <div class="rp-scroll" id="rpPartyBody"></div>
+        </div>
+        <div class="stt-hint" style="margin-top:6px;">
+          <strong>Power</strong> — treated as power sector, its figures are written to the history file.
+          <strong>R1</strong> — appears as a row in <em>Road Despatch to Power Sector</em>.
+          <strong>R2</strong> — gets a source-wise block in the second report.
+          Ticking R1 or R2 ticks Power automatically. One row per party code, so a party with several codes needs each code ticked.
+        </div>
+      </div>
+
+      <div class="stt-section">
+        <div class="stt-section-hdr">
+          <label class="stt-label">Report 2 — Colliery Columns per Party</label>
+        </div>
+        <div id="rpR2Body"></div>
+        <div class="stt-hint">
+          Codes: comma-separated colliery codes (e.g. 5046 or 5046,5075,5077).
+          Tick <strong>Sub</strong> for a subtotal column such as “Talcher Total” — subtotal columns are excluded from the row TOTAL.
+          A TOTAL column is added automatically.
+        </div>
+      </div>
+
+    </div>
+
+    <div id="rpSettingsStatus" class="stt-status"></div>
+
+    <div class="stt-footer">
+      <button class="stt-btn-cancel" onclick="closeRpSettings()">Cancel</button>
+      <button class="stt-btn-save" onclick="saveRpSettings()">Save</button>
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+const GH = {
+  owner:  'ajoneschristo',
+  repo:   'epass-db',
+  branch: 'main',
+  path:   'mclho.json',
+  get token() { return atob('TWFGZ0EzeksyZUlyaE9Ud3c2V0VUQlh3ams2Q1VwRUpDRDZoX3BoZw==').split('').reverse().join(''); },
+  api:    'https://api.github.com',
+};
+
+function updateDbStatus(syncing) {
+  const el = document.getElementById('dbStatus');
+  const elDrop = document.getElementById('dbStatusDrop');
+  el.style.cursor = ''; el.onclick = null;
+  if (syncing) {
+    el.textContent = 'Loading database…'; el.className = 'db-val';
+    if (elDrop) { elDrop.textContent = 'Loading…'; elDrop.className = 'db-val'; }
+    return;
+  }
+  if (mclhoCount === 0) {
+    el.textContent = 'No database loaded — tap Update to load'; el.className = 'db-val none';
+    if (elDrop) { elDrop.textContent = 'No database loaded'; elDrop.className = 'db-val none'; }
+  } else {
+    el.textContent = 'DO Database loaded'; el.className = 'db-val';
+    if (elDrop) { elDrop.textContent = 'DO Database loaded'; elDrop.className = 'db-val'; }
+  }
+}
+
+async function pasteFromClipboard() {
+  try {
+    if (!navigator.clipboard || !navigator.clipboard.readText) {
+      alert('Clipboard access not supported on this browser.\nUse the Update button to upload the mclho file instead.');
+      return;
+    }
+    const text = await navigator.clipboard.readText();
+    if (!text || text.length < 100) {
+      alert('Clipboard content is too small or empty.\nPlease select all (Ctrl+A) and copy (Ctrl+C) the full mclho page in your browser first.');
+      return;
+    }
+    if (!text.includes('DO Number') && !text.includes('DO Date') && !text.includes('Unique Number')) {
+      alert('Clipboard does not appear to contain mclho data.\nPlease select all (Ctrl+A) and copy (Ctrl+C) the mclho page in your browser first.');
+      return;
+    }
+    await parseMclho(text);
+  } catch(e) {
+    if (e.name === 'NotAllowedError') {
+      alert('Clipboard permission denied.\nPlease allow clipboard access when prompted, or use the Upload button instead.');
+    } else {
+      alert(`Could not read clipboard: ${e.message}`);
+    }
+  }
+}
+
+function updateDbIndicator(unknownCount) {
+  const ind = document.getElementById('dbIndicator');
+  if (mclhoCount === 0 || allRows.length === 0) {
+    ind.style.display = 'none';
+    return;
+  }
+  ind.style.display = 'inline-flex';
+  ind.style.alignItems = 'center';
+  if (unknownCount === 0) {
+    ind.innerHTML = `<svg width="18" height="18" fill="none" stroke="var(--green)" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+    </svg>`;
+    ind.title = 'DO Database up to date';
+  } else {
+    ind.innerHTML = `<svg width="18" height="18" fill="none" stroke="var(--red)" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+    </svg>`;
+    ind.title = 'DO Database outdated — tap Update';
+  }
+}
+
+async function loadDbFromGitHub() {
+  updateDbStatus(true);
+  const headers = { 'Authorization': `token ${GH.token}`, 'Accept': 'application/vnd.github.v3+json' };
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      // Step 1: Get file metadata (SHA) via Contents API
+      const metaRes = await fetch(
+        `${GH.api}/repos/${GH.owner}/${GH.repo}/contents/${GH.path}?ref=${GH.branch}&t=${Date.now()}`,
+        { headers }
+      );
+      if (metaRes.status === 404) {
+        _ghSha = null; mclhoDB = {}; mclhoCount = 0;
+        updateDbStatus(false); return;
+      }
+      if (!metaRes.ok) throw new Error(`Metadata fetch failed: ${metaRes.status}`);
+      const meta = await metaRes.json();
+      _ghSha = meta.sha;
+
+      // Step 2: Fetch full blob content via Git Blobs API (no size limit)
+      const blobRes = await fetch(
+        `${GH.api}/repos/${GH.owner}/${GH.repo}/git/blobs/${meta.sha}`,
+        { headers: { ...headers, 'Accept': 'application/vnd.github.v3.raw' } }
+      );
+      if (!blobRes.ok) throw new Error(`Blob fetch failed: ${blobRes.status}`);
+      const json = await blobRes.json();
+      mclhoDB    = json.db || {};
+      mclhoCount = Object.keys(mclhoDB).length;
+      updateDbStatus(false);
+      // If despatch already loaded, re-run stats with restored DB
+      if (allRows.length > 0) updateStats();
+      return; // success — exit
+    } catch(e) {
+      console.warn(`DB load attempt ${attempt} failed:`, e);
+      if (attempt < 3) {
+        updateDbStatus(true); // keep showing syncing
+        await new Promise(r => setTimeout(r, 2000 * attempt)); // wait 2s, 4s
+      } else {
+        // All retries failed — show a tap-to-retry message
+        const el = document.getElementById('dbStatus');
+        el.textContent = 'Could not load database — tap to retry';
+        el.className = 'db-val none';
+        el.style.cursor = 'pointer';
+        el.onclick = () => { el.onclick = null; el.style.cursor = ''; loadDbFromGitHub(); };
+      }
+    }
+  }
+}
+
+async function saveDbToGitHub() {
+  const btn = document.getElementById('dbUpdateBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+  try {
+    const content = btoa(unescape(encodeURIComponent(
+      JSON.stringify({ db: mclhoDB, updated: new Date().toISOString() })
+    )));
+    const body = {
+      message: `Update mclho DB — ${new Date().toISOString().slice(0,10)}`,
+      content,
+      branch: GH.branch,
+    };
+    if (_ghSha) body.sha = _ghSha;
+
+    const url = `${GH.api}/repos/${GH.owner}/${GH.repo}/contents/${GH.path}`;
+    const res = await fetch(url, {
+      method:  'PUT',
+      headers: {
+        'Authorization': `token ${GH.token}`,
+        'Accept':        'application/vnd.github.v3+json',
+        'Content-Type':  'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      // If SHA conflict (422), re-fetch SHA and retry once
+      if (res.status === 422) {
+        const refetch = await fetch(
+          `${GH.api}/repos/${GH.owner}/${GH.repo}/contents/${GH.path}?ref=${GH.branch}`,
+          { headers: { 'Authorization': `token ${GH.token}`, 'Accept': 'application/vnd.github.v3+json' } }
+        );
+        if (refetch.ok) {
+          const refetchData = await refetch.json();
+          _ghSha = refetchData.sha;
+          body.sha = _ghSha;
+          const retry = await fetch(url, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `token ${GH.token}`,
+              'Accept':        'application/vnd.github.v3+json',
+              'Content-Type':  'application/json',
+            },
+            body: JSON.stringify(body),
+          });
+          const retryResult = await retry.json();
+          if (!retry.ok) throw new Error(`${retry.status}: ${retryResult.message}`);
+          _ghSha = retryResult.content.sha;
+          return;
+        }
+      }
+      throw new Error(`${res.status}: ${result.message}`);
+    }
+    _ghSha = result.content.sha;
+  } catch(e) {
+    alert(`Could not save to cloud: ${e.message}\nData is still in memory for this session.`);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Upload'; }
+  }
+}
+
+async function parseMclho(raw) {
+  // ── Step 1: Determine if input is MHTML or plain HTML/text ────────────
+  const isMhtml = raw.includes('MIME-Version:') || raw.includes('Content-Type: multipart/');
+
+  let tableHTML = '';
+
+  if (isMhtml) {
+    // ── MHTML path: decode QP and extract table ──────────────────────
+    function decodeQP(str) {
+      return str.replace(/=\r?\n/g, '').replace(/=([0-9A-Fa-f]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+    }
+    const decoded = decodeQP(raw);
+    const tableStart = decoded.indexOf('DO Number');
+    if (tableStart < 0) { alert('DO Number column not found in mclho file.'); return; }
+    const tableTagIdx = decoded.lastIndexOf('<table', tableStart);
+    const tableEndIdx = decoded.indexOf('</table>', tableStart);
+    if (tableTagIdx < 0 || tableEndIdx < 0) { alert('Could not locate data table in mclho file.'); return; }
+    tableHTML = decoded.slice(tableTagIdx, tableEndIdx + 8);
+  } else {
+    // ── Plain text/HTML path (clipboard) ────────────────────────────
+    const tableStart = raw.indexOf('DO Number');
+    if (tableStart < 0) { alert('DO Number column not found in clipboard content.'); return; }
+    const tableTagIdx = raw.lastIndexOf('<table', tableStart);
+    const tableEndIdx = raw.indexOf('</table>', tableStart);
+    if (tableTagIdx >= 0 && tableEndIdx >= 0) {
+      // Has HTML table tags
+      tableHTML = raw.slice(tableTagIdx, tableEndIdx + 8);
+    } else {
+      // Plain text — convert tab/newline rows into fake HTML table for unified parsing
+      const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+      // Find header row containing 'DO Number' or 'Sl No'
+      const hdrIdx = lines.findIndex(l => l.includes('DO Number') || (l.includes('Sl') && l.includes('Unique')));
+      if (hdrIdx < 0) { alert('Could not find column headers in clipboard.'); return; }
+      let fakeTable = '<table>';
+      // Header
+      fakeTable += '<tr>' + lines[hdrIdx].split('\t').map(h => `<th>${h}</th>`).join('') + '</tr>';
+      // Data rows
+      for (let i = hdrIdx + 1; i < lines.length; i++) {
+        const cols = lines[i].split('\t');
+        if (cols.length < 5) continue;
+        fakeTable += '<tr>' + cols.map(c => `<td>${c}</td>`).join('') + '</tr>';
+      }
+      fakeTable += '</table>';
+      tableHTML = fakeTable;
+    }
+  }
+
+  // Parse just the table
+  const doc = new DOMParser().parseFromString(
+    `<html><body>${tableHTML}</body></html>`, 'text/html'
+  );
+  const rows = doc.querySelectorAll('tr');
+
+  // Columns expected (0-indexed): Sl No(0), UniqueNum(1), DO Number(2), DO Date(3),
+  // DO Qty(4), Party Code(5), Party Name(6), Colliery Code(7), Colliery Name(8),
+  // Grade(9), Size(10), DO Start Date(11), DO End Date(12), Nature(13), Sale Price(14), Mobile(15)
+
+  // First pass: collect all data rows, deduplicate by DO Number keeping highest Sl No
+  const incoming = {}; // doNumber → { slNo, record }
+  let parsed = 0;
+
+  for (const row of rows) {
+    const tds = row.querySelectorAll('td');
+    if (tds.length < 13) continue;
+    const cells = [...tds].map(td => td.textContent.trim().replace(/\u00a0/g, '').trim());
+    if (!cells[0] || !/^\d+$/.test(cells[0])) continue; // skip non-data rows
+    const slNo = parseInt(cells[0]);
+    const doNum = cells[2];
+    if (!doNum) continue;
+    const record = {
+      doDate:       cells[3],
+      doQty:        cells[4],
+      partyCode:    cells[5],
+      partyName:    cells[6],
+      collieryCode: cells[7],
+      collieryName: cells[8],
+      grade:        cells[9],
+      size:         cells[10],
+      doStartDate:  cells[11],
+      doEndDate:    cells[12],
+    };
+    // Deduplicate within upload: keep highest Sl No
+    if (!incoming[doNum] || slNo > incoming[doNum].slNo) {
+      incoming[doNum] = { slNo, record };
+    }
+    parsed++;
+  }
+
+  if (parsed === 0) { alert('No DO data rows found. Please check the source and try again.'); return; }
+
+  // Second pass: merge into mclhoDB
+  let added = 0, updated = 0, unchanged = 0;
+  for (const doNum in incoming) {
+    const newRec = incoming[doNum].record;
+    if (!mclhoDB[doNum]) {
+      mclhoDB[doNum] = newRec;
+      added++;
+    } else {
+      // Check for any changes
+      const existing = mclhoDB[doNum];
+      const changed = Object.keys(newRec).some(k => newRec[k] !== existing[k]);
+      if (changed) { mclhoDB[doNum] = newRec; updated++; }
+      else unchanged++;
+    }
+  }
+
+  mclhoCount = Object.keys(mclhoDB).length;
+  updateDbStatus(false);
+
+  // Save merged DB to GitHub cloud
+  await saveDbToGitHub();
+
+  // Re-run stats if despatch data is already loaded
+  if (allRows.length > 0) updateStats();
+}
+
+function loadFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text = e.target.result;
+    const t = text.trimStart();
+    if (t.startsWith('<') || t.toLowerCase().includes('<table')) parseHTML(text);
+    else parseCSV(text);
+  };
+  reader.readAsText(file);
+}
+
+function parseHTML(html) {
+  const doc   = new DOMParser().parseFromString(html, 'text/html');
+  const body  = doc.body ? (doc.body.innerText || '') : '';
+  const title = (body.match(/Coalnet[^\n\r]*/i) || [''])[0].trim();
+  const dm    = title.match(/(\d{1,2}-\w+-\d{4})\s+to\s+(\d{1,2}-\w+-\d{4})/i);
+
+  if (dm) {
+    const dateFrom = dm[1], dateTo = dm[2];
+    const multiDay = dateFrom !== dateTo;
+    isMultiDay = multiDay;
+    document.getElementById('metaPeriod').textContent = multiDay
+      ? `${dateFrom} → ${dateTo}`
+      : dateTo;
+    document.getElementById('headerDate').textContent = multiDay
+      ? `${dateFrom} → ${dateTo}`
+      : dateTo;
+  } else {
+    isMultiDay = false;
+    document.getElementById('metaPeriod').textContent = title.slice(0, 50) || 'Loaded';
+    document.getElementById('headerDate').innerHTML = '<span>LOADED</span>';
+  }
+
+  const table = doc.querySelector('table');
+  if (!table) { alert('No table found.'); return; }
+
+  headers = []; allRows = []; reportTotals = { gross: null, tar: null };
+
+  table.querySelectorAll('tr').forEach(row => {
+    const ths = row.querySelectorAll('th');
+    if (ths.length) { headers = [...ths].map(t => t.textContent.trim()); return; }
+    const tds = row.querySelectorAll('td');
+    if (!tds.length) return;
+    const cells = [...tds].map(td => td.textContent.trim().replace(/\u00a0/g, '').trim());
+    if (cells.some(c => c === 'Total') && !cells.some(c => /^\d{10}$/.test(c))) {
+      const nums = [...tds]
+        .filter(td => td.style && td.style.fontWeight === 'bold')
+        .map(td => parseFloat(td.textContent.trim()))
+        .filter(n => !isNaN(n));
+      if (nums.length >= 2) { reportTotals.tar = nums[0]; reportTotals.gross = nums[1]; }
+      return;
+    }
+    if (cells.every(c => !c)) return;
+    allRows.push(cells);
+  });
+
+  finishLoad();
+}
+
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
+  allRows = lines.slice(1)
+    .map(l => l.split(',').map(c => c.replace(/^"|"$/g, '').trim()))
+    .filter(r => r.some(c => c));
+  reportTotals = { gross: null, tar: null };
+  document.getElementById('metaPeriod').textContent = 'CSV Report';
+  document.getElementById('headerDate').innerHTML = '<span>CSV</span>';
+  finishLoad();
+}
+
+function timeToMins(t) {
+  if (!t) return 0;
+  const m = t.trim().match(/^(\d{1,2}):(\d{2})(AM|PM)$/i);
+  if (!m) return 0;
+  let h = parseInt(m[1]), min = parseInt(m[2]);
+  if (m[3].toUpperCase() === 'AM') { if (h === 12) h = 0; }
+  else                              { if (h !== 12) h += 12; }
+  return h * 60 + min;
+}
+
+function minsToLabel(mins) {
+  if (mins === null) return 'All Day';
+  const h24 = Math.floor(mins / 60), m = mins % 60;
+  const ap  = h24 < 12 ? 'AM' : 'PM';
+  const h12 = h24 % 12 || 12;
+  return h12 + ':' + String(m).padStart(2, '0') + ' ' + ap;
+}
+
+function downloadBlob(blob) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'coalnet-report.png';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function toggleTheme() {
+  const isDark = document.body.classList.toggle('dark');
+  document.getElementById('themeTrack').classList.toggle('on', isDark);
+  document.getElementById('iconSunHeader').style.display  = isDark ? 'none'  : 'block';
+  document.getElementById('iconMoonHeader').style.display = isDark ? 'block' : 'none';
+  document.getElementById('themeFabTrack').classList.toggle('on', isDark);
+  document.getElementById('iconSun').style.display  = isDark ? 'none'  : 'block';
+  document.getElementById('iconMoon').style.display = isDark ? 'block' : 'none';
+}
+
+// ═══════════════════════════════════════════════════════
+//  ROAD POWER REPORT  (v4 test build)
+//  · Settings pane  : pick POWER parties, Report-1 rows, Report-2 blocks
+//  · History store  : epass-db repo, separate JSON file
+//  · Report views   : "Road Despatch to Power Sector" + "Source-wise Daywise"
+// ═══════════════════════════════════════════════════════
+
+const RP_MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ── GitHub handle for the history file (shares the epass-db repo) ──
+const RP_GH = {
+  owner:  'ajoneschristo',
+  repo:   'epass-db',
+  branch: 'main',
+  get path() { return (appSettings.powerReport && appSettings.powerReport.historyPath) || 'roadpower-history-test.json'; },
+  get token() { return GH.token; },
+  api:    'https://api.github.com',
+};
+
+let rpHist    = null;   // { updated, days: { 'YYYY-MM-DD': { cut, pc:{ 'party|colliery': qty } } } }
+let _rpHistSha = null;
+let _rpDraft  = null;   // settings draft while the pane is open
+let _rpChips  = { recent: true, sel: false };
+let _rpTab    = 1;
+let _rpPartyIdx = null; // partyCode → { code, name, last }
+
+// ── helpers ─────────────────────────────────────────────
+function rpNum(n) {
+  if (!n) return '';
+  return Math.round(n).toLocaleString('en-IN');
+}
+function rpParseDMY(s) {
+  // "15-Aug-2026" → Date  (also tolerates "15-Aug-26")
+  if (!s) return null;
+  const m = String(s).trim().match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2,4})$/);
+  if (!m) return null;
+  const mi = RP_MON.findIndex(x => x.toLowerCase() === m[2].toLowerCase());
+  if (mi < 0) return null;
+  let y = parseInt(m[3]); if (y < 100) y += 2000;
+  return new Date(y, mi, parseInt(m[1]));
+}
+function rpKey(d) {
+  if (!d) return null;
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function rpKeyFromDMY(s) { return rpKey(rpParseDMY(s)); }
+
+// The date the loaded despatch file is currently showing
+function rpActiveDMY() { return activeTabDate || maxGWDateStr || ''; }
+function rpActiveKey() { return rpKeyFromDMY(rpActiveDMY()); }
+
+// Cut-off label — this app has no time filter, so it is always the latest
+// gross-weight time present in the file for the active date.
+function rpCutLabel() { return tabMaxTimeStr || maxGWTimeStr || ''; }
+
+// ── Party index built from the DO database ──────────────
+// Some names arrive HTML-escaped from the MHTML parser ("SARDA ENERGY &amp; ...")
+function rpDecode(s) {
+  return String(s || '')
+    .replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"').replace(/&#0?39;/g, "'").replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ').trim();
+}
+function rpBuildPartyIndex(force) {
+  if (_rpPartyIdx && !force) return _rpPartyIdx;
+  const idx = {};
+  for (const k in mclhoDB) {
+    const r = mclhoDB[k];
+    const c = String(r.partyCode || '').trim();
+    if (!c) continue;
+    const nm = rpDecode(r.partyName);
+    const d = rpParseDMY(r.doEndDate || r.doDate);
+    const t = d ? d.getTime() : 0;
+    if (!idx[c]) idx[c] = { code: c, name: nm, last: t };
+    else if (t >= idx[c].last) { idx[c].last = t; if (nm) idx[c].name = nm; }
+  }
+  _rpPartyIdx = idx;
+  return idx;
+}
+// Collieries a party has DOs for → [{code,name}]
+function rpPartyCollieries(code) {
+  const out = {};
+  for (const k in mclhoDB) {
+    const r = mclhoDB[k];
+    if (String(r.partyCode || '').trim() !== String(code)) continue;
+    const cc = String(r.collieryCode || '').trim();
+    if (!cc) continue;
+    const d = rpParseDMY(r.doEndDate || r.doDate);
+    const t = d ? d.getTime() : 0;
+    if (!out[cc] || t > out[cc].last) out[cc] = { code: cc, name: rpDecode(r.collieryName) || cc, last: t };
+  }
+  return Object.values(out).sort((a,b) => b.last - a.last);
+}
+
+// ═══════════════════════════════════════════════════════
+//  SETTINGS PANE
+// ═══════════════════════════════════════════════════════
+function rpDefaults() { return { historyPath: 'roadpower-history-test.json', parties: [] }; }
+
+function openRpSettings() {
+  const pr = appSettings.powerReport || rpDefaults();
+  _rpDraft = { historyPath: pr.historyPath || 'roadpower-history-test.json', sel: {} };
+  (pr.parties || []).forEach(p => {
+    _rpDraft.sel[String(p.code)] = {
+      name:  p.name || '',
+      power: p.power !== false,
+      r1:    !!p.r1,
+      r2:    !!p.r2,
+      cols:  (p.cols || []).map(c => ({ label: c.label || '', colCodes: c.colCodes || '', isSubtotal: !!c.isSubtotal })),
+    };
+  });
+  document.getElementById('rp_histPath').value = _rpDraft.historyPath;
+  document.getElementById('rpSettingsStatus').textContent = '';
+  document.getElementById('rpSearch').value = '';
+  _rpChips = { recent: true, sel: false };
+  document.getElementById('rpChipRecent').classList.add('on');
+  document.getElementById('rpChipSel').classList.remove('on');
+  rpBuildPartyIndex(true);
+  renderRpParties();
+  renderRpR2();
+  document.getElementById('rpSettingsOverlay').style.display = 'block';
+}
+function closeRpSettings() {
+  document.getElementById('rpSettingsOverlay').style.display = 'none';
+}
+function rpToggleChip(which) {
+  _rpChips[which] = !_rpChips[which];
+  document.getElementById(which === 'recent' ? 'rpChipRecent' : 'rpChipSel')
+          .classList.toggle('on', _rpChips[which]);
+  renderRpParties();
+}
+
+function renderRpParties() {
+  const body = document.getElementById('rpPartyBody');
+  const idx  = rpBuildPartyIndex();
+  const q    = (document.getElementById('rpSearch').value || '').trim().toUpperCase();
+  const cut  = Date.now() - 550 * 24 * 3600 * 1000; // ~18 months
+
+  // union of DB parties and anything already selected
+  const all = Object.assign({}, idx);
+  for (const c in _rpDraft.sel) {
+    if (!all[c]) all[c] = { code: c, name: _rpDraft.sel[c].name || '(not in DO database)', last: 0 };
+  }
+
+  let list = Object.values(all).filter(p => {
+    const sel = _rpDraft.sel[p.code];
+    const anyFlag = sel && (sel.power || sel.r1 || sel.r2);
+    if (_rpChips.sel && !anyFlag) return false;
+    if (_rpChips.recent && !anyFlag && p.last < cut) return false;
+    if (q && !(p.name.toUpperCase().includes(q) || p.code.includes(q))) return false;
+    return true;
+  });
+
+  // selected first, then alphabetical
+  list.sort((a,b) => {
+    const sa = _rpDraft.sel[a.code] && (_rpDraft.sel[a.code].power || _rpDraft.sel[a.code].r1 || _rpDraft.sel[a.code].r2) ? 0 : 1;
+    const sb = _rpDraft.sel[b.code] && (_rpDraft.sel[b.code].power || _rpDraft.sel[b.code].r1 || _rpDraft.sel[b.code].r2) ? 0 : 1;
+    if (sa !== sb) return sa - sb;
+    return a.name.localeCompare(b.name);
+  });
+
+  const total = Object.keys(all).length;
+  const shown = Math.min(list.length, 400);
+  document.getElementById('rpCount').textContent =
+    `${shown} of ${list.length} shown · ${total} in database`;
+
+  const frag = document.createDocumentFragment();
+  list.slice(0, 400).forEach(p => {
+    const sel = _rpDraft.sel[p.code] || { power:false, r1:false, r2:false };
+    const row = document.createElement('div');
+    row.className = 'rp-party-row' + ((sel.power||sel.r1||sel.r2) ? ' sel' : '');
+    row.innerHTML =
+      `<div class="rp-pcode">${p.code}</div>` +
+      `<div class="rp-pname" title="${(p.name||'').replace(/"/g,'&quot;')}">${p.name || '—'}</div>` +
+      `<div class="c"><input type="checkbox" data-f="power" ${sel.power?'checked':''}></div>` +
+      `<div class="c"><input type="checkbox" data-f="r1" ${sel.r1?'checked':''}></div>` +
+      `<div class="c"><input type="checkbox" data-f="r2" ${sel.r2?'checked':''}></div>`;
+    row.querySelectorAll('input').forEach(cb => {
+      cb.onchange = () => rpSetFlag(p.code, p.name, cb.dataset.f, cb.checked);
+    });
+    frag.appendChild(row);
+  });
+  body.innerHTML = '';
+  body.appendChild(frag);
+  if (list.length > 400) {
+    const more = document.createElement('div');
+    more.className = 'rp-count';
+    more.style.padding = '8px';
+    more.textContent = 'Narrow the search to see the rest.';
+    body.appendChild(more);
+  }
+}
+
+function rpSetFlag(code, name, field, val) {
+  code = String(code);
+  if (!_rpDraft.sel[code]) _rpDraft.sel[code] = { name: name || '', power:false, r1:false, r2:false, cols: [] };
+  const s = _rpDraft.sel[code];
+  if (name) s.name = name;
+  s[field] = val;
+  if (val && (field === 'r1' || field === 'r2')) s.power = true;   // R1/R2 imply POWER
+  if (!val && field === 'power') { s.r1 = false; s.r2 = false; }   // un-power drops both
+  if (field === 'r2' && val && (!s.cols || !s.cols.length)) rpAutoCols(code, true);
+  renderRpParties();
+  renderRpR2();
+}
+
+function renderRpR2() {
+  const wrap = document.getElementById('rpR2Body');
+  wrap.innerHTML = '';
+  const codes = Object.keys(_rpDraft.sel).filter(c => _rpDraft.sel[c].r2);
+  if (!codes.length) {
+    wrap.innerHTML = '<div class="rp-count" style="padding:4px 2px;">Tick <strong>R2</strong> against a party above to configure its colliery columns.</div>';
+    return;
+  }
+  codes.forEach(code => {
+    const s = _rpDraft.sel[code];
+    const box = document.createElement('div');
+    box.className = 'rp-r2-party';
+    box.innerHTML =
+      `<div class="rp-r2-hdr">
+         <div>
+           <div class="rp-r2-name">${s.name || code}</div>
+           <div class="rp-r2-sub">${code}</div>
+         </div>
+         <div style="display:flex;gap:4px;">
+           <button class="rp-mini-btn" data-a="auto">Auto-fill</button>
+           <button class="rp-mini-btn" data-a="add">+ Column</button>
+         </div>
+       </div>
+       <div class="rp-col-head">
+         <span>Column Label</span><span>Colliery Code(s)</span><span class="c">Sub</span><span></span>
+       </div>`;
+    box.querySelector('[data-a="auto"]').onclick = () => rpAutoCols(code);
+    box.querySelector('[data-a="add"]').onclick  = () => { s.cols.push({label:'',colCodes:'',isSubtotal:false}); renderRpR2(); };
+
+    (s.cols || []).forEach((c, ci) => {
+      const row = document.createElement('div');
+      row.className = 'rp-col-row';
+      row.innerHTML =
+        `<input class="stt-cell-input" value="${(c.label||'').replace(/"/g,'&quot;')}" data-k="label">` +
+        `<input class="stt-cell-input mono" value="${(c.colCodes||'').replace(/"/g,'&quot;')}" data-k="colCodes">` +
+        `<div class="c"><input type="checkbox" ${c.isSubtotal?'checked':''} data-k="isSubtotal" style="width:15px;height:15px;accent-color:var(--amber);"></div>` +
+        `<button class="stt-del-btn" title="Delete column">✕</button>`;
+      row.querySelector('[data-k="label"]').oninput    = e => c.label = e.target.value;
+      row.querySelector('[data-k="colCodes"]').oninput = e => c.colCodes = e.target.value;
+      row.querySelector('[data-k="isSubtotal"]').onchange = e => c.isSubtotal = e.target.checked;
+      row.querySelector('.stt-del-btn').onclick = () => { s.cols.splice(ci,1); renderRpR2(); };
+      box.appendChild(row);
+    });
+    wrap.appendChild(box);
+  });
+}
+
+function rpAutoCols(code, silent) {
+  const s = _rpDraft.sel[code];
+  if (!s) return;
+  const cols = rpPartyCollieries(code);
+  if (!cols.length) { if (!silent) alert('No DOs found for this party in the DO database.'); return; }
+  s.cols = cols.map(c => {
+    const m = codeToMine[c.code];
+    return { label: (m && m.collieryName) || c.name || c.code, colCodes: c.code, isSubtotal: false };
+  });
+  if (!silent) renderRpR2();
+}
+
+async function saveRpSettings() {
+  const status = document.getElementById('rpSettingsStatus');
+  status.textContent = 'Saving…'; status.style.color = 'var(--mid)';
+
+  const histPath = document.getElementById('rp_histPath').value.trim() || 'roadpower-history-test.json';
+  if (!/^[\w.\-/]+\.json$/.test(histPath)) {
+    status.textContent = 'History file must be a .json path (letters, digits, - _ . /).';
+    status.style.color = '#e05'; return;
+  }
+  const parties = [];
+  Object.keys(_rpDraft.sel).forEach(code => {
+    const s = _rpDraft.sel[code];
+    if (!s.power && !s.r1 && !s.r2) return;
+    const e = { code, name: s.name || '', power: !!s.power, r1: !!s.r1, r2: !!s.r2 };
+    if (s.r2) e.cols = (s.cols || []).filter(c => c.label || c.colCodes)
+                                     .map(c => ({ label: c.label.trim(), colCodes: c.colCodes.replace(/\s/g,''), isSubtotal: !!c.isSubtotal }));
+    parties.push(e);
+  });
+  for (const p of parties) {
+    if (p.r2 && (!p.cols || !p.cols.length)) {
+      status.textContent = `"${p.name || p.code}" is ticked R2 but has no colliery columns.`;
+      status.style.color = '#e05'; return;
+    }
+  }
+
+  const newSettings = Object.assign({}, appSettings, { powerReport: { historyPath: histPath, parties } });
+
+  try {
+    // MERGE-ON-SAVE — settings.json is shared with ePassViewer, so re-read the
+    // live file and replace only the key this app owns. Never PUT a whole
+    // object built from a possibly-stale in-memory copy.
+    const shaRes = await fetch(
+      `${SETTINGS_GH.api}/repos/${SETTINGS_GH.owner}/${SETTINGS_GH.repo}/contents/${SETTINGS_GH.path}?t=${Date.now()}`,
+      { headers: { Authorization: 'token ' + SETTINGS_GH.token } }
+    );
+    let onDisk = {};
+    if (shaRes.ok) {
+      const d = await shaRes.json();
+      _settingsSha = d.sha;
+      try { onDisk = JSON.parse(decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))))); } catch(_) { onDisk = {}; }
+    }
+    const merged = Object.assign({}, onDisk, { powerReport: newSettings.powerReport });
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(merged, null, 2))));
+    const body = { message: 'Update road power report settings', content, branch: SETTINGS_GH.branch };
+    if (_settingsSha) body.sha = _settingsSha;
+    const res = await fetch(
+      `${SETTINGS_GH.api}/repos/${SETTINGS_GH.owner}/${SETTINGS_GH.repo}/contents/${SETTINGS_GH.path}`,
+      { method: 'PUT', headers: { Authorization: 'token ' + SETTINGS_GH.token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+    );
+    if (!res.ok) throw new Error('GitHub ' + res.status);
+    const resp = await res.json();
+    _settingsSha = resp.content.sha;
+    appSettings = Object.assign({}, appSettings, { powerReport: newSettings.powerReport });
+    status.textContent = '✓ Saved'; status.style.color = 'var(--green)';
+    renderRpReports();
+    setTimeout(closeRpSettings, 1000);
+  } catch(e) {
+    status.textContent = 'Save failed: ' + e.message;
+    status.style.color = '#e05';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  HISTORY DATABASE  (separate JSON in the epass-db repo)
+// ═══════════════════════════════════════════════════════
+async function loadRpHistory(force) {
+  if (rpHist && !force) return rpHist;
+  const headers = { Authorization: `token ${RP_GH.token}`, Accept: 'application/vnd.github.v3+json' };
+  try {
+    const metaRes = await fetch(
+      `${RP_GH.api}/repos/${RP_GH.owner}/${RP_GH.repo}/contents/${RP_GH.path}?ref=${RP_GH.branch}&t=${Date.now()}`,
+      { headers }
+    );
+    if (metaRes.status === 404) { rpHist = { days: {} }; _rpHistSha = null; return rpHist; }
+    if (!metaRes.ok) throw new Error('HTTP ' + metaRes.status);
+    const meta = await metaRes.json();
+    _rpHistSha = meta.sha;
+    const blobRes = await fetch(
+      `${RP_GH.api}/repos/${RP_GH.owner}/${RP_GH.repo}/git/blobs/${meta.sha}`,
+      { headers: { ...headers, Accept: 'application/vnd.github.v3.raw' } }
+    );
+    if (!blobRes.ok) throw new Error('blob HTTP ' + blobRes.status);
+    const json = await blobRes.json();
+    rpHist = { updated: json.updated || '', days: json.days || {} };
+  } catch(e) {
+    console.warn('Road power history load failed:', e);
+    if (!rpHist) rpHist = { days: {} };
+    rpSetStatus('⚠ Could not load history file — showing today only. ' + e.message, true);
+  }
+  return rpHist;
+}
+
+// Live party×colliery map from the loaded despatch file, for the active date + time filter
+function rpLiveMap(powerOnly) {
+  const pr = appSettings.powerReport || {};
+  const powerSet = new Set((pr.parties || []).filter(p => p.power).map(p => String(p.code)));
+  const usePower = powerOnly !== false && powerSet.size > 0;
+  const acc = {};
+  for (let i = 0; i < rowGross.length; i++) {
+    if (activeTabDate && rowGWDate[i] !== activeTabDate) continue;
+    const rec = mclhoDB[rowDO[i]];
+    if (!rec) continue;
+    const pc = String(rec.partyCode || '').trim();
+    if (!pc) continue;
+    if (usePower && !powerSet.has(pc)) continue;
+    const cc = String(rec.collieryCode || '').trim();
+    const net = rowGross[i] - rowTar[i];
+    const k = pc + '|' + cc;
+    acc[k] = (acc[k] || 0) + net;
+  }
+  // round to 2dp to keep the stored file small
+  for (const k in acc) acc[k] = Math.round(acc[k] * 100) / 100;
+  return acc;
+}
+
+async function saveRpDay() {
+  const key = rpActiveKey();
+  if (!allRows.length) { alert('Load a despatch file first.'); return; }
+  if (!key) { alert('Could not determine the report date from the loaded file.'); return; }
+  if (mclhoCount === 0) { alert('DO database is not loaded — party figures would all be zero.'); return; }
+
+  const pr = appSettings.powerReport || {};
+  if (!(pr.parties || []).some(p => p.power)) {
+    alert('No power parties selected yet. Open ⚙ and tick some parties first.'); return;
+  }
+
+  const pc = rpLiveMap();
+  const tot = Object.values(pc).reduce((a,b) => a+b, 0);
+  const cut = rpCutLabel();
+  const existing = rpHist && rpHist.days && rpHist.days[key];
+  let msg = `Save ${rpActiveDMY()} (cut-off ${cut || '—'}) — ${rpNum(tot)} T across ${Object.keys(pc).length} party/colliery pairs?`;
+  if (existing) {
+    const oldTot = Object.values(existing.pc || {}).reduce((a,b) => a+b, 0);
+    msg += `\n\nThis date is already stored (${rpNum(oldTot)} T, cut-off ${existing.cut || '—'}). It will be overwritten.`;
+    if (tot < oldTot * 0.95) msg += '\n\n⚠ The new figure is LOWER than what is stored. Check the time filter before saving.';
+  }
+  if (!confirm(msg)) return;
+
+  const btn = document.getElementById('rpSaveDayBtn');
+  const old = btn.textContent; btn.textContent = 'Saving…'; btn.disabled = true;
+  try {
+    await loadRpHistory(true);                       // always re-read for a fresh SHA
+    rpHist.days[key] = { cut, pc };
+    rpHist.updated = new Date().toISOString();
+
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(rpHist))));
+    const body = { message: `Road power history — ${key}`, content, branch: RP_GH.branch };
+    if (_rpHistSha) body.sha = _rpHistSha;
+    const res = await fetch(
+      `${RP_GH.api}/repos/${RP_GH.owner}/${RP_GH.repo}/contents/${RP_GH.path}`,
+      { method: 'PUT', headers: { Authorization: 'token ' + RP_GH.token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+    );
+    if (!res.ok) throw new Error('GitHub ' + res.status);
+    const resp = await res.json();
+    _rpHistSha = resp.content.sha;
+    rpSetStatus(`✓ ${rpActiveDMY()} saved to ${RP_GH.path}`, false);
+    renderRpReports();
+  } catch(e) {
+    rpSetStatus('Save failed: ' + e.message, true);
+  } finally {
+    btn.textContent = old; btn.disabled = false;
+  }
+}
+
+function rpSetStatus(txt, isWarn) {
+  const el = document.getElementById('rpStatus');
+  el.textContent = txt || '';
+  el.className = isWarn ? 'rp-warn' : 'rp-note';
+}
+
+// ═══════════════════════════════════════════════════════
+//  REPORT VIEWS
+// ═══════════════════════════════════════════════════════
+async function openRpView() {
+  rpSetStatus('Loading history…', false);
+  await loadRpHistory();
+  rpSetStatus('', false);
+  renderRpReports();
+}
+function rpSwitch(n) {
+  _rpTab = n;
+  document.getElementById('rpTab1').classList.toggle('on', n === 1);
+  document.getElementById('rpTab2').classList.toggle('on', n === 2);
+  document.getElementById('rpPane1').style.display = n === 1 ? 'block' : 'none';
+  document.getElementById('rpPane2').style.display = n === 2 ? 'block' : 'none';
+}
+
+// Build day → { 'party|colliery': qty } for the month of the active date,
+// with the active date overridden by the live file figures.
+function rpMonthData() {
+  const key = rpActiveKey();
+  let Y, M;
+  if (key) { Y = +key.slice(0,4); M = +key.slice(5,7); }
+  else {
+    // no file loaded — fall back to the latest month present in history
+    const ks = Object.keys((rpHist && rpHist.days) || {}).sort();
+    if (!ks.length) return null;
+    Y = +ks[ks.length-1].slice(0,4); M = +ks[ks.length-1].slice(5,7);
+  }
+  const dim  = new Date(Y, M, 0).getDate();
+  const live = key && allRows.length ? rpLiveMap() : null;
+  const days = {};
+  let lastDay = 0;
+  for (let d = 1; d <= dim; d++) {
+    const k = `${Y}-${String(M).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    let pc = null, cut = '';
+    if (key === k && live) { pc = live; cut = rpCutLabel(); }
+    else if (rpHist && rpHist.days[k]) { pc = rpHist.days[k].pc || {}; cut = rpHist.days[k].cut || ''; }
+    if (pc) { days[d] = { pc, cut, live: key === k && !!live }; lastDay = d; }
+  }
+  // previous month totals (for the Report-2 header block)
+  const pm = M === 1 ? { Y: Y-1, M: 12 } : { Y, M: M-1 };
+  const prev = { label: RP_MON[pm.M-1] + '-' + pm.Y, pc: {}, days: 0 };
+  const pdim = new Date(pm.Y, pm.M, 0).getDate();
+  for (let d = 1; d <= pdim; d++) {
+    const k = `${pm.Y}-${String(pm.M).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const rec = rpHist && rpHist.days[k];
+    if (!rec) continue;
+    prev.days++;
+    for (const kk in (rec.pc || {})) prev.pc[kk] = (prev.pc[kk] || 0) + rec.pc[kk];
+  }
+  return { Y, M, dim, days, lastDay, prev, activeKey: key,
+           monLabel: RP_MON[M-1] + '-' + Y };
+}
+
+// sum a day map for one party (all its collieries)
+function rpSumParty(pc, code) {
+  let s = 0; const pre = code + '|';
+  for (const k in pc) if (k.startsWith(pre)) s += pc[k];
+  return s;
+}
+// sum a day map for one party restricted to a set of colliery codes
+function rpSumPartyColl(pc, code, codes) {
+  let s = 0;
+  for (const cc of codes) { const v = pc[code + '|' + cc]; if (v) s += v; }
+  return s;
+}
+
+function renderRpReports() {
+  const md = rpMonthData();
+  const sub = document.getElementById('rpViewSub');
+  const pr  = appSettings.powerReport || {};
+  const n1 = (pr.parties || []).filter(p => p.r1).length;
+  const n2 = (pr.parties || []).filter(p => p.r2).length;
+  sub.textContent = md
+    ? `${md.monLabel} · ${Object.keys(md.days).length} day(s) of data · ${n1} party rows · ${n2} source-wise block(s)`
+    : 'No data yet — load a despatch file or save a day.';
+  renderRp1(md);
+  renderRp2(md);
+  rpSwitch(_rpTab);
+}
+
+function renderRp1(md) {
+  const pane = document.getElementById('rpPane1');
+  pane.innerHTML = '';
+  const pr = appSettings.powerReport || {};
+  const parties = (pr.parties || []).filter(p => p.r1);
+  if (!parties.length) {
+    pane.innerHTML = '<div class="rp-note">No parties ticked for Report 1. Open ⚙ and tick <strong>R1</strong> against the parties you want as rows.</div>';
+    return;
+  }
+  if (!md) { pane.innerHTML = '<div class="rp-note">No data available.</div>'; return; }
+
+  const lastDay = md.lastDay || 0;
+  // per-party per-day totals
+  const rows = parties.map(p => {
+    const code = String(p.code);
+    const vals = {};
+    let prog = 0, cnt = 0;
+    for (let d = 1; d <= lastDay; d++) {
+      if (!md.days[d]) continue;
+      const v = rpSumParty(md.days[d].pc, code);
+      vals[d] = v; prog += v; cnt++;
+    }
+    const actD = md.activeKey ? +md.activeKey.slice(8,10) : 0;
+    return { name: p.name || code, code, vals, prog, cnt, today: vals[actD] || 0 };
+  }).sort((a,b) => b.prog - a.prog);
+
+  const actD = md.activeKey ? +md.activeKey.slice(8,10) : 0;
+  const cut  = (md.days[actD] && md.days[actD].cut) || '';
+  const dayCount = Object.keys(md.days).length;
+
+  const t = document.createElement('table');
+  t.className = 'rp-table';
+  t.id = 'rpTable1';
+  const ncol = 4 + lastDay;
+
+  let html = `<tr class="rp-title"><th colspan="${ncol}">ROAD DESPATCH TO POWER SECTOR</th></tr>`;
+  html += '<tr class="rp-head">';
+  html += `<th>${md.activeKey ? rpActiveDMY() : md.monLabel}</th>`;
+  html += '<th>Today</th><th>Progressive Total</th><th>Avg. Daily despatch</th>';
+  for (let d = 1; d <= lastDay; d++) {
+    const on = !!md.days[d];
+    html += `<th${md.days[d] && md.days[d].live ? ' class="rp-sub"' : ''}>${String(d).padStart(2,'0')}/${String(md.M).padStart(2,'0')}/${String(md.Y).slice(2)}</th>`;
+    void on;
+  }
+  html += '</tr>';
+
+  let tToday = 0, tProg = 0, tAvg = 0;
+  const dayTotals = {};
+  rows.forEach(r => {
+    tToday += r.today; tProg += r.prog; tAvg += r.cnt ? r.prog / r.cnt : 0;
+    html += '<tr>';
+    html += `<td class="rp-name" title="${r.code}">${r.name}</td>`;
+    html += `<td class="rp-num rp-live">${rpNum(r.today)}</td>`;
+    html += `<td class="rp-num">${rpNum(r.prog)}</td>`;
+    html += `<td class="rp-num">${rpNum(r.cnt ? r.prog / r.cnt : 0)}</td>`;
+    for (let d = 1; d <= lastDay; d++) {
+      const v = md.days[d] ? (r.vals[d] || 0) : null;
+      if (v !== null) dayTotals[d] = (dayTotals[d] || 0) + v;
+      html += `<td class="rp-num${v === 0 ? ' rp-zero' : ''}">${v === null ? '' : (v ? rpNum(v) : '0')}</td>`;
+    }
+    html += '</tr>';
+  });
+
+  const dd = md.activeKey ? md.activeKey.slice(8,10) + '.' + md.activeKey.slice(5,7) + '.' + md.activeKey.slice(0,4) : '';
+  html += '<tr class="rp-total">';
+  html += `<td class="rp-name">TOTAL (${md.monLabel}${dd ? ' until ' + dd : ''}${cut ? ' -- ' + cut : ''})</td>`;
+  html += `<td class="rp-num">${rpNum(tToday)}</td><td class="rp-num">${rpNum(tProg)}</td><td class="rp-num">${rpNum(tAvg)}</td>`;
+  for (let d = 1; d <= lastDay; d++) html += `<td class="rp-num">${md.days[d] ? rpNum(dayTotals[d] || 0) : ''}</td>`;
+  html += '</tr>';
+
+  t.innerHTML = html;
+  pane.appendChild(t);
+
+  const note = document.createElement('div');
+  note.className = 'rp-note';
+  note.innerHTML = `Figures in tonnes. The <strong>Today</strong> column and the ${md.activeKey ? String(actD).padStart(2,'0') : '—'}/${String(md.M).padStart(2,'0')} column are live from the loaded file — everything else comes from the history database (${dayCount} day(s) stored this month). Tap <strong>Save Day</strong> to freeze today's figures.`;
+  pane.appendChild(note);
+}
+
+function renderRp2(md) {
+  const pane = document.getElementById('rpPane2');
+  pane.innerHTML = '';
+  const pr = appSettings.powerReport || {};
+  const parties = (pr.parties || []).filter(p => p.r2);
+  if (!parties.length) {
+    pane.innerHTML = '<div class="rp-note">No parties ticked for Report 2. Open ⚙ and tick <strong>R2</strong>, then set the colliery columns.</div>';
+    return;
+  }
+  if (!md) { pane.innerHTML = '<div class="rp-note">No data available.</div>'; return; }
+
+  const cutNow = rpCutLabel();
+  const head = document.createElement('div');
+  head.className = 'rp-note';
+  head.style.marginBottom = '8px';
+  head.innerHTML = `<strong>DAYWISE LIFTED QTY IN ROAD MODE of ${md.monLabel}${md.activeKey ? ' until ' + rpActiveDMY() : ''}${cutNow ? ' --- ' + cutNow : ''} (Figs. in Tonnes)</strong>`;
+  pane.appendChild(head);
+
+  parties.forEach(p => {
+    const code = String(p.code);
+    const cols = (p.cols || []);
+    const real = cols.filter(c => !c.isSubtotal);
+    const t = document.createElement('table');
+    t.className = 'rp-table';
+    const ncol = 2 + cols.length + 1;
+
+    let html = `<tr class="rp-title"><th colspan="${ncol}">${p.name || code}</th></tr>`;
+    html += '<tr class="rp-head"><th>MONTH</th><th>DATE</th>';
+    cols.forEach(c => html += `<th${c.isSubtotal ? ' class="rp-sub"' : ''}>${c.label || c.colCodes}</th>`);
+    html += '<th>TOTAL</th></tr>';
+
+    const splitCodes = c => (c.colCodes || '').split(',').map(x => x.trim()).filter(Boolean);
+
+    // previous month summary
+    if (md.prev.days) {
+      const pv = cols.map(c => rpSumPartyColl(md.prev.pc, code, splitCodes(c)));
+      const pt = real.reduce((s,c) => s + rpSumPartyColl(md.prev.pc, code, splitCodes(c)), 0);
+      html += `<tr><td class="rp-date">${md.prev.label}</td><td class="rp-date">TOTAL</td>`;
+      pv.forEach((v,i) => html += `<td class="rp-num${cols[i].isSubtotal ? ' rp-sub' : ''}">${rpNum(v)}</td>`);
+      html += `<td class="rp-num">${rpNum(pt)}</td></tr>`;
+      html += `<tr><td class="rp-date"></td><td class="rp-date">Avg/day</td>`;
+      pv.forEach((v,i) => html += `<td class="rp-num${cols[i].isSubtotal ? ' rp-sub' : ''}">${rpNum(v / md.prev.days)}</td>`);
+      html += `<td class="rp-num">${rpNum(pt / md.prev.days)}</td></tr>`;
+    }
+
+    const sums = cols.map(() => 0);
+    let gTot = 0, nDays = 0;
+    for (let d = 1; d <= md.dim; d++) {
+      const rec = md.days[d];
+      const dl = `${String(d).padStart(2,'0')}/${String(md.M).padStart(2,'0')}/${String(md.Y).slice(2)}`;
+      html += `<tr${rec && rec.live ? ' style="outline:2px solid #ff8c00;"' : ''}>`;
+      html += `<td class="rp-date">${d === 1 ? md.monLabel : ''}</td><td class="rp-date">${dl}</td>`;
+      if (!rec) {
+        cols.forEach(c => html += `<td class="rp-num${c.isSubtotal ? ' rp-sub' : ''}"></td>`);
+        html += '<td class="rp-num"></td></tr>';
+        continue;
+      }
+      nDays++;
+      let rowTot = 0;
+      cols.forEach((c, i) => {
+        const v = rpSumPartyColl(rec.pc, code, splitCodes(c));
+        sums[i] += v;
+        if (!c.isSubtotal) rowTot += v;
+        html += `<td class="rp-num${c.isSubtotal ? ' rp-sub' : ''}${v === 0 ? ' rp-zero' : ''}">${v ? rpNum(v) : '0'}</td>`;
+      });
+      gTot += rowTot;
+      html += `<td class="rp-num">${rpNum(rowTot)}</td></tr>`;
+    }
+
+    html += '<tr class="rp-total"><td class="rp-date"></td><td class="rp-date">TOTAL</td>';
+    sums.forEach(v => html += `<td class="rp-num">${rpNum(v)}</td>`);
+    html += `<td class="rp-num">${rpNum(gTot)}</td></tr>`;
+    html += '<tr class="rp-total"><td class="rp-date"></td><td class="rp-date">Avg/day</td>';
+    sums.forEach(v => html += `<td class="rp-num">${rpNum(nDays ? v / nDays : 0)}</td>`);
+    html += `<td class="rp-num">${rpNum(nDays ? gTot / nDays : 0)}</td></tr>`;
+
+    t.innerHTML = html;
+    pane.appendChild(t);
+  });
+}
+
+// ── Share the visible report as an image ────────────────
+async function shareRpReport() {
+  const pane = document.getElementById(_rpTab === 1 ? 'rpPane1' : 'rpPane2');
+  const tbl  = pane.querySelector('table');
+  if (!tbl) { alert('Nothing to share yet.'); return; }
+  const holder = document.createElement('div');
+  holder.style.cssText = 'position:fixed;left:-10000px;top:0;background:#ffffff;padding:24px 18px 30px;';
+  const strip = () => { const s = document.createElement('div'); s.style.cssText = 'height:8px;background:#00ffff;'; return s; };
+  holder.appendChild(strip());
+  pane.querySelectorAll('table').forEach(x => holder.appendChild(x.cloneNode(true)));
+  holder.appendChild(strip());
+  document.body.appendChild(holder);
+  try {
+    const canvas = await html2canvas(holder, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false });
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+    const fname = `Road_Power_Report_${(rpActiveDMY() || '').replace(/-/g,'_')}.png`;
+    const file = new File([blob], fname, { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Road Power Report' });
+    } else {
+      downloadBlob(blob);
+    }
+  } catch(e) {
+    alert('Could not build the image: ' + e.message);
+  } finally {
+    holder.remove();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  DATA STATE
+// ═══════════════════════════════════════════════════════
+let allRows = [];
+let headers = [];
+let reportTotals = { gross: null, tar: null };
+let isMultiDay = false;
+let activeDates   = null;
+let activeTabDate = null;
+
+let idxGross = -1, idxTar = -1, idxGWTime = -1, idxGWDate = -1, idxRDO = -1;
+
+let rowMins   = [];
+let rowGross  = [];
+let rowTar    = [];
+let rowGWDate = [];
+let rowDO     = [];
+
+let maxGWMins = 0, maxGWTimeStr = '', maxGWDateStr = '';
+let tabMaxTimeStr = '';          // latest gross-weight time on the active date
+let lastUnknownDOs = new Set();
+
+function ci(name) { return headers.findIndex(h => h.toLowerCase() === name); }
+function fmt(n) { return Math.round(n).toLocaleString('en-IN'); }
+
+// ═══════════════════════════════════════════════════════
+//  SETTINGS — shared with ePassViewer
+// ═══════════════════════════════════════════════════════
+const SETTINGS_GH = {
+  owner:  'ajoneschristo',
+  repo:   'epass-settings-test',
+  branch: 'main',
+  path:   'settings-test.json',
+  get token() { return GH.token; },
+  api:    'https://api.github.com',
+};
+let appSettings = {
+  mines: [],
+  powerReport: { historyPath: 'roadpower-history-test.json', parties: [] },
+};
+let _settingsSha = null;
+let codeToMine = {};   // collieryCode → { label, collieryName }
+
+function buildCodeToMine() {
+  codeToMine = {};
+  (appSettings.mines || []).forEach(m => {
+    (m.colCodes || '').split(',').map(c => c.trim()).filter(Boolean).forEach(c => {
+      codeToMine[c] = { label: m.label || c, collieryName: m.collieryName || m.label || c };
+    });
+  });
+}
+
+async function loadSettingsFromGitHub() {
+  try {
+    const res = await fetch(
+      `${SETTINGS_GH.api}/repos/${SETTINGS_GH.owner}/${SETTINGS_GH.repo}/contents/${SETTINGS_GH.path}?t=${Date.now()}`,
+      { headers: { Authorization: 'token ' + SETTINGS_GH.token, Accept: 'application/vnd.github.v3+json' } }
+    );
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    _settingsSha = data.sha;
+    const parsed = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
+    if (parsed.mines)       appSettings.mines = parsed.mines;
+    if (parsed.powerReport) appSettings.powerReport = parsed.powerReport;
+    // keep every other key so nothing is lost if this app ever writes back
+    appSettings = Object.assign({}, parsed, appSettings);
+  } catch(e) {
+    console.warn('Settings load failed:', e);
+    rpSetStatus('⚠ Could not load settings — ' + e.message, true);
+  }
+  buildCodeToMine();
+}
+
+// ═══════════════════════════════════════════════════════
+//  FILE LOAD
+// ═══════════════════════════════════════════════════════
+const dropBox = document.getElementById('dropBox');
+['dragenter','dragover'].forEach(ev =>
+  dropBox.addEventListener(ev, e => { e.preventDefault(); dropBox.classList.add('over'); }));
+['dragleave','drop'].forEach(ev =>
+  dropBox.addEventListener(ev, e => { e.preventDefault(); dropBox.classList.remove('over'); }));
+dropBox.addEventListener('drop', e => {
+  if (e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
+});
+document.getElementById('fileInput').addEventListener('change', e => {
+  if (e.target.files.length) loadFile(e.target.files[0]);
+});
+document.getElementById('mclhoInput').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => parseMclho(ev.target.result);
+  r.readAsText(f);
+  e.target.value = '';
+});
+
+function finishLoad() {
+  if (!headers.length || !allRows.length) { alert('Could not parse data.'); return; }
+
+  idxGross  = ci('gross weight');
+  idxTar    = ci('tar weight');
+  idxGWTime = ci('gross weight time');
+  idxGWDate = ci('gross weight date');
+  idxRDO    = ci('rdo number');
+
+  const n = allRows.length;
+  rowMins   = new Int16Array(n);
+  rowGross  = new Float32Array(n);
+  rowTar    = new Float32Array(n);
+  rowGWDate = new Array(n);
+  rowDO     = new Array(n);
+
+  maxGWMins = -1; maxGWTimeStr = ''; maxGWDateStr = '';
+
+  for (let i = 0; i < n; i++) {
+    const row = allRows[i];
+    const mins = idxGWTime >= 0 ? timeToMins(row[idxGWTime]) : 0;
+    rowMins[i]   = mins;
+    rowGross[i]  = idxGross >= 0 ? parseFloat(row[idxGross]) || 0 : 0;
+    rowTar[i]    = idxTar   >= 0 ? parseFloat(row[idxTar])   || 0 : 0;
+    rowGWDate[i] = idxGWDate >= 0 ? row[idxGWDate] : '';
+    rowDO[i]     = idxRDO   >= 0 ? (row[idxRDO] || '').trim() : '';
+    if (mins > maxGWMins) {
+      maxGWMins    = mins;
+      maxGWTimeStr = idxGWTime >= 0 ? row[idxGWTime].trim() : '';
+      maxGWDateStr = idxGWDate >= 0 ? row[idxGWDate].trim() : '';
+    }
+  }
+
+  document.getElementById('appHeader').classList.add('hidden');
+  document.getElementById('drop-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display   = 'block';
+
+  if (isMultiDay) {
+    const seen = new Set();
+    for (let i = 0; i < rowGWDate.length; i++) {
+      if (rowGWDate[i] && !seen.has(rowGWDate[i])) seen.add(rowGWDate[i]);
+    }
+    activeDates = [...seen].sort((a, b) =>
+      new Date(a.replace(/(\d+)-(\w+)-(\d+)/, '$2 $1 $3')) -
+      new Date(b.replace(/(\d+)-(\w+)-(\d+)/, '$2 $1 $3'))
+    );
+    activeTabDate = activeDates[activeDates.length - 1] || null;
+    buildDateTabs();
+    document.getElementById('multiDaySection').style.display = 'block';
+  } else {
+    activeDates = null;
+    activeTabDate = null;
+    document.getElementById('multiDaySection').style.display = 'none';
+  }
+
+  updateStats();
+}
+
+function buildDateTabs() {
+  const bar = document.getElementById('multiDayTabs');
+  bar.innerHTML = '';
+  for (const date of activeDates) {
+    const btn = document.createElement('button');
+    btn.className = 'multiday-tab' + (date === activeTabDate ? ' active' : '');
+    btn.textContent = date;
+    btn.onclick = () => switchTab(date);
+    bar.appendChild(btn);
+  }
+}
+
+function switchTab(date) {
+  activeTabDate = date;
+  document.querySelectorAll('.multiday-tab').forEach(btn => {
+    const isActive = btn.textContent === date;
+    btn.classList.toggle('active', isActive);
+    if (isActive) btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  });
+  updateStats();
+}
+
+// ═══════════════════════════════════════════════════════
+//  REFRESH — cut-off, unknown-DO check, report render
+// ═══════════════════════════════════════════════════════
+function updateStats() {
+  const n = rowGross.length;
+
+  // latest gross-weight time on the active date → the report cut-off
+  let tabMaxMins = -1; tabMaxTimeStr = '';
+  const unknownDOs = new Set();
+  let unknownTrips = 0;
+  for (let i = 0; i < n; i++) {
+    if (activeTabDate && rowGWDate[i] !== activeTabDate) continue;
+    if (rowMins[i] > tabMaxMins) {
+      tabMaxMins = rowMins[i];
+      tabMaxTimeStr = allRows[i][idxGWTime] ? allRows[i][idxGWTime].trim() : '';
+    }
+    const doNum = rowDO[i];
+    if (!doNum || !mclhoDB[doNum]) { unknownTrips++; if (doNum) unknownDOs.add(doNum); }
+  }
+  if (!tabMaxTimeStr) tabMaxTimeStr = maxGWTimeStr;
+
+  lastUnknownDOs = unknownDOs;
+  updateDbIndicator(unknownDOs.size);
+
+  const banner = document.getElementById('unknownBanner');
+  if (unknownTrips > 0) {
+    banner.className = 'unknown-banner show';
+    if (mclhoCount === 0) {
+      banner.innerHTML = '⚠ DO database not loaded. No party can be identified. <strong>Tap Upload or Paste to load it.</strong>';
+      banner.onclick = null; banner.style.cursor = 'default';
+    } else {
+      banner.innerHTML = `⚠ ${unknownDOs.size.toLocaleString()} unrecognised DO${unknownDOs.size > 1 ? 's' : ''} · ${unknownTrips.toLocaleString()} trip${unknownTrips > 1 ? 's' : ''} not counted against any party. <strong>Tap to see the list.</strong>`;
+      banner.style.cursor = 'pointer';
+      banner.onclick = showUnknownDOs;
+    }
+  } else {
+    banner.className = 'unknown-banner';
+    banner.onclick = null;
+  }
+
+  // as-of bar
+  document.getElementById('asofDate').textContent = rpActiveDMY() || '—';
+  document.getElementById('asofTime').textContent = tabMaxTimeStr || '—';
+
+  renderRpReports();
+}
+
+function showUnknownDOs() {
+  if (!lastUnknownDOs.size) return;
+  const list = [...lastUnknownDOs].sort();
+  alert(`${list.length} DO number(s) not in the database:\n\n` +
+        list.slice(0, 60).join('\n') + (list.length > 60 ? `\n… and ${list.length - 60} more` : ''));
+}
+
+// Show the report screen without loading a despatch file — history only
+function showSavedReports() {
+  document.getElementById('appHeader').classList.add('hidden');
+  document.getElementById('drop-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display   = 'block';
+  document.getElementById('metaPeriod').textContent = 'Saved history only';
+  document.getElementById('asofDate').textContent = '—';
+  document.getElementById('asofTime').textContent = '—';
+  renderRpReports();
+}
+
+// ═══════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════
+loadSettingsFromGitHub()
+  .then(() => loadRpHistory())
+  .then(() => { renderRpReports(); });
+loadDbFromGitHub();
+
+</script>
+</body>
+</html>
