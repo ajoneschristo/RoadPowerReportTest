@@ -985,7 +985,10 @@ body.dark .rp-card {
   font-family: 'IBM Plex Sans', sans-serif;
   font-size: 12px; font-weight: 500;
   border-right: 1px solid var(--ash);
-  max-width: 220px; overflow: hidden; text-overflow: ellipsis;
+}
+.rp-nm {
+  display: block; max-width: 230px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .rp-lead .rp-codes { font-family: var(--mono); font-size: 9px; color: var(--mute); }
 
@@ -1044,6 +1047,29 @@ body.dark .rp-card {
 
 
 
+/* day-by-day switch */
+.rp-sw { display:inline-flex; align-items:center; gap:7px; cursor:pointer; user-select:none; }
+.rp-sw input { position:absolute; opacity:0; width:0; height:0; }
+.rp-sw-track {
+  width:34px; height:18px; border-radius:9px; background:var(--border);
+  position:relative; transition:background .18s; flex-shrink:0;
+}
+.rp-sw-knob {
+  position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%;
+  background:var(--surface); box-shadow:0 1px 2px rgba(0,0,0,.3); transition:transform .18s;
+}
+.rp-sw input:checked + .rp-sw-track { background:#d97a06; }
+.rp-sw input:checked + .rp-sw-track .rp-sw-knob { transform:translateX(16px); }
+.rp-sw input:focus-visible + .rp-sw-track { outline:2px solid #d97a06; outline-offset:2px; }
+.rp-sw-lbl {
+  font-family:'IBM Plex Sans Condensed',sans-serif; font-size:11px; font-weight:600;
+  text-transform:uppercase; letter-spacing:.09em; color:var(--dim);
+}
+.rp-sw input:checked ~ .rp-sw-lbl { color:#d97a06; }
+@media (prefers-reduced-motion: reduce) {
+  .rp-sw-track, .rp-sw-knob { transition:none; }
+}
+
 .rp-toggles { display:flex; flex-direction:column; gap:7px; }
 .rp-tgl { display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; color:var(--text); }
 .rp-tgl input { width:16px; height:16px; accent-color:#d97a06; cursor:pointer; flex-shrink:0; }
@@ -1097,7 +1123,7 @@ body.dark .rp-card {
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B3-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B4-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1209,6 +1235,11 @@ body.dark .rp-card {
   <div class="rp-tabs">
     <button class="rp-tab on" id="rpTab1" onclick="rpSwitch(1)">Power Sector</button>
     <button class="rp-tab"    id="rpTab2" onclick="rpSwitch(2)">Source-wise</button>
+    <label class="rp-sw" title="Show or hide the day-by-day breakdown for this report">
+      <input type="checkbox" id="rpDaywiseTgl" onchange="rpToggleDaywise()">
+      <span class="rp-sw-track"><span class="rp-sw-knob"></span></span>
+      <span class="rp-sw-lbl">Day-by-day</span>
+    </label>
     <span style="flex:1"></span>
     <button class="rp-mini-btn" id="rpSaveDayBtn" onclick="saveRpDay()">💾 Save Day</button>
     <button class="rp-mini-btn" onclick="loadRpHistory(true).then(renderRpReports)">↻ Reload</button>
@@ -1254,7 +1285,8 @@ body.dark .rp-card {
           <label class="rp-tgl"><input type="checkbox" id="rp_r2Daywise"><span>Source-wise report — show each day's row</span></label>
         </div>
         <div class="stt-hint" style="margin-top:5px;">
-          Switch either off to show only the on-date figure, month to date, and average per day.
+          Off shows only the on-date figure, month to date, and average per day.
+          The same switch sits above each report, and either place remembers your choice.
         </div>
       </div>
 
@@ -2389,8 +2421,60 @@ async function openRpView() {
   rpSetStatus('', false);
   renderRpReports();
 }
+// Reflect the active report's setting on the switch
+function rpSyncDaywiseToggle() {
+  const el = document.getElementById('rpDaywiseTgl');
+  if (el) el.checked = rpDaywise(_rpTab);
+}
+
+// Flip the day-by-day breakdown for the report currently on screen.
+// The choice sticks: it is written back to the shared settings file, so it
+// survives a reload and follows you to another device.
+let _rpPrefTimer = null;
+function rpToggleDaywise() {
+  const key = _rpTab === 1 ? 'r1Daywise' : 'r2Daywise';
+  const pr = appSettings.powerReport = appSettings.powerReport || {};
+  pr[key] = !rpDaywise(_rpTab);
+  renderRpReports();
+  rpSetStatus('', false);
+  clearTimeout(_rpPrefTimer);
+  _rpPrefTimer = setTimeout(rpPersistPrefs, 1200);
+}
+
+async function rpPersistPrefs() {
+  const pr = appSettings.powerReport || {};
+  try {
+    const res = await fetch(
+      `${SETTINGS_GH.api}/repos/${SETTINGS_GH.owner}/${SETTINGS_GH.repo}/contents/${SETTINGS_GH.path}?t=${Date.now()}`,
+      { headers: { Authorization: 'token ' + SETTINGS_GH.token } }
+    );
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const d = await res.json();
+    let onDisk = {};
+    try { onDisk = JSON.parse(decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))))); } catch(_) {}
+    // merge into whatever is on disk — never overwrite the party list
+    const merged = Object.assign({}, onDisk, {
+      powerReport: Object.assign({}, onDisk.powerReport || {}, {
+        r1Daywise: pr.r1Daywise !== false,
+        r2Daywise: pr.r2Daywise !== false,
+      }),
+    });
+    const put = await fetch(
+      `${SETTINGS_GH.api}/repos/${SETTINGS_GH.owner}/${SETTINGS_GH.repo}/contents/${SETTINGS_GH.path}`,
+      { method: 'PUT', headers: { Authorization: 'token ' + SETTINGS_GH.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'Road power — day-by-day view preference', content: btoa(unescape(encodeURIComponent(JSON.stringify(merged, null, 2)))), branch: SETTINGS_GH.branch, sha: d.sha }) }
+    );
+    if (!put.ok) throw new Error('GitHub ' + put.status);
+    const resp = await put.json();
+    _settingsSha = resp.content.sha;
+  } catch(e) {
+    rpSetStatus('Day-by-day view changed here, but could not be saved: ' + e.message, true);
+  }
+}
+
 function rpSwitch(n) {
   _rpTab = n;
+  rpSyncDaywiseToggle();
   document.getElementById('rpTab1').classList.toggle('on', n === 1);
   document.getElementById('rpTab2').classList.toggle('on', n === 2);
   document.getElementById('rpPane1').style.display = n === 1 ? 'block' : 'none';
@@ -2434,7 +2518,14 @@ function rpMonthData() {
     prev.days++;
     for (const kk in (rec.pc || {})) prev.pc[kk] = (prev.pc[kk] || 0) + rec.pc[kk];
   }
-  return { Y, M, dim, days, lastDay, prev, activeKey: key,
+  // The "on date" column points at the active date when the file covers it,
+  // otherwise at the latest day holding data — so a history-only view still
+  // shows the most recent day's lifting instead of a blank column.
+  const actD = key ? +key.slice(8,10) : 0;
+  const onDay = (actD && days[actD]) ? actD : lastDay;
+  const onKey = onDay ? `${Y}-${String(M).padStart(2,'0')}-${String(onDay).padStart(2,'0')}` : null;
+
+  return { Y, M, dim, days, lastDay, prev, activeKey: key, onDay, onKey,
            monLabel: RP_MON[M-1] + '-' + Y };
 }
 
@@ -2462,8 +2553,8 @@ function rpSumPartyColl(pc, codes, colls) {
 function rpEsc(x) { return String(x == null ? '' : x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
 function rpDayNum(d) { return String(d).padStart(2,'0'); }
 function rpOnLabel(md) {
-  if (!md.activeKey) return md.monLabel;
-  return rpDayNum(+md.activeKey.slice(8,10)) + ' ' + RP_MON[md.M-1].toUpperCase();
+  if (!md.onKey) return md.monLabel;
+  return rpDayNum(md.onDay) + ' ' + RP_MON[md.M-1].toUpperCase();
 }
 // is the day-by-day breakdown switched on for a report?
 function rpDaywise(which) {
@@ -2501,7 +2592,7 @@ function renderRp1(md) {
 
   const daywise = rpDaywise(1);
   const lastDay = md.lastDay || 0;
-  const actD    = md.activeKey ? +md.activeKey.slice(8,10) : 0;
+  const actD    = md.onDay || 0;
 
   // day columns actually holding data
   const dayCols = [];
@@ -2538,8 +2629,10 @@ function renderRp1(md) {
     tToday += r.today; tProg += r.prog; tAvg += r.cnt ? r.prog / r.cnt : 0;
     const bar = peak > 0 ? Math.round((r.today / peak) * 100) : 0;
     body += '<tr>';
-    body += `<td class="rp-lead" title="${rpEsc(r.codes.join(', '))}">${rpEsc(r.name)}` +
-            (r.codes.length > 1 ? ` <span class="rp-codes">${r.codes.length} codes</span>` : '') + '</td>';
+    body += `<td class="rp-lead" title="${rpEsc(r.name)} · ${rpEsc(r.codes.join(', '))}">` +
+            `<span class="rp-nm">${rpEsc(r.name)}` +
+            (r.codes.length > 1 ? ` <span class="rp-codes">${r.codes.length} codes</span>` : '') +
+            '</span></td>';
     body += `<td class="rp-v rp-on" style="--b:${bar}%"><span>${rpNum(r.today) || '—'}</span></td>`;
     body += `<td class="rp-v rp-key">${rpNum(r.prog)}</td>`;
     body += `<td class="rp-v">${rpNum(r.cnt ? r.prog / r.cnt : 0)}</td>`;
@@ -2566,7 +2659,7 @@ function renderRp1(md) {
        <div class="rp-cap-meta">${md.monLabel} · as on <b>${rpEsc(rpOnLabel(md))}</b>${cut ? ' · cut-off ' + rpEsc(cut) : ''}</div>
      </div>
      <div class="rp-scrollx"><table class="rp-t"><thead>${head}</thead><tbody>${body}${foot}</tbody></table></div>
-     <div class="rp-foot">Tonnes${hidden ? ` · ${hidden} customer${hidden > 1 ? 's' : ''} hidden with no lifting this month` : ''}${daywise ? '' : ' · day-by-day columns switched off in settings'}</div>`;
+     <div class="rp-foot">Tonnes${hidden ? ` · ${hidden} customer${hidden > 1 ? 's' : ''} hidden with no lifting this month` : ''}</div>`;
   pane.appendChild(card);
 
   if (!rows.length) card.querySelector('.rp-scrollx').innerHTML =
@@ -2588,7 +2681,7 @@ function renderRp2(md) {
   if (!md) { pane.innerHTML = '<div class="rp-card"><div class="rp-empty">Nothing to show. Load a despatch file, or reload the saved history.</div></div>'; return; }
 
   const daywise = rpDaywise(2);
-  const actD = md.activeKey ? +md.activeKey.slice(8,10) : 0;
+  const actD = md.onDay || 0;
   const splitCodes = c => (c.colCodes || '').split(',').map(x => x.trim()).filter(Boolean);
 
   // days holding data, blanks skipped
@@ -2666,7 +2759,7 @@ function renderRp2(md) {
          <div class="rp-cap-meta">Source-wise · ${md.monLabel} · as on <b>${rpEsc(rpOnLabel(md))}</b></div>
        </div>
        <div class="rp-scrollx"><table class="rp-t"><thead>${head}</thead><tbody>${prevRows}${body}${foot}</tbody></table></div>
-       <div class="rp-foot">Tonnes · ${n} day${n === 1 ? '' : 's'} lifted${daywise ? '' : ' · day-by-day rows switched off in settings'}</div>`;
+       <div class="rp-foot">Tonnes · ${n} day${n === 1 ? '' : 's'} lifted</div>`;
     pane.appendChild(card);
   });
 }
