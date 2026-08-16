@@ -963,14 +963,13 @@ body.dark .rp-card {
 }
 .rp-t th, .rp-t td {
   padding: 5px 9px; white-space: nowrap;
-  border-bottom: 1px solid var(--ash-soft);
+  border: 1px solid var(--ash);
 }
 .rp-t thead th {
   font-family: 'IBM Plex Sans Condensed', sans-serif;
   font-size: 10px; font-weight: 600; letter-spacing: .1em;
   text-transform: uppercase; color: var(--mute);
   text-align: right; padding-top: 8px; padding-bottom: 7px;
-  border-bottom: 1px solid var(--ash);
   background: var(--paper);
 }
 .rp-t thead th.rp-lead { text-align: left; }
@@ -984,7 +983,6 @@ body.dark .rp-card {
   text-align: left;
   font-family: 'IBM Plex Sans', sans-serif;
   font-size: 12px; font-weight: 500;
-  border-right: 1px solid var(--ash);
 }
 .rp-nm {
   display: block; max-width: 230px;
@@ -1001,7 +999,7 @@ body.dark .rp-card {
 /* signature: load bar behind the on-date figure */
 .rp-on {
   position: relative; color: var(--live); font-weight: 600;
-  border-left: 2px solid var(--live); border-right: 1px solid var(--ash);
+  border-left: 2px solid var(--live) !important;
 }
 .rp-on::before {
   content: ''; position: absolute; left: 0; top: 2px; bottom: 2px;
@@ -1011,20 +1009,19 @@ body.dark .rp-card {
 
 /* subtotal columns (e.g. Talcher Total) read as derived, not as data */
 .rp-t th.rp-sub, .rp-t td.rp-sub {
-  border-left: 1px dashed var(--ash);
+  border-left: 1px dashed var(--mute) !important;
   color: var(--mute); font-style: italic;
 }
 
 /* totals band */
 .rp-t tr.rp-sum td {
   background: var(--band); color: var(--band-ink);
-  font-weight: 600; border-bottom: none;
+  font-weight: 600; border-color: var(--band);
 }
 .rp-t tr.rp-sum td.rp-lead {
   background: var(--band); color: var(--band-ink);
   font-family: 'IBM Plex Sans Condensed', sans-serif;
   letter-spacing: .06em; text-transform: uppercase; font-size: 11px;
-  border-right-color: var(--band);
 }
 .rp-t tr.rp-sum td.rp-on { color: var(--band-ink); border-left-color: var(--live); }
 .rp-t tr.rp-sum td.rp-on::before { background: none; }
@@ -1140,7 +1137,7 @@ body.dark .rp-card {
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B5-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B6-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1262,6 +1259,8 @@ body.dark .rp-card {
     <button class="rp-mini-btn" onclick="loadRpHistory(true).then(renderRpReports)">↻ Reload</button>
     <button class="rp-mini-btn" onclick="openRpDays()">Saved days</button>
     <button class="rp-mini-btn" onclick="shareRpReport()">Share</button>
+    <button class="rp-mini-btn" id="rpPdfBtn" onclick="rpExportPdf()">PDF</button>
+    <button class="rp-mini-btn" id="rpXlsBtn" onclick="rpExportXlsx()">Excel</button>
   </div>
 
   <div class="rp-note" id="rpViewSub">—</div>
@@ -2697,10 +2696,55 @@ function rpOnLabel(md) {
   if (!md.onKey) return md.monLabel;
   return rpDayNum(md.onDay) + ' ' + RP_MON[md.M-1].toUpperCase();
 }
-// is the day-by-day breakdown switched on for a report?
 function rpDaywise(which) {
   const pr = appSettings.powerReport || {};
   return pr[which === 1 ? 'r1Daywise' : 'r2Daywise'] !== false;
+}
+
+// Every rendered table is kept as a model, so the screen, the PDF and the
+// workbook all come from one description instead of three.
+//   head : [{ t, k }]                       k = lead | on | key | num | sub | day
+//   rows : [{ k, cells:[{ v, txt, b }] }]   k = data | sum | avg
+let _rpTables = [];
+
+function rpCellCls(k) {
+  return k === 'lead' ? 'rp-lead'
+       : k === 'on'   ? 'rp-v rp-on'
+       : k === 'key'  ? 'rp-v rp-key'
+       : k === 'sub'  ? 'rp-v rp-sub'
+       : k === 'day'  ? 'rp-v rp-day'
+       :                'rp-v';
+}
+
+function rpTableHTML(t) {
+  let h = '<thead><tr>';
+  t.head.forEach(c => h += `<th class="${c.k === 'lead' ? 'rp-lead' : c.k === 'on' ? 'rp-on' : c.k === 'sub' ? 'rp-sub' : c.k === 'day' ? 'rp-day' : ''}">${rpEsc(c.t)}</th>`);
+  h += '</tr></thead><tbody>';
+  t.rows.forEach(r => {
+    h += `<tr${r.k === 'sum' ? ' class="rp-sum"' : r.k === 'avg' ? ' class="rp-avg"' : ''}>`;
+    r.cells.forEach((c, i) => {
+      const k = t.head[i] ? t.head[i].k : 'num';
+      const zero = (k !== 'lead' && r.k === 'data' && c.v === 0) ? ' rp-zero' : '';
+      const bar  = (k === 'on' && c.b != null) ? ` style="--b:${c.b}%"` : '';
+      const txt  = c.txt != null ? c.txt : (typeof c.v === 'number' ? (c.v ? rpNum(c.v) : (r.k === 'data' ? '·' : '')) : c.v);
+      const tip  = c.title ? ` title="${rpEsc(c.title)}"` : '';
+      if (k === 'lead') h += `<td class="rp-lead"${tip}><span class="rp-nm">${c.html || rpEsc(txt)}</span></td>`;
+      else if (k === 'on') h += `<td class="${rpCellCls(k)}${zero}"${bar}><span>${rpEsc(txt) || '—'}</span></td>`;
+      else h += `<td class="${rpCellCls(k)}${zero}">${rpEsc(txt)}</td>`;
+    });
+    h += '</tr>';
+  });
+  return h + '</tbody>';
+}
+
+function rpCard(t) {
+  const card = document.createElement('div');
+  card.className = 'rp-card';
+  card.innerHTML =
+    `<div class="rp-cap"><h3>${rpEsc(t.title)}</h3><div class="rp-cap-meta">${t.metaHtml || rpEsc(t.meta || '')}</div></div>
+     <div class="rp-scrollx"><table class="rp-t">${rpTableHTML(t)}</table></div>
+     ${t.foot ? `<div class="rp-foot">${rpEsc(t.foot)}</div>` : ''}`;
+  return card;
 }
 
 function renderRpReports() {
@@ -2712,9 +2756,19 @@ function renderRpReports() {
   sub.textContent = md
     ? `${md.monLabel} · ${Object.keys(md.days).length} day(s) of data · ${n1} customer rows · ${n2} source-wise block(s)`
     : 'No data yet — load a despatch file or save a day.';
+  _rpTables = [];
   renderRp1(md);
   renderRp2(md);
   rpSwitch(_rpTab);
+  rpSyncExportBtns();
+}
+
+function rpSyncExportBtns() {
+  const on = _rpTables.length > 0;
+  ['rpPdfBtn','rpXlsBtn'].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) { b.disabled = !on; b.style.opacity = on ? '1' : '.4'; }
+  });
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2735,7 +2789,6 @@ function renderRp1(md) {
   const lastDay = md.lastDay || 0;
   const actD    = md.onDay || 0;
 
-  // day columns actually holding data
   const dayCols = [];
   for (let d = 1; d <= lastDay; d++) if (md.days[d]) dayCols.push(d);
 
@@ -2743,66 +2796,56 @@ function renderRp1(md) {
     const codes = rpCodesOf(p);
     const vals = {};
     let prog = 0, cnt = 0;
-    dayCols.forEach(d => {
-      const v = rpSumParty(md.days[d].pc, codes);
-      vals[d] = v; prog += v; cnt++;
-    });
+    dayCols.forEach(d => { const v = rpSumParty(md.days[d].pc, codes); vals[d] = v; prog += v; cnt++; });
     return { name: p.name || codes[0], codes, vals, prog, cnt, today: vals[actD] || 0 };
   });
 
-  // customers with nothing lifted this month stay hidden
   const hidden = rows.filter(r => r.prog <= 0).length;
   rows = rows.filter(r => r.prog > 0).sort((a,b) => b.prog - a.prog);
 
   const peak = rows.reduce((m,r) => Math.max(m, r.today), 0);
   const cut  = (md.days[actD] && md.days[actD].cut) || '';
 
-  let head = '<tr><th class="rp-lead">Customer</th>' +
-             `<th class="rp-on">${rpOnLabel(md)}</th>` +
-             '<th>Month to date</th><th>Avg / day</th>';
-  if (daywise) dayCols.forEach(d => head += `<th class="rp-day">${rpDayNum(d)}</th>`);
-  head += '</tr>';
+  const head = [
+    { t: 'Customer',      k: 'lead' },
+    { t: rpOnLabel(md),   k: 'on'   },
+    { t: 'Month to date', k: 'key'  },
+    { t: 'Avg / day',     k: 'num'  },
+  ];
+  if (daywise) dayCols.forEach(d => head.push({ t: rpDayNum(d), k: 'day' }));
 
-  let body = '';
+  const outRows = [];
   let tToday = 0, tProg = 0, tAvg = 0;
   const dayTotals = {};
   rows.forEach(r => {
     tToday += r.today; tProg += r.prog; tAvg += r.cnt ? r.prog / r.cnt : 0;
-    const bar = peak > 0 ? Math.round((r.today / peak) * 100) : 0;
-    body += '<tr>';
-    body += `<td class="rp-lead" title="${rpEsc(r.name)} · ${rpEsc(r.codes.join(', '))}">` +
-            `<span class="rp-nm">${rpEsc(r.name)}` +
-            (r.codes.length > 1 ? ` <span class="rp-codes">${r.codes.length} codes</span>` : '') +
-            '</span></td>';
-    body += `<td class="rp-v rp-on" style="--b:${bar}%"><span>${rpNum(r.today) || '—'}</span></td>`;
-    body += `<td class="rp-v rp-key">${rpNum(r.prog)}</td>`;
-    body += `<td class="rp-v">${rpNum(r.cnt ? r.prog / r.cnt : 0)}</td>`;
-    if (daywise) dayCols.forEach(d => {
-      const v = r.vals[d] || 0;
-      dayTotals[d] = (dayTotals[d] || 0) + v;
-      body += `<td class="rp-v rp-day${v === 0 ? ' rp-zero' : ''}">${v ? rpNum(v) : '·'}</td>`;
-    });
-    body += '</tr>';
+    dayCols.forEach(d => dayTotals[d] = (dayTotals[d] || 0) + (r.vals[d] || 0));
+    const cells = [
+      { v: r.name, title: r.name + ' · ' + r.codes.join(', '),
+        html: rpEsc(r.name) + (r.codes.length > 1 ? ` <span class="rp-codes">${r.codes.length} codes</span>` : '') },
+      { v: r.today, b: peak > 0 ? Math.round((r.today / peak) * 100) : 0 },
+      { v: r.prog },
+      { v: r.cnt ? r.prog / r.cnt : 0 },
+    ];
+    if (daywise) dayCols.forEach(d => cells.push({ v: r.vals[d] || 0 }));
+    outRows.push({ k: 'data', cells });
   });
-  if (!daywise) dayCols.forEach(d => { dayTotals[d] = rows.reduce((s,r) => s + (r.vals[d]||0), 0); });
 
-  let foot = '<tr class="rp-sum"><td class="rp-lead">All customers</td>';
-  foot += `<td class="rp-v rp-on">${rpNum(tToday)}</td>`;
-  foot += `<td class="rp-v">${rpNum(tProg)}</td><td class="rp-v">${rpNum(tAvg)}</td>`;
-  if (daywise) dayCols.forEach(d => foot += `<td class="rp-v">${rpNum(dayTotals[d] || 0)}</td>`);
-  foot += '</tr>';
+  const sumCells = [{ v: 'All customers' }, { v: tToday }, { v: tProg }, { v: tAvg }];
+  if (daywise) dayCols.forEach(d => sumCells.push({ v: dayTotals[d] || 0 }));
+  outRows.push({ k: 'sum', cells: sumCells });
 
-  const card = document.createElement('div');
-  card.className = 'rp-card';
-  card.innerHTML =
-    `<div class="rp-cap">
-       <h3>Road despatch to power sector</h3>
-       <div class="rp-cap-meta">${md.monLabel} · as on <b>${rpEsc(rpOnLabel(md))}</b>${cut ? ' · cut-off ' + rpEsc(cut) : ''}</div>
-     </div>
-     <div class="rp-scrollx"><table class="rp-t"><thead>${head}</thead><tbody>${body}${foot}</tbody></table></div>
-     <div class="rp-foot">Tonnes${hidden ? ` · ${hidden} customer${hidden > 1 ? 's' : ''} hidden with no lifting this month` : ''}</div>`;
+  const t = {
+    sheet: 'Power sector',
+    title: 'Road despatch to power sector',
+    meta:  `${md.monLabel} · as on ${rpOnLabel(md)}${cut ? ' · cut-off ' + cut : ''}`,
+    metaHtml: `${rpEsc(md.monLabel)} · as on <b>${rpEsc(rpOnLabel(md))}</b>${cut ? ' · cut-off ' + rpEsc(cut) : ''}`,
+    foot:  `Tonnes${hidden ? ` · ${hidden} customer${hidden > 1 ? 's' : ''} hidden with no lifting this month` : ''}`,
+    head, rows: outRows,
+  };
+  _rpTables.push(t);
+  const card = rpCard(t);
   pane.appendChild(card);
-
   if (!rows.length) card.querySelector('.rp-scrollx').innerHTML =
     '<div class="rp-empty">No lifting recorded against any of the picked customers this month.</div>';
 }
@@ -2816,7 +2859,7 @@ function renderRp2(md) {
   const pr = appSettings.powerReport || {};
   const parties = (pr.parties || []).filter(p => p.r2);
   if (!parties.length) {
-    pane.innerHTML = '<div class="rp-card"><div class="rp-empty">No customers picked for this report yet. Open ⚙, tick <strong>R2</strong>, then set the colliery columns.</div></div>';
+    pane.innerHTML = '<div class="rp-card"><div class="rp-empty">No customers picked for this report yet. Open ⚙, tap <strong>+ Add customer</strong>, then set the colliery columns.</div></div>';
     return;
   }
   if (!md) { pane.innerHTML = '<div class="rp-card"><div class="rp-empty">Nothing to show. Load a despatch file, or reload the saved history.</div></div>'; return; }
@@ -2825,7 +2868,6 @@ function renderRp2(md) {
   const actD = md.onDay || 0;
   const splitCodes = c => (c.colCodes || '').split(',').map(x => x.trim()).filter(Boolean);
 
-  // days holding data, blanks skipped
   const dayList = [];
   for (let d = 1; d <= md.dim; d++) if (md.days[d]) dayList.push(d);
 
@@ -2834,19 +2876,18 @@ function renderRp2(md) {
     const cols  = (p.cols || []);
     const real  = cols.filter(c => !c.isSubtotal);
 
-    let head = '<tr><th class="rp-lead">Date</th>';
-    cols.forEach(c => head += `<th${c.isSubtotal ? ' class="rp-sub"' : ''}>${rpEsc(c.label || c.colCodes)}</th>`);
-    head += '<th class="rp-on">Total</th></tr>';
+    const head = [{ t: 'Date', k: 'lead' }];
+    cols.forEach(c => head.push({ t: c.label || c.colCodes, k: c.isSubtotal ? 'sub' : 'num' }));
+    head.push({ t: 'Total', k: 'on' });
 
-    const sums = cols.map(() => 0);
-    let gTot = 0;
     const cellsFor = pc => {
       const v = cols.map(c => rpSumPartyColl(pc, codes, splitCodes(c)));
       const t = real.reduce((s,c) => s + rpSumPartyColl(pc, codes, splitCodes(c)), 0);
       return { v, t };
     };
 
-    // accumulate over every day with data, whether or not the rows are shown
+    const sums = cols.map(() => 0);
+    let gTot = 0;
     dayList.forEach(d => {
       const { v, t } = cellsFor(md.days[d].pc);
       v.forEach((x,i) => sums[i] += x);
@@ -2854,54 +2895,35 @@ function renderRp2(md) {
     });
     const peak = dayList.reduce((m,d) => Math.max(m, cellsFor(md.days[d].pc).t), 0);
 
-    let body = '';
-    const rowFor = (label, d) => {
-      const { v, t } = cellsFor(md.days[d].pc);
-      const bar = peak > 0 ? Math.round((t / peak) * 100) : 0;
-      let h = `<tr><td class="rp-lead">${rpEsc(label)}</td>`;
-      v.forEach((x,i) => h += `<td class="rp-v${cols[i].isSubtotal ? ' rp-sub' : ''}${x === 0 ? ' rp-zero' : ''}">${x ? rpNum(x) : '·'}</td>`);
-      h += `<td class="rp-v rp-on" style="--b:${bar}%"><span>${rpNum(t) || '—'}</span></td></tr>`;
-      return h;
-    };
-
-    if (daywise) {
-      dayList.forEach(d => body += rowFor(`${rpDayNum(d)} ${RP_MON[md.M-1]}`, d));
-    } else if (md.days[actD]) {
-      body += rowFor(rpOnLabel(md), actD);
-    }
-
-    let foot = '<tr class="rp-sum"><td class="rp-lead">Month to date</td>';
-    sums.forEach((v,i) => foot += `<td class="rp-v${cols[i].isSubtotal ? ' rp-sub' : ''}">${rpNum(v)}</td>`);
-    foot += `<td class="rp-v rp-on">${rpNum(gTot)}</td></tr>`;
-
-    const n = dayList.length;
-    foot += '<tr class="rp-avg"><td class="rp-lead">Avg / day</td>';
-    sums.forEach((v,i) => foot += `<td class="rp-v${cols[i].isSubtotal ? ' rp-sub' : ''}">${rpNum(n ? v / n : 0)}</td>`);
-    foot += `<td class="rp-v">${rpNum(n ? gTot / n : 0)}</td></tr>`;
-
-    // previous month, when history reaches back that far
-    let prevRows = '';
+    const outRows = [];
     if (md.prev.days) {
       const pv = cols.map(c => rpSumPartyColl(md.prev.pc, codes, splitCodes(c)));
       const pt = real.reduce((s,c) => s + rpSumPartyColl(md.prev.pc, codes, splitCodes(c)), 0);
-      prevRows += `<tr class="rp-avg"><td class="rp-lead">${rpEsc(md.prev.label)} total</td>`;
-      pv.forEach((v,i) => prevRows += `<td class="rp-v${cols[i].isSubtotal ? ' rp-sub' : ''}">${rpNum(v)}</td>`);
-      prevRows += `<td class="rp-v">${rpNum(pt)}</td></tr>`;
-      prevRows += `<tr class="rp-avg"><td class="rp-lead">${rpEsc(md.prev.label)} avg / day</td>`;
-      pv.forEach((v,i) => prevRows += `<td class="rp-v${cols[i].isSubtotal ? ' rp-sub' : ''}">${rpNum(v / md.prev.days)}</td>`);
-      prevRows += `<td class="rp-v">${rpNum(pt / md.prev.days)}</td></tr>`;
+      outRows.push({ k: 'avg', cells: [{ v: md.prev.label + ' total' }, ...pv.map(v => ({ v })), { v: pt }] });
+      outRows.push({ k: 'avg', cells: [{ v: md.prev.label + ' avg / day' }, ...pv.map(v => ({ v: v / md.prev.days })), { v: pt / md.prev.days }] });
     }
 
-    const card = document.createElement('div');
-    card.className = 'rp-card';
-    card.innerHTML =
-      `<div class="rp-cap">
-         <h3>${rpEsc(p.name || codes[0])}</h3>
-         <div class="rp-cap-meta">Source-wise · ${md.monLabel} · as on <b>${rpEsc(rpOnLabel(md))}</b></div>
-       </div>
-       <div class="rp-scrollx"><table class="rp-t"><thead>${head}</thead><tbody>${prevRows}${body}${foot}</tbody></table></div>
-       <div class="rp-foot">Tonnes · ${n} day${n === 1 ? '' : 's'} lifted</div>`;
-    pane.appendChild(card);
+    const dayRow = (label, d) => {
+      const { v, t } = cellsFor(md.days[d].pc);
+      return { k: 'data', cells: [{ v: label }, ...v.map(x => ({ v: x })), { v: t, b: peak > 0 ? Math.round((t / peak) * 100) : 0 }] };
+    };
+    if (daywise) dayList.forEach(d => outRows.push(dayRow(`${rpDayNum(d)} ${RP_MON[md.M-1]}`, d)));
+    else if (md.days[actD]) outRows.push(dayRow(rpOnLabel(md), actD));
+
+    outRows.push({ k: 'sum', cells: [{ v: 'Month to date' }, ...sums.map(v => ({ v })), { v: gTot }] });
+    const n = dayList.length;
+    outRows.push({ k: 'avg', cells: [{ v: 'Avg / day' }, ...sums.map(v => ({ v: n ? v / n : 0 })), { v: n ? gTot / n : 0 }] });
+
+    const t = {
+      sheet: 'Source-wise',
+      title: p.name || codes[0],
+      meta:  `Source-wise · ${md.monLabel} · as on ${rpOnLabel(md)}`,
+      metaHtml: `Source-wise · ${rpEsc(md.monLabel)} · as on <b>${rpEsc(rpOnLabel(md))}</b>`,
+      foot:  `Tonnes · ${n} day${n === 1 ? '' : 's'} lifted`,
+      head, rows: outRows,
+    };
+    _rpTables.push(t);
+    pane.appendChild(rpCard(t));
   });
 }
 
@@ -2935,6 +2957,360 @@ async function shareRpReport() {
     alert('Could not build the image: ' + e.message);
   } finally {
     holder.remove();
+  }
+}
+function _buildZip(files) {
+  function u16(n){const b=new Uint8Array(2);new DataView(b.buffer).setUint16(0,n,true);return b;}
+  function u32(n){const b=new Uint8Array(4);new DataView(b.buffer).setUint32(0,n,true);return b;}
+  function cat(...a){const t=a.reduce((s,x)=>s+x.length,0),o=new Uint8Array(t);let p=0;for(const x of a){o.set(x,p);p+=x.length;}return o;}
+  function crc32(buf){
+    const t=new Uint32Array(256);
+    for(let i=0;i<256;i++){let v=i;for(let j=0;j<8;j++)v=(v&1)?(0xEDB88320^(v>>>1)):(v>>>1);t[i]=v;}
+    let c=0xFFFFFFFF;
+    for(let i=0;i<buf.length;i++)c=t[(c^buf[i])&0xFF]^(c>>>8);
+    return(c^0xFFFFFFFF)>>>0;
+  }
+  const lp=[],cd=[];let off=0;
+  for(const[path,data] of Object.entries(files)){
+    const nm=new TextEncoder().encode(path),crc=crc32(data);
+    const lh=cat(new Uint8Array([0x50,0x4B,0x03,0x04]),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nm.length),u16(0),nm);
+    lp.push(cat(lh,data));
+    cd.push(cat(new Uint8Array([0x50,0x4B,0x01,0x02]),u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nm.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(off),nm));
+    off+=lh.length+data.length;
+  }
+  const local=cat(...lp),cdir=cat(...cd);
+  const eocd=cat(new Uint8Array([0x50,0x4B,0x05,0x06]),u16(0),u16(0),u16(lp.length),u16(lp.length),u32(cdir.length),u32(local.length),u16(0));
+  return new Blob([cat(local,cdir,eocd)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+
+// ═══════════════════════════════════════════════════════
+//  EXPORTS — one PDF, one workbook
+//  Both are built in the browser with no extra libraries:
+//  the PDF embeds JPEG page images, the workbook is hand-rolled
+//  SpreadsheetML zipped with the same writer the viewer uses.
+// ═══════════════════════════════════════════════════════
+
+function rpStamp() {
+  const d = rpActiveDMY() || new Date().toDateString();
+  return String(d).replace(/[^\w]+/g, '_');
+}
+function rpSaveBlob(blob, fname) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = fname;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+async function rpShareOrSave(blob, fname, type, title) {
+  const file = new File([blob], fname, { type });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title }); return; }
+    catch(e) { if (e && e.name === 'AbortError') return; }
+  }
+  rpSaveBlob(blob, fname);
+}
+
+// ── every report card, rendered off-screen in the light palette ────────
+async function rpSnapCards(onProgress) {
+  const cards = [];
+  ['rpPane1','rpPane2'].forEach(id => {
+    document.getElementById(id).querySelectorAll('.rp-card').forEach(c => {
+      if (c.querySelector('.rp-t')) cards.push(c);
+    });
+  });
+  if (!cards.length) return [];
+
+  const shots = [];
+  for (let i = 0; i < cards.length; i++) {
+    if (onProgress) onProgress(i + 1, cards.length);
+    const holder = document.createElement('div');
+    holder.className = 'rp-light';
+    holder.style.cssText = 'position:fixed;left:-10000px;top:0;background:#f5f7f9;padding:20px;display:inline-block;';
+    const c = cards[i].cloneNode(true);
+    c.querySelectorAll('.rp-lead').forEach(el => { el.style.position = 'static'; });
+    c.querySelectorAll('.rp-nm').forEach(el => { el.style.maxWidth = 'none'; });
+    const sx = c.querySelector('.rp-scrollx');
+    if (sx) sx.style.overflow = 'visible';
+    holder.appendChild(c);
+    document.body.appendChild(holder);
+    try {
+      const canvas = await html2canvas(holder, { backgroundColor: '#f5f7f9', scale: 2, useCORS: true, logging: false });
+      shots.push(canvas);
+    } finally { holder.remove(); }
+  }
+  return shots;
+}
+
+// ── PDF ────────────────────────────────────────────────────────────────
+function rpJpegBytes(canvas, q) {
+  const b64 = canvas.toDataURL('image/jpeg', q == null ? 0.92 : q).split(',')[1];
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+function rpBuildPdf(pages, title) {
+  const enc = new TextEncoder();
+  const chunks = [];
+  let len = 0;
+  const push = u8 => { chunks.push(u8); len += u8.length; };
+  const pushStr = s => push(enc.encode(s));
+
+  const objs = [];                       // byte offset of each object, 1-based
+  const startObj = n => { objs[n] = len; pushStr(`${n} 0 obj\n`); };
+  const endObj = () => pushStr('endobj\n');
+
+  const nPages = pages.length;
+  // 1 catalog, 2 pages tree, then 3 objects per page
+  const pageObjId = i => 3 + i * 3;
+  const contId   = i => 4 + i * 3;
+  const imgId    = i => 5 + i * 3;
+
+  pushStr('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+
+  startObj(1);
+  pushStr('<< /Type /Catalog /Pages 2 0 R >>\n');
+  endObj();
+
+  startObj(2);
+  pushStr(`<< /Type /Pages /Count ${nPages} /Kids [ ${pages.map((_,i) => pageObjId(i) + ' 0 R').join(' ')} ] >>\n`);
+  endObj();
+
+  pages.forEach((p, i) => {
+    const stream = `q\n${p.w} 0 0 ${p.h} 0 0 cm\n/Im0 Do\nQ\n`;
+
+    startObj(pageObjId(i));
+    pushStr(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${p.w} ${p.h}] ` +
+            `/Resources << /XObject << /Im0 ${imgId(i)} 0 R >> >> /Contents ${contId(i)} 0 R >>\n`);
+    endObj();
+
+    startObj(contId(i));
+    pushStr(`<< /Length ${stream.length} >>\nstream\n${stream}endstream\n`);
+    endObj();
+
+    startObj(imgId(i));
+    pushStr(`<< /Type /XObject /Subtype /Image /Width ${p.pw} /Height ${p.ph} ` +
+            `/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${p.jpeg.length} >>\nstream\n`);
+    push(p.jpeg);
+    pushStr('\nendstream\n');
+    endObj();
+  });
+
+  const maxObj = 2 + nPages * 3;
+  const xrefAt = len;
+  pushStr(`xref\n0 ${maxObj + 1}\n0000000000 65535 f \n`);
+  for (let n = 1; n <= maxObj; n++) {
+    pushStr(String(objs[n]).padStart(10, '0') + ' 00000 n \n');
+  }
+  pushStr(`trailer\n<< /Size ${maxObj + 1} /Root 1 0 R /Info << /Title (${String(title||'').replace(/[()\\]/g,'')}) >> >>\n` +
+          `startxref\n${xrefAt}\n%%EOF\n`);
+
+  const out = new Uint8Array(len);
+  let at = 0;
+  for (const c of chunks) { out.set(c, at); at += c.length; }
+  return new Blob([out], { type: 'application/pdf' });
+}
+
+async function rpExportPdf() {
+  const btn = document.getElementById('rpPdfBtn');
+  if (!_rpTables.length) { alert('Nothing to export yet — the reports are empty.'); return; }
+  const label = btn.textContent; btn.disabled = true;
+  try {
+    btn.textContent = 'Rendering…';
+    const shots = await rpSnapCards((i,n) => btn.textContent = `Page ${i}/${n}…`);
+    if (!shots.length) { alert('Nothing to export yet — the reports are empty.'); return; }
+
+    const MAXW = 1500, MAXH = 2000;   // points
+    const pages = shots.map(cv => {
+      let w = cv.width * 0.375, h = cv.height * 0.375;   // 2x canvas → CSS px → pt
+      if (w > MAXW) { h *= MAXW / w; w = MAXW; }
+      if (h > MAXH) { w *= MAXH / h; h = MAXH; }
+      return { w: Math.round(w), h: Math.round(h), pw: cv.width, ph: cv.height, jpeg: rpJpegBytes(cv) };
+    });
+
+    btn.textContent = 'Building…';
+    const blob = rpBuildPdf(pages, 'Road Power Report');
+    await rpShareOrSave(blob, `Road_Power_Report_${rpStamp()}.pdf`, 'application/pdf', 'Road Power Report');
+    rpSetStatus(`PDF ready — ${pages.length} page${pages.length > 1 ? 's' : ''}.`, false);
+  } catch(e) {
+    rpSetStatus('Could not build the PDF: ' + e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = label;
+  }
+}
+
+// ── XLSX ───────────────────────────────────────────────────────────────
+function rpXmlEsc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+}
+function rpColLetter(n) {           // 1 → A
+  let s = '';
+  while (n > 0) { const r = (n - 1) % 26; s = String.fromCharCode(65 + r) + s; n = (n - r - 1) / 26; }
+  return s;
+}
+
+// style ids written into styles.xml below
+const RP_S = { title:1, meta:2, head:3, lead:4, num:5, key:6, on:7, sub:8, sumLead:9, sum:10, avgLead:11, avg:12 };
+
+function rpSheetXml(tables) {
+  let rowNo = 0, maxCols = 1;
+  const rows = [];
+  const push = cells => { rowNo++; rows.push({ r: rowNo, cells }); };
+
+  tables.forEach((t, ti) => {
+    if (ti) push([]);                                        // blank spacer row
+    maxCols = Math.max(maxCols, t.head.length);
+    push([{ v: t.title, s: RP_S.title, span: t.head.length }]);
+    push([{ v: t.meta,  s: RP_S.meta,  span: t.head.length }]);
+    push(t.head.map(h => ({ v: h.t, s: RP_S.head })));
+    t.rows.forEach(r => {
+      push(r.cells.map((c, i) => {
+        const k = t.head[i] ? t.head[i].k : 'num';
+        let s;
+        if (k === 'lead') s = r.k === 'sum' ? RP_S.sumLead : r.k === 'avg' ? RP_S.avgLead : RP_S.lead;
+        else if (r.k === 'sum') s = RP_S.sum;
+        else if (r.k === 'avg') s = RP_S.avg;
+        else if (k === 'on')  s = RP_S.on;
+        else if (k === 'key') s = RP_S.key;
+        else if (k === 'sub') s = RP_S.sub;
+        else s = RP_S.num;
+        return { v: c.v, s };
+      }));
+    });
+    push([{ v: t.foot || '', s: RP_S.meta, span: t.head.length }]);
+  });
+
+  let xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+    '<cols><col min="1" max="1" width="34" customWidth="1"/>' +
+    `<col min="2" max="${Math.max(2, maxCols)}" width="13" customWidth="1"/></cols><sheetData>`;
+
+  const merges = [];
+  rows.forEach(r => {
+    if (!r.cells.length) { xml += `<row r="${r.r}"/>`; return; }
+    xml += `<row r="${r.r}">`;
+    r.cells.forEach((c, i) => {
+      const ref = rpColLetter(i + 1) + r.r;
+      if (c.span && c.span > 1) merges.push(`${rpColLetter(1)}${r.r}:${rpColLetter(c.span)}${r.r}`);
+      if (typeof c.v === 'number' && isFinite(c.v)) {
+        xml += `<c r="${ref}" s="${c.s}"><v>${Math.round(c.v * 100) / 100}</v></c>`;
+      } else if (c.v === '' || c.v == null) {
+        xml += `<c r="${ref}" s="${c.s}"/>`;
+      } else {
+        xml += `<c r="${ref}" s="${c.s}" t="inlineStr"><is><t xml:space="preserve">${rpXmlEsc(c.v)}</t></is></c>`;
+      }
+    });
+    // pad the row so the border grid stays square
+    for (let i = r.cells.length; i < maxCols; i++) {
+      if (r.cells.length === 1 && r.cells[0].span) break;
+      xml += `<c r="${rpColLetter(i + 1) + r.r}" s="${RP_S.num}"/>`;
+    }
+    xml += '</row>';
+  });
+
+  xml += '</sheetData>';
+  if (merges.length) xml += `<mergeCells count="${merges.length}">` +
+    merges.map(m => `<mergeCell ref="${m}"/>`).join('') + '</mergeCells>';
+  return xml + '</worksheet>';
+}
+
+function rpStylesXml() {
+  // one border definition, thin on all four sides, used by every cell
+  const IND = '#,##0';
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+  '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+    `<numFmts count="1"><numFmt numFmtId="164" formatCode="${IND}"/></numFmts>` +
+    '<fonts count="7">' +
+      '<font><sz val="10"/><name val="IBM Plex Sans"/></font>' +                                    // 0 body
+      '<font><b/><sz val="13"/><name val="IBM Plex Sans"/></font>' +                                // 1 title
+      '<font><sz val="9"/><color rgb="FF74808E"/><name val="IBM Plex Sans"/></font>' +              // 2 meta
+      '<font><b/><sz val="9"/><color rgb="FF3D4652"/><name val="IBM Plex Sans"/></font>' +          // 3 head
+      '<font><b/><sz val="10"/><color rgb="FFF5F7F9"/><name val="IBM Plex Sans"/></font>' +         // 4 on band
+      '<font><b/><sz val="10"/><color rgb="FFB8620A"/><name val="IBM Plex Sans"/></font>' +         // 5 live
+      '<font><i/><sz val="10"/><color rgb="FF74808E"/><name val="IBM Plex Sans"/></font>' +         // 6 roll-up
+    '</fonts>' +
+    '<fills count="5">' +
+      '<fill><patternFill patternType="none"/></fill>' +
+      '<fill><patternFill patternType="gray125"/></fill>' +
+      '<fill><patternFill patternType="solid"><fgColor rgb="FFE6EBF0"/><bgColor indexed="64"/></patternFill></fill>' +   // 2 head
+      '<fill><patternFill patternType="solid"><fgColor rgb="FF212A35"/><bgColor indexed="64"/></patternFill></fill>' +   // 3 band
+      '<fill><patternFill patternType="solid"><fgColor rgb="FFF0F3F6"/><bgColor indexed="64"/></patternFill></fill>' +   // 4 avg
+    '</fills>' +
+    '<borders count="2">' +
+      '<border><left/><right/><top/><bottom/><diagonal/></border>' +
+      '<border><left style="thin"><color rgb="FF9AA5B1"/></left><right style="thin"><color rgb="FF9AA5B1"/></right>' +
+      '<top style="thin"><color rgb="FF9AA5B1"/></top><bottom style="thin"><color rgb="FF9AA5B1"/></bottom><diagonal/></border>' +
+    '</borders>' +
+    '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+    '<cellXfs count="13">' +
+      '<xf xfId="0" numFmtId="0" fontId="0" fillId="0" borderId="0"/>' +                                                                                     // 0 normal
+      '<xf xfId="0" numFmtId="0" fontId="1" fillId="0" borderId="1" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>' +   // 1 title
+      '<xf xfId="0" numFmtId="0" fontId="2" fillId="0" borderId="1" applyFont="1" applyBorder="1"/>' +                                                       // 2 meta
+      '<xf xfId="0" numFmtId="0" fontId="3" fillId="2" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" wrapText="1"/></xf>' + // 3 head
+      '<xf xfId="0" numFmtId="0" fontId="0" fillId="0" borderId="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left"/></xf>' +                // 4 lead
+      '<xf xfId="0" numFmtId="164" fontId="0" fillId="0" borderId="1" applyNumberFormat="1" applyBorder="1"/>' +                                             // 5 num
+      '<xf xfId="0" numFmtId="164" fontId="3" fillId="0" borderId="1" applyNumberFormat="1" applyFont="1" applyBorder="1"/>' +                               // 6 key
+      '<xf xfId="0" numFmtId="164" fontId="5" fillId="0" borderId="1" applyNumberFormat="1" applyFont="1" applyBorder="1"/>' +                               // 7 on
+      '<xf xfId="0" numFmtId="164" fontId="6" fillId="0" borderId="1" applyNumberFormat="1" applyFont="1" applyBorder="1"/>' +                               // 8 sub
+      '<xf xfId="0" numFmtId="0" fontId="4" fillId="3" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left"/></xf>' +        // 9 sumLead
+      '<xf xfId="0" numFmtId="164" fontId="4" fillId="3" borderId="1" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>' +                 // 10 sum
+      '<xf xfId="0" numFmtId="0" fontId="0" fillId="4" borderId="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left"/></xf>' +  // 11 avgLead
+      '<xf xfId="0" numFmtId="164" fontId="0" fillId="4" borderId="1" applyNumberFormat="1" applyFill="1" applyBorder="1"/>' +                               // 12 avg
+    '</cellXfs>' +
+    '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
+    '<dxfs count="0"/>' +
+  '</styleSheet>';
+}
+
+function rpExportXlsx() {
+  if (!_rpTables.length) { alert('Nothing to export yet — the reports are empty.'); return; }
+  const btn = document.getElementById('rpXlsBtn');
+  const label = btn.textContent; btn.disabled = true; btn.textContent = 'Building…';
+  try {
+    const t1 = _rpTables.filter(t => t.sheet === 'Power sector');
+    const t2 = _rpTables.filter(t => t.sheet === 'Source-wise');
+    const enc = new TextEncoder();
+    const files = {
+      '[Content_Types].xml': enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+        '<Default Extension="xml" ContentType="application/xml"/>' +
+        '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+        '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+        '<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+        '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
+        '</Types>'),
+      '_rels/.rels': enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+        '</Relationships>'),
+      'xl/workbook.xml': enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ' +
+        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' +
+        '<sheet name="Power Sector" sheetId="1" r:id="rId1"/>' +
+        '<sheet name="Source-wise" sheetId="2" r:id="rId2"/>' +
+        '</sheets></workbook>'),
+      'xl/_rels/workbook.xml.rels': enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' +
+        '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>' +
+        '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+        '</Relationships>'),
+      'xl/styles.xml': enc.encode(rpStylesXml()),
+      'xl/worksheets/sheet1.xml': enc.encode(rpSheetXml(t1)),
+      'xl/worksheets/sheet2.xml': enc.encode(rpSheetXml(t2)),
+    };
+    const blob = _buildZip(files);
+    rpShareOrSave(blob, `Road_Power_Report_${rpStamp()}.xlsx`,
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Road Power Report');
+    rpSetStatus('Workbook ready — Power Sector and Source-wise on separate tabs.', false);
+  } catch(e) {
+    rpSetStatus('Could not build the workbook: ' + e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = label;
   }
 }
 
