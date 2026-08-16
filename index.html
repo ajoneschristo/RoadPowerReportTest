@@ -909,6 +909,7 @@ body.dark {
   --band:     #212a35;
   --band-ink: #f5f7f9;
   --zero:     #a9b3be;
+  --avg:      #123a8a;
 
   background: var(--paper);
   border: 1px solid var(--ash);
@@ -926,13 +927,14 @@ body.dark .rp-card {
   --band:     #0b1017;
   --band-ink: #e7edf4;
   --zero:     #4a5665;
+  --avg:      #7fa8f5;
 }
 /* snapshots always render light, whatever the app theme is */
 .rp-light .rp-card, .rp-light .rp-card * { color-scheme: light; }
 .rp-light .rp-card {
   --paper:#f5f7f9; --ink:#151a21; --ash:#ccd4dd; --ash-soft:#e6ebf0;
   --mute:#74808e; --live:#b8620a; --live-bar:rgba(217,122,6,.17);
-  --band:#212a35; --band-ink:#f5f7f9; --zero:#a9b3be;
+  --band:#212a35; --band-ink:#f5f7f9; --zero:#a9b3be; --avg:#123a8a;
 }
 
 /* ── caption ── */
@@ -996,16 +998,10 @@ body.dark .rp-card {
 .rp-day  { color: var(--mute); font-size: 11px; }
 .rp-key  { font-weight: 600; }
 
-/* signature: load bar behind the on-date figure */
 .rp-on {
-  position: relative; color: var(--live); font-weight: 600;
+  color: var(--live); font-weight: 600;
   border-left: 2px solid var(--live) !important;
 }
-.rp-on::before {
-  content: ''; position: absolute; left: 0; top: 2px; bottom: 2px;
-  width: var(--b, 0%); background: var(--live-bar); pointer-events: none;
-}
-.rp-on span { position: relative; }
 
 /* subtotal columns (e.g. Talcher Total) read as derived, not as data */
 .rp-t th.rp-sub, .rp-t td.rp-sub {
@@ -1026,9 +1022,11 @@ body.dark .rp-card {
 .rp-t tr.rp-sum td.rp-on { color: var(--band-ink); border-left-color: var(--live); }
 .rp-t tr.rp-sum td.rp-on::before { background: none; }
 .rp-t tr.rp-sum td.rp-sub { color: rgba(245,247,249,.62); }
-.rp-t tr.rp-avg td { background: var(--ash-soft); color: var(--ink); font-weight: 500; }
+/* averages read as a distinct measure, not another tonnage */
+.rp-avgc, .rp-t th.rp-avgc { color: var(--avg) !important; font-weight: 700; }
+.rp-t tr.rp-avg td { background: var(--ash-soft); color: var(--avg); font-weight: 700; }
 .rp-t tr.rp-avg td.rp-lead {
-  background: var(--ash-soft);
+  background: var(--ash-soft); color: var(--avg);
   font-family: 'IBM Plex Sans Condensed', sans-serif;
   letter-spacing: .06em; text-transform: uppercase; font-size: 11px;
 }
@@ -1069,13 +1067,29 @@ body.dark .rp-card {
 
 /* saved-days list */
 .rp-dgrp {
-  padding:6px 10px; background:var(--bg); font-family:'IBM Plex Sans Condensed',sans-serif;
-  font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--dim);
-  border-top:1px solid var(--border);
+  display:grid; grid-template-columns:22px 1fr auto auto auto; gap:8px; align-items:center;
+  padding:8px 10px; background:var(--bg); cursor:pointer;
+  border-top:2px solid var(--border);
 }
+.rp-dgrp input { width:16px; height:16px; accent-color:#d97a06; cursor:pointer; }
+.rp-dmon {
+  font-family:'IBM Plex Sans Condensed',sans-serif; font-size:12px; font-weight:600;
+  letter-spacing:.09em; text-transform:uppercase; color:var(--text);
+}
+.rp-dmeta { font-family:var(--mono); font-size:10px; color:var(--dim); }
+.rp-dmtot { font-family:var(--mono); font-size:11px; font-weight:600; color:var(--text); }
+.rp-dmavg { font-family:var(--mono); font-size:11px; font-weight:700; color:#123a8a; }
+body.dark .rp-dmavg { color:#7fa8f5; }
+.rp-dsel {
+  padding:8px 14px; font-size:11px; color:var(--dim);
+  font-family:var(--mono); border-top:1px solid var(--border);
+}
+.rp-dsel strong { color:var(--text); }
+.rp-dsel .rp-selavg { color:#123a8a; }
+body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 .rp-drow {
   display:grid; grid-template-columns:22px 62px 1fr 92px 66px; gap:6px; align-items:center;
-  padding:7px 10px; border-top:1px solid var(--border); cursor:pointer;
+  padding:7px 10px 7px 22px; border-top:1px solid var(--border); cursor:pointer;
 }
 .rp-drow:active { background:var(--amber-lo); }
 .rp-drow input { width:16px; height:16px; accent-color:var(--red); cursor:pointer; }
@@ -1137,7 +1151,7 @@ body.dark .rp-card {
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B6-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B7-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1156,8 +1170,8 @@ body.dark .rp-card {
   </button>
 </header>
 
-<input type="file" id="fileInput"  accept=".xls,.xlsx,.htm,.html,.csv" style="display:none">
-<input type="file" id="mclhoInput" accept=".htm,.html,.mht,.mhtml,.xls,.txt" style="display:none">
+<input type="file" id="fileInput"  style="display:none" accept="application/octet-stream,.xls">
+<input type="file" id="mclhoInput" style="display:none" accept=".mhtml,.mht,message/rfc822">
 
 <!-- ══ DROP SCREEN ════════════════════════════════════ -->
 <div id="drop-screen">
@@ -2473,6 +2487,10 @@ function closeRpDays() {
   renderRpReports();
 }
 
+function rpDayTotal(rec) {
+  return Object.values((rec && rec.pc) || {}).reduce((a,b) => a+b, 0);
+}
+
 function renderRpDays() {
   const days = (rpHist && rpHist.days) || {};
   const keys = Object.keys(days).sort().reverse();
@@ -2482,38 +2500,85 @@ function renderRpDays() {
 
   if (!keys.length) {
     list.innerHTML = '<div class="rp-count" style="padding:14px;">Nothing stored yet. Load a despatch file and tap Save Day.</div>';
+    rpDaysSyncBtn();
     return;
   }
 
-  let html = '', lastMon = '';
+  // group by month so a whole month can be totalled or cleared in one go
+  const months = {};
   keys.forEach(k => {
-    const mon = RP_MON[+k.slice(5,7) - 1] + ' ' + k.slice(0,4);
-    if (mon !== lastMon) { html += `<div class="rp-dgrp">${mon}</div>`; lastMon = mon; }
-    const rec = days[k];
-    const tot = Object.values(rec.pc || {}).reduce((a,b) => a+b, 0);
-    const pairs = Object.keys(rec.pc || {}).length;
-    html += `<label class="rp-drow">
-      <input type="checkbox" value="${k}">
-      <span class="rp-ddate">${k.slice(8,10)} ${RP_MON[+k.slice(5,7)-1]}</span>
-      <span class="rp-dcut">${rpEsc(rec.cut || '—')}</span>
-      <span class="rp-dtot">${rpNum(tot) || '0'} T</span>
-      <span class="rp-dpairs">${pairs} rows</span>
+    const m = k.slice(0,7);
+    (months[m] = months[m] || []).push(k);
+  });
+
+  let html = '';
+  Object.keys(months).sort().reverse().forEach(m => {
+    const mk = months[m];
+    const tot = mk.reduce((a,k) => a + rpDayTotal(days[k]), 0);
+    const avg = tot / mk.length;
+    const label = RP_MON[+m.slice(5,7) - 1] + ' ' + m.slice(0,4);
+    html += `<label class="rp-dgrp" data-mon="${m}">
+      <input type="checkbox" data-mon-cb="${m}">
+      <span class="rp-dmon">${label}</span>
+      <span class="rp-dmeta">${mk.length} day${mk.length > 1 ? 's' : ''}</span>
+      <span class="rp-dmtot">Total ${rpNum(tot) || '0'}</span>
+      <span class="rp-dmavg">Avg / day ${rpNum(avg) || '0'}</span>
     </label>`;
+    mk.forEach(k => {
+      const rec = days[k];
+      html += `<label class="rp-drow" data-mon="${m}">
+        <input type="checkbox" value="${k}">
+        <span class="rp-ddate">${k.slice(8,10)} ${RP_MON[+k.slice(5,7)-1]}</span>
+        <span class="rp-dcut">${rpEsc(rec.cut || '—')}</span>
+        <span class="rp-dtot">${rpNum(rpDayTotal(rec)) || '0'} T</span>
+        <span class="rp-dpairs">${Object.keys(rec.pc || {}).length} rows</span>
+      </label>`;
+    });
   });
   list.innerHTML = html;
-  list.querySelectorAll('input').forEach(cb => cb.onchange = rpDaysSyncBtn);
+
+  // a month box ticks every day inside it
+  list.querySelectorAll('[data-mon-cb]').forEach(cb => {
+    cb.onchange = () => {
+      const m = cb.dataset.monCb;
+      list.querySelectorAll(`.rp-drow[data-mon="${m}"] input`).forEach(d => d.checked = cb.checked);
+      rpDaysSyncBtn();
+    };
+  });
+  list.querySelectorAll('.rp-drow input').forEach(cb => cb.onchange = () => { rpDaysSyncMonths(); rpDaysSyncBtn(); });
+  rpDaysSyncMonths();
   rpDaysSyncBtn();
 }
 
-function rpDaysChecked() {
-  return [...document.querySelectorAll('#rpDaysList input:checked')].map(x => x.value);
+// keep each month box in step with its days
+function rpDaysSyncMonths() {
+  const list = document.getElementById('rpDaysList');
+  list.querySelectorAll('[data-mon-cb]').forEach(cb => {
+    const m = cb.dataset.monCb;
+    const boxes = [...list.querySelectorAll(`.rp-drow[data-mon="${m}"] input`)];
+    const on = boxes.filter(b => b.checked).length;
+    cb.checked = on === boxes.length && boxes.length > 0;
+    cb.indeterminate = on > 0 && on < boxes.length;
+  });
 }
+
+function rpDaysChecked() {
+  return [...document.querySelectorAll('#rpDaysList .rp-drow input:checked')].map(x => x.value);
+}
+
 function rpDaysSyncBtn() {
-  const n = rpDaysChecked().length;
+  const keys = rpDaysChecked();
   const btn = document.getElementById('rpDaysDelBtn');
-  btn.disabled = n === 0;
-  btn.style.opacity = n ? '1' : '.4';
-  btn.textContent = n ? `Clear ${n} day${n > 1 ? 's' : ''}` : 'Clear selected days';
+  btn.disabled = keys.length === 0;
+  btn.style.opacity = keys.length ? '1' : '.4';
+  btn.textContent = keys.length ? `Clear ${keys.length} day${keys.length > 1 ? 's' : ''}` : 'Clear selected days';
+
+  // running total and average for whatever is ticked
+  const days = (rpHist && rpHist.days) || {};
+  const sel = document.getElementById('rpDaysSel');
+  if (!keys.length) { sel.textContent = 'Tick days, or a whole month, to total them.'; return; }
+  const tot = keys.reduce((a,k) => a + rpDayTotal(days[k]), 0);
+  sel.innerHTML = `<strong>${keys.length} day${keys.length > 1 ? 's' : ''} selected</strong> · Total <strong>${rpNum(tot) || '0'}</strong> T · Avg / day <strong class="rp-selavg">${rpNum(tot / keys.length) || '0'}</strong> T`;
 }
 
 async function rpClearDays() {
@@ -2713,23 +2778,23 @@ function rpCellCls(k) {
        : k === 'key'  ? 'rp-v rp-key'
        : k === 'sub'  ? 'rp-v rp-sub'
        : k === 'day'  ? 'rp-v rp-day'
+       : k === 'avg'  ? 'rp-v rp-avgc'
        :                'rp-v';
 }
 
 function rpTableHTML(t) {
   let h = '<thead><tr>';
-  t.head.forEach(c => h += `<th class="${c.k === 'lead' ? 'rp-lead' : c.k === 'on' ? 'rp-on' : c.k === 'sub' ? 'rp-sub' : c.k === 'day' ? 'rp-day' : ''}">${rpEsc(c.t)}</th>`);
+  t.head.forEach(c => h += `<th class="${c.k === 'lead' ? 'rp-lead' : c.k === 'on' ? 'rp-on' : c.k === 'sub' ? 'rp-sub' : c.k === 'day' ? 'rp-day' : c.k === 'avg' ? 'rp-avgc' : ''}">${rpEsc(c.t)}</th>`);
   h += '</tr></thead><tbody>';
   t.rows.forEach(r => {
     h += `<tr${r.k === 'sum' ? ' class="rp-sum"' : r.k === 'avg' ? ' class="rp-avg"' : ''}>`;
     r.cells.forEach((c, i) => {
       const k = t.head[i] ? t.head[i].k : 'num';
       const zero = (k !== 'lead' && r.k === 'data' && c.v === 0) ? ' rp-zero' : '';
-      const bar  = (k === 'on' && c.b != null) ? ` style="--b:${c.b}%"` : '';
       const txt  = c.txt != null ? c.txt : (typeof c.v === 'number' ? (c.v ? rpNum(c.v) : (r.k === 'data' ? '·' : '')) : c.v);
       const tip  = c.title ? ` title="${rpEsc(c.title)}"` : '';
       if (k === 'lead') h += `<td class="rp-lead"${tip}><span class="rp-nm">${c.html || rpEsc(txt)}</span></td>`;
-      else if (k === 'on') h += `<td class="${rpCellCls(k)}${zero}"${bar}><span>${rpEsc(txt) || '—'}</span></td>`;
+      else if (k === 'on') h += `<td class="${rpCellCls(k)}${zero}"><span>${rpEsc(txt) || '—'}</span></td>`;
       else h += `<td class="${rpCellCls(k)}${zero}">${rpEsc(txt)}</td>`;
     });
     h += '</tr>';
@@ -2800,17 +2865,15 @@ function renderRp1(md) {
     return { name: p.name || codes[0], codes, vals, prog, cnt, today: vals[actD] || 0 };
   });
 
-  const hidden = rows.filter(r => r.prog <= 0).length;
   rows = rows.filter(r => r.prog > 0).sort((a,b) => b.prog - a.prog);
 
-  const peak = rows.reduce((m,r) => Math.max(m, r.today), 0);
   const cut  = (md.days[actD] && md.days[actD].cut) || '';
 
   const head = [
     { t: 'Customer',      k: 'lead' },
     { t: rpOnLabel(md),   k: 'on'   },
     { t: 'Month to date', k: 'key'  },
-    { t: 'Avg / day',     k: 'num'  },
+    { t: 'Avg / day',     k: 'avg'  },
   ];
   if (daywise) dayCols.forEach(d => head.push({ t: rpDayNum(d), k: 'day' }));
 
@@ -2823,7 +2886,7 @@ function renderRp1(md) {
     const cells = [
       { v: r.name, title: r.name + ' · ' + r.codes.join(', '),
         html: rpEsc(r.name) + (r.codes.length > 1 ? ` <span class="rp-codes">${r.codes.length} codes</span>` : '') },
-      { v: r.today, b: peak > 0 ? Math.round((r.today / peak) * 100) : 0 },
+      { v: r.today },
       { v: r.prog },
       { v: r.cnt ? r.prog / r.cnt : 0 },
     ];
@@ -2840,7 +2903,7 @@ function renderRp1(md) {
     title: 'Road despatch to power sector',
     meta:  `${md.monLabel} · as on ${rpOnLabel(md)}${cut ? ' · cut-off ' + cut : ''}`,
     metaHtml: `${rpEsc(md.monLabel)} · as on <b>${rpEsc(rpOnLabel(md))}</b>${cut ? ' · cut-off ' + rpEsc(cut) : ''}`,
-    foot:  `Tonnes${hidden ? ` · ${hidden} customer${hidden > 1 ? 's' : ''} hidden with no lifting this month` : ''}`,
+    foot:  'Figs. in Tonnes',
     head, rows: outRows,
   };
   _rpTables.push(t);
@@ -2893,7 +2956,6 @@ function renderRp2(md) {
       v.forEach((x,i) => sums[i] += x);
       gTot += t;
     });
-    const peak = dayList.reduce((m,d) => Math.max(m, cellsFor(md.days[d].pc).t), 0);
 
     const outRows = [];
     if (md.prev.days) {
@@ -2905,7 +2967,7 @@ function renderRp2(md) {
 
     const dayRow = (label, d) => {
       const { v, t } = cellsFor(md.days[d].pc);
-      return { k: 'data', cells: [{ v: label }, ...v.map(x => ({ v: x })), { v: t, b: peak > 0 ? Math.round((t / peak) * 100) : 0 }] };
+      return { k: 'data', cells: [{ v: label }, ...v.map(x => ({ v: x })), { v: t }] };
     };
     if (daywise) dayList.forEach(d => outRows.push(dayRow(`${rpDayNum(d)} ${RP_MON[md.M-1]}`, d)));
     else if (md.days[actD]) outRows.push(dayRow(rpOnLabel(md), actD));
@@ -2919,7 +2981,7 @@ function renderRp2(md) {
       title: p.name || codes[0],
       meta:  `Source-wise · ${md.monLabel} · as on ${rpOnLabel(md)}`,
       metaHtml: `Source-wise · ${rpEsc(md.monLabel)} · as on <b>${rpEsc(rpOnLabel(md))}</b>`,
-      foot:  `Tonnes · ${n} day${n === 1 ? '' : 's'} lifted`,
+      foot:  'Figs. in Tonnes',
       head, rows: outRows,
     };
     _rpTables.push(t);
@@ -2946,13 +3008,7 @@ async function shareRpReport() {
   try {
     const canvas = await html2canvas(holder, { backgroundColor: '#f5f7f9', scale: 2, useCORS: true, logging: false });
     const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
-    const fname = `Road_Power_Report_${(rpActiveDMY() || '').replace(/-/g,'_')}.png`;
-    const file = new File([blob], fname, { type: 'image/png' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: 'Road Power Report' });
-    } else {
-      downloadBlob(blob);
-    }
+    await rpShareOrSave(blob, `Road_Power_Report_${rpStamp()}.png`, 'image/png', 'Road Power Report');
   } catch(e) {
     alert('Could not build the image: ' + e.message);
   } finally {
@@ -2990,9 +3046,14 @@ function _buildZip(files) {
 //  SpreadsheetML zipped with the same writer the viewer uses.
 // ═══════════════════════════════════════════════════════
 
+// Filenames carry the latest despatch date the report covers, not today's date.
 function rpStamp() {
-  const d = rpActiveDMY() || new Date().toDateString();
-  return String(d).replace(/[^\w]+/g, '_');
+  const md = rpMonthData();
+  if (md && md.onKey) {
+    return `${md.onKey.slice(8,10)}_${RP_MON[md.M-1]}_${md.Y}`;
+  }
+  const d = rpActiveDMY();
+  return d ? String(d).replace(/[^\w]+/g, '_') : 'no_data';
 }
 function rpSaveBlob(blob, fname) {
   const url = URL.createObjectURL(blob);
@@ -3001,13 +3062,25 @@ function rpSaveBlob(blob, fname) {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
+// One delivery per call: hand it to the share sheet, or download it — never
+// both, and never twice if the button is tapped again mid-flight.
+let _rpSharing = false;
 async function rpShareOrSave(blob, fname, type, title) {
-  const file = new File([blob], fname, { type });
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try { await navigator.share({ files: [file], title }); return; }
-    catch(e) { if (e && e.name === 'AbortError') return; }
+  if (_rpSharing) return;
+  _rpSharing = true;
+  try {
+    const file = new File([blob], fname, { type });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title });   // shared, or cancelled — either way we are done
+      return;
+    }
+    rpSaveBlob(blob, fname);
+  } catch(e) {
+    if (e && (e.name === 'AbortError' || e.name === 'NotAllowedError')) return;
+    rpSaveBlob(blob, fname);                             // sharing genuinely failed, fall back once
+  } finally {
+    setTimeout(() => { _rpSharing = false; }, 600);
   }
-  rpSaveBlob(blob, fname);
 }
 
 // ── every report card, rendered off-screen in the light palette ────────
@@ -3153,7 +3226,7 @@ function rpColLetter(n) {           // 1 → A
 }
 
 // style ids written into styles.xml below
-const RP_S = { title:1, meta:2, head:3, lead:4, num:5, key:6, on:7, sub:8, sumLead:9, sum:10, avgLead:11, avg:12 };
+const RP_S = { title:1, meta:2, head:3, lead:4, num:5, key:6, on:7, sub:8, sumLead:9, sum:10, avgLead:11, avg:12, avgCol:13 };
 
 function rpSheetXml(tables) {
   let rowNo = 0, maxCols = 1;
@@ -3173,6 +3246,7 @@ function rpSheetXml(tables) {
         if (k === 'lead') s = r.k === 'sum' ? RP_S.sumLead : r.k === 'avg' ? RP_S.avgLead : RP_S.lead;
         else if (r.k === 'sum') s = RP_S.sum;
         else if (r.k === 'avg') s = RP_S.avg;
+        else if (k === 'avg') s = RP_S.avgCol;
         else if (k === 'on')  s = RP_S.on;
         else if (k === 'key') s = RP_S.key;
         else if (k === 'sub') s = RP_S.sub;
@@ -3223,7 +3297,7 @@ function rpStylesXml() {
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
   '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
     `<numFmts count="1"><numFmt numFmtId="164" formatCode="${IND}"/></numFmts>` +
-    '<fonts count="7">' +
+    '<fonts count="8">' +
       '<font><sz val="10"/><name val="IBM Plex Sans"/></font>' +                                    // 0 body
       '<font><b/><sz val="13"/><name val="IBM Plex Sans"/></font>' +                                // 1 title
       '<font><sz val="9"/><color rgb="FF74808E"/><name val="IBM Plex Sans"/></font>' +              // 2 meta
@@ -3231,6 +3305,7 @@ function rpStylesXml() {
       '<font><b/><sz val="10"/><color rgb="FFF5F7F9"/><name val="IBM Plex Sans"/></font>' +         // 4 on band
       '<font><b/><sz val="10"/><color rgb="FFB8620A"/><name val="IBM Plex Sans"/></font>' +         // 5 live
       '<font><i/><sz val="10"/><color rgb="FF74808E"/><name val="IBM Plex Sans"/></font>' +         // 6 roll-up
+      '<font><b/><sz val="10"/><color rgb="FF123A8A"/><name val="IBM Plex Sans"/></font>' +         // 7 average
     '</fonts>' +
     '<fills count="5">' +
       '<fill><patternFill patternType="none"/></fill>' +
@@ -3245,7 +3320,7 @@ function rpStylesXml() {
       '<top style="thin"><color rgb="FF9AA5B1"/></top><bottom style="thin"><color rgb="FF9AA5B1"/></bottom><diagonal/></border>' +
     '</borders>' +
     '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-    '<cellXfs count="13">' +
+    '<cellXfs count="14">' +
       '<xf xfId="0" numFmtId="0" fontId="0" fillId="0" borderId="0"/>' +                                                                                     // 0 normal
       '<xf xfId="0" numFmtId="0" fontId="1" fillId="0" borderId="1" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>' +   // 1 title
       '<xf xfId="0" numFmtId="0" fontId="2" fillId="0" borderId="1" applyFont="1" applyBorder="1"/>' +                                                       // 2 meta
@@ -3257,8 +3332,9 @@ function rpStylesXml() {
       '<xf xfId="0" numFmtId="164" fontId="6" fillId="0" borderId="1" applyNumberFormat="1" applyFont="1" applyBorder="1"/>' +                               // 8 sub
       '<xf xfId="0" numFmtId="0" fontId="4" fillId="3" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left"/></xf>' +        // 9 sumLead
       '<xf xfId="0" numFmtId="164" fontId="4" fillId="3" borderId="1" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>' +                 // 10 sum
-      '<xf xfId="0" numFmtId="0" fontId="0" fillId="4" borderId="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left"/></xf>' +  // 11 avgLead
-      '<xf xfId="0" numFmtId="164" fontId="0" fillId="4" borderId="1" applyNumberFormat="1" applyFill="1" applyBorder="1"/>' +                               // 12 avg
+      '<xf xfId="0" numFmtId="0" fontId="7" fillId="4" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left"/></xf>' +  // 11 avgLead
+      '<xf xfId="0" numFmtId="164" fontId="7" fillId="4" borderId="1" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>' +                 // 12 avg
+      '<xf xfId="0" numFmtId="164" fontId="7" fillId="0" borderId="1" applyNumberFormat="1" applyFont="1" applyBorder="1"/>' +                                // 13 avg column
     '</cellXfs>' +
     '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
     '<dxfs count="0"/>' +
@@ -3695,6 +3771,7 @@ loadDbFromGitHub();
         </div>
       </div>
     </div>
+    <div id="rpDaysSel" class="rp-dsel">Tick days, or a whole month, to total them.</div>
     <div id="rpDaysStatus" class="stt-status"></div>
     <div class="stt-footer">
       <button class="stt-btn-cancel" onclick="closeRpDays()">Close</button>
