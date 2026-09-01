@@ -1137,20 +1137,20 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 .rp-dpairs{ font-family:var(--mono); font-size:10px; text-align:right; color:var(--dim); }
 
 /* monthwise total / avg grid */
-.rp-sgrid { border:1.5px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:10px; }
+.rp-sgrid { border:1.5px solid var(--border); border-radius:8px; overflow-x:auto; margin-bottom:10px; }
 .rp-sgrid-h {
   padding:7px 10px; background:var(--bg); border-bottom:1px solid var(--border);
   font-family:'IBM Plex Sans Condensed',sans-serif; font-size:11px; font-weight:700;
   letter-spacing:.09em; text-transform:uppercase; color:var(--text);
 }
-.rp-srow { display:grid; grid-template-columns:1fr 84px 84px; align-items:center; gap:4px; padding:0 10px; }
+.rp-srow { display:grid; grid-template-columns:minmax(96px,1fr) 62px 62px 76px 76px; align-items:center; gap:3px; padding:0 8px; }
 .rp-srow.hd span {
-  padding:6px 2px; font-size:9px; font-weight:700; letter-spacing:.07em;
-  text-transform:uppercase; color:var(--dim); text-align:center;
+  padding:6px 2px; font-size:8.5px; font-weight:700; letter-spacing:.04em;
+  text-transform:uppercase; color:var(--dim); text-align:center; line-height:1.3;
 }
 .rp-srow.hd span:first-child { text-align:left; }
 .rp-srow.bd { border-top:1px solid var(--border); padding-top:7px; padding-bottom:7px; }
-.rp-srow.bd label { font-size:11.5px; color:var(--text); }
+.rp-srow.bd label { font-size:11px; color:var(--text); }
 .rp-srow.bd div { text-align:center; }
 .rp-srow.bd input { width:16px; height:16px; accent-color:#d97a06; cursor:pointer; }
 
@@ -1232,7 +1232,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B19-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B20-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1397,35 +1397,10 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
         </div>
         <div id="rpShowGrids"></div>
         <div class="stt-hint" style="margin-top:6px;">
-          Each report answers separately depending on whether its day-by-day switch is on,
-          so a wide day-by-day view can drop the summary columns while the compact view keeps them.
-        </div>
-      </div>
-
-      <div class="stt-section">
-        <div class="stt-section-hdr">
-          <label class="stt-label">HTML Export</label>
-        </div>
-        <div class="rp-modes">
-          <button class="rp-mode" id="rpModeStatic" onclick="rpSetHtmlMode('static')">
-            <b>Static</b><span>Tables only. No script, nothing to tap — the lightest thing to send.</span>
-          </button>
-          <button class="rp-mode" id="rpModeInter" onclick="rpSetHtmlMode('interactive')">
-            <b>Interactive</b><span>Charts, drill-down and sortable tables.</span>
-          </button>
-        </div>
-        <div id="rpHtmlOpts">
-          <label class="stt-label" style="margin-top:12px;display:block;">Months to include</label>
-          <div class="rp-monthpick" id="rpHtmlMonths"></div>
-          <div class="stt-hint" style="margin-top:4px;">
-            Nothing ticked means the month on screen. Pick more and the export gains a month-on-month
-            comparison, a progressive curve per month, and a pace figure against the previous one.
-          </div>
-          <label class="stt-label" style="margin-top:12px;display:block;">Charts</label>
-          <div class="rp-chartpick" id="rpHtmlCharts"></div>
-          <label class="rp-tgl" style="margin-top:10px;">
-            <input type="checkbox" id="rp_htmlTables"><span>Include the full report tables under the charts</span>
-          </label>
+          The first pair covers the months you pin with <strong>☆ Show</strong> in Saved days;
+          the second pair covers the month on screen. Each report answers separately depending on
+          whether its day-by-day switch is on, so a wide day-by-day view can drop the summary
+          columns while the compact view keeps them.
         </div>
       </div>
 
@@ -2004,13 +1979,12 @@ function openRpSettings() {
   const shDef = rpShowDefaults();
   const shCur = pr.show || {};
   ['r1','r2'].forEach(k => ['on','off'].forEach(m => {
-    if (shCur[k] && shCur[k][m]) {
-      shDef[k][m].total = shCur[k][m].total !== false;
-      shDef[k][m].avg   = shCur[k][m].avg   !== false;
-    }
+    const cur = shCur[k] && shCur[k][m];
+    if (!cur) return;
+    RP_SHOW_KEYS.forEach(f => { if (cur[f] !== undefined) shDef[k][m][f] = cur[f] !== false; });
   }));
   _rpDraft = { historyPath: pr.historyPath || 'roadpower-history-test.json', sel: {},
-               html: rpHtmlCfg(), show: shDef };
+               show: shDef };
   (pr.parties || []).forEach(p => {
     const codes = rpCodesOf(p);
     _rpDraft.sel[codes[0]] = {
@@ -2030,7 +2004,6 @@ function openRpSettings() {
   document.getElementById('rpChipSel').classList.remove('on');
   rpBuildPartyIndex(true);
   renderRpShowGrids();
-  renderRpHtmlOpts();
   renderRpParties();
   renderRpR2();
   document.getElementById('rpSettingsOverlay').style.display = 'block';
@@ -2282,66 +2255,23 @@ function renderRpShowGrids() {
     box.className = 'rp-sgrid';
     box.innerHTML =
       `<div class="rp-sgrid-h">${label}</div>
-       <div class="rp-srow hd"><span></span><span>Show Average</span><span>Show Total</span></div>`;
+       <div class="rp-srow hd"><span></span>
+         <span>Show<br>Average</span><span>Show<br>Total</span>
+         <span>Show Average<br>(current month)</span><span>Show Total<br>(current month)</span>
+       </div>`;
     [['off', 'If day-by-day disabled'], ['on', 'If day-by-day enabled']].forEach(([mode, text]) => {
       const row = document.createElement('div');
       row.className = 'rp-srow bd';
       const m = _rpDraft.show[key][mode];
+      RP_SHOW_KEYS.forEach(f => { if (m[f] === undefined) m[f] = true; });
       row.innerHTML = `<label>${text}</label>` +
-        `<div><input type="checkbox" data-f="avg"   ${m.avg   !== false ? 'checked' : ''}></div>` +
-        `<div><input type="checkbox" data-f="total" ${m.total !== false ? 'checked' : ''}></div>`;
+        RP_SHOW_KEYS.map(f => `<div><input type="checkbox" data-f="${f}" ${m[f] !== false ? 'checked' : ''}></div>`).join('');
       row.querySelectorAll('input').forEach(cb => {
         cb.onchange = () => { m[cb.dataset.f] = cb.checked; };
       });
       box.appendChild(row);
     });
     wrap.appendChild(box);
-  });
-}
-
-// ── HTML export settings ──────────────────────────────────────────────
-function rpSetHtmlMode(mode) {
-  _rpDraft.html.mode = mode;
-  renderRpHtmlOpts();
-}
-function renderRpHtmlOpts() {
-  const h = _rpDraft.html;
-  document.getElementById('rpModeStatic').classList.toggle('on', h.mode === 'static');
-  document.getElementById('rpModeInter').classList.toggle('on', h.mode !== 'static');
-  document.getElementById('rpHtmlOpts').style.opacity = h.mode === 'static' ? '.45' : '1';
-  document.getElementById('rpHtmlCharts').style.pointerEvents = h.mode === 'static' ? 'none' : '';
-  document.getElementById('rp_htmlTables').checked = h.tables !== false;
-  document.getElementById('rp_htmlTables').onchange = e => { h.tables = e.target.checked; };
-
-  // months, read straight out of the history file
-  const mons = rpHistMonths();
-  const mw = document.getElementById('rpHtmlMonths');
-  if (!mons.length) {
-    mw.innerHTML = '<span class="rp-count">No saved months yet.</span>';
-  } else {
-    mw.innerHTML = '';
-    mons.forEach(mk => {
-      const days = Object.keys((rpHist && rpHist.days) || {}).filter(k => k.slice(0,7) === mk).length;
-      const b = document.createElement('button');
-      b.className = 'rp-mchip' + (h.months.indexOf(mk) >= 0 ? ' on' : '');
-      b.innerHTML = `${RP_MON[+mk.slice(5,7)-1]} ${mk.slice(0,4)}<small>${days} day${days === 1 ? '' : 's'}</small>`;
-      b.onclick = () => {
-        const i = h.months.indexOf(mk);
-        if (i >= 0) h.months.splice(i, 1); else h.months.push(mk);
-        renderRpHtmlOpts();
-      };
-      mw.appendChild(b);
-    });
-  }
-
-  const cw = document.getElementById('rpHtmlCharts');
-  cw.innerHTML = '';
-  RP_CHARTS.forEach(([key, label, hint]) => {
-    const l = document.createElement('label');
-    l.className = 'rp-cpick';
-    l.innerHTML = `<input type="checkbox" ${h.charts[key] !== false ? 'checked' : ''}><span><b>${label}</b><span>${hint}</span></span>`;
-    l.querySelector('input').onchange = e => { h.charts[key] = e.target.checked; };
-    cw.appendChild(l);
   });
 }
 
@@ -2458,7 +2388,6 @@ async function saveRpSettings() {
     r1Daywise: pr0.r1Daywise !== false,   // owned by the switch above the report
     r2Daywise: pr0.r2Daywise !== false,
     r2Months:  pr0.r2Months || [],        // owned by the Saved days view
-    html:      _rpDraft.html,
     show:      _rpDraft.show,
     parties,
   } });
@@ -2980,13 +2909,17 @@ function rpAggMonth(mk) {
   return out;
 }
 
-// Months pinned in the Saved days view, shown as comparison rows.
-// Nothing pinned → fall back to the month before the one on screen.
-function rpRefMonths(md) {
+// Just the months explicitly pinned in Saved days — no fallback, so the
+// Power Sector report only widens when you ask it to.
+function rpPinnedMonths() {
   const pr = appSettings.powerReport || {};
-  const pinned = (pr.r2Months || []).slice().sort();
-  if (pinned.length) return pinned.map(rpAggMonth).filter(a => a.days);
-  return md.prev.days ? [md.prev] : [];
+  return (pr.r2Months || []).slice().sort().map(rpAggMonth).filter(a => a.days);
+}
+
+// Comparison months come only from the pins, so both reports agree and the
+// ☆ Show control in Saved days is the single answer to "which months".
+function rpRefMonths() {
+  return rpPinnedMonths();
 }
 
 // sum a day map for one party row (all its codes, all collieries)
@@ -3019,16 +2952,20 @@ function rpDaywise(which) {
 // Whether the monthly Total and Average are shown. Each report keeps a
 // separate answer for day-by-day on and day-by-day off, because the two
 // views get read for different reasons.
+// total / avg  → the months pinned in Saved days
+// ctotal / cavg → the month on screen
+const RP_SHOW_KEYS = ['avg', 'total', 'cavg', 'ctotal'];
 function rpShowDefaults() {
-  return { r1: { on: { total: true, avg: true }, off: { total: true, avg: true } },
-           r2: { on: { total: true, avg: true }, off: { total: true, avg: true } } };
+  const blank = () => ({ total: true, avg: true, ctotal: true, cavg: true });
+  return { r1: { on: blank(), off: blank() }, r2: { on: blank(), off: blank() } };
 }
 function rpShow(which, daywise) {
   const pr = appSettings.powerReport || {};
   const sh = pr.show || {};
   const r  = sh[which === 1 ? 'r1' : 'r2'] || {};
   const m  = r[daywise ? 'on' : 'off'] || {};
-  return { total: m.total !== false, avg: m.avg !== false };
+  return { total:  m.total  !== false, avg:  m.avg  !== false,
+           ctotal: m.ctotal !== false, cavg: m.cavg !== false };
 }
 
 // Every rendered table is kept as a model, so the screen, the PDF and the
@@ -3138,17 +3075,23 @@ function renderRp1(md) {
   const cut  = (md.days[actD] && md.days[actD].cut) || '';
 
   const sh = rpShow(1, daywise);
+  // months pinned in Saved days, each contributing a Total and an Avg column
+  const refs = (sh.total || sh.avg) ? rpPinnedMonths() : [];
   const head = [
     { t: 'Customer',    k: 'lead' },
     { t: rpOnLabel(md), k: 'on'   },
   ];
-  if (sh.total) head.push({ t: 'Month to date', k: 'key' });
-  if (sh.avg)   head.push({ t: 'Avg / day',     k: 'avg' });
+  refs.forEach(r => {
+    if (sh.total) head.push({ t: r.label + ' total',     k: 'key' });
+    if (sh.avg)   head.push({ t: r.label + ' avg / day', k: 'avg' });
+  });
+  if (sh.ctotal) head.push({ t: 'Month to date', k: 'key' });
+  if (sh.cavg)   head.push({ t: 'Avg / day',     k: 'avg' });
   if (daywise) dayCols.forEach(d => head.push({ t: rpDayNum(d), k: 'day' }));
 
   const outRows = [];
   let tToday = 0, tProg = 0, tAvg = 0;
-  const dayTotals = {};
+  const dayTotals = {}, refTot = [];
   rows.forEach(r => {
     tToday += r.today; tProg += r.prog; tAvg += r.cnt ? r.prog / r.cnt : 0;
     dayCols.forEach(d => dayTotals[d] = (dayTotals[d] || 0) + (r.vals[d] || 0));
@@ -3157,15 +3100,25 @@ function renderRp1(md) {
         html: rpEsc(r.name) + (r.codes.length > 1 ? ` <span class="rp-codes">${r.codes.length} codes</span>` : '') },
       { v: r.today },
     ];
-    if (sh.total) cells.push({ v: r.prog });
-    if (sh.avg)   cells.push({ v: r.cnt ? r.prog / r.cnt : 0 });
+    refs.forEach((ref, ri) => {
+      const t = rpSumParty(ref.pc, r.codes);
+      refTot[ri] = (refTot[ri] || 0) + t;
+      if (sh.total) cells.push({ v: t });
+      if (sh.avg)   cells.push({ v: ref.days ? t / ref.days : 0 });
+    });
+    if (sh.ctotal) cells.push({ v: r.prog });
+    if (sh.cavg)   cells.push({ v: r.cnt ? r.prog / r.cnt : 0 });
     if (daywise) dayCols.forEach(d => cells.push({ v: r.vals[d] || 0 }));
     outRows.push({ k: 'data', cells });
   });
 
   const sumCells = [{ v: 'All customers' }, { v: tToday }];
-  if (sh.total) sumCells.push({ v: tProg });
-  if (sh.avg)   sumCells.push({ v: tAvg });
+  refs.forEach((ref, ri) => {
+    if (sh.total) sumCells.push({ v: refTot[ri] || 0 });
+    if (sh.avg)   sumCells.push({ v: ref.days ? (refTot[ri] || 0) / ref.days : 0 });
+  });
+  if (sh.ctotal) sumCells.push({ v: tProg });
+  if (sh.cavg)   sumCells.push({ v: tAvg });
   if (daywise) dayCols.forEach(d => sumCells.push({ v: dayTotals[d] || 0 }));
   outRows.push({ k: 'sum', cells: sumCells });
 
@@ -3204,7 +3157,8 @@ function renderRp2(md) {
 
   const dayList = [];
   for (let d = 1; d <= md.dim; d++) if (md.days[d]) dayList.push(d);
-  const refMonths = rpRefMonths(md);
+  const shTop = rpShow(2, daywise);
+  const refMonths = (shTop.total || shTop.avg) ? rpRefMonths() : [];
 
   parties.forEach(p => {
     const codes = rpCodesOf(p);
@@ -3246,8 +3200,8 @@ function renderRp2(md) {
     else if (md.days[actD]) outRows.push(dayRow(rpOnLabel(md), actD));
 
     const n = dayList.length;
-    if (sh.total) outRows.push({ k: 'sum', cells: [{ v: 'Month to date' }, ...sums.map(v => ({ v })), { v: gTot }] });
-    if (sh.avg)   outRows.push({ k: 'avg', cells: [{ v: 'Avg / day' }, ...sums.map(v => ({ v: n ? v / n : 0 })), { v: n ? gTot / n : 0 }] });
+    if (sh.ctotal) outRows.push({ k: 'sum', cells: [{ v: 'Month to date' }, ...sums.map(v => ({ v })), { v: gTot }] });
+    if (sh.cavg)   outRows.push({ k: 'avg', cells: [{ v: 'Avg / day' }, ...sums.map(v => ({ v: n ? v / n : 0 })), { v: n ? gTot / n : 0 }] });
 
     const t = {
       sheet: 'Customer',
@@ -3540,275 +3494,6 @@ async function rpExportPdf() {
 // plain string (not a template literal) so nothing in it collides with the
 // app's own interpolation, and with no library dependency so the file works
 // offline and in whatever viewer it lands in.
-const RP_DASH_JS = [
-"(function(){",
-"var D=RPD, C=D.colors, CH=D.charts;",
-"var F=function(n){return Math.round(n).toLocaleString('en-IN');};",
-"var PAL=['#b8620a','#123a8a','#2f7d5f','#8a5cb8','#b5442f','#3f7fa3','#c9992b','#6b7280'];",
-"var LINE=['#b8620a','#123a8a','#2f7d5f','#8a5cb8','#b5442f'];",
-"function el(id){return document.getElementById(id);}",
-"function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}",
-"var M=D.months, P=null, PR=null;",
-"M.forEach(function(m){ if(m.key===D.primaryKey)P=m; if(m.key===D.priorKey)PR=m; });",
-
-// ── multi-series line ─────────────────────────────────────────────────
-"function multiLine(labels, series, ref, refLabel){",
-"  var W=860,H=250,L=68,R=16,T=16,B=34;",
-"  var all=[]; series.forEach(function(s){all=all.concat(s.vals);}); if(ref)all.push(ref);",
-"  var max=(Math.max.apply(null,all)||1)*1.12;",
-"  var n=labels.length, iw=W-L-R, ih=H-T-B;",
-"  var x=function(i){return L+(n<2?iw/2:iw*i/(n-1));};",
-"  var y=function(v){return T+ih-(v/max)*ih;};",
-"  var s='<svg viewBox=\"0 0 '+W+' '+H+'\" preserveAspectRatio=\"xMidYMid meet\" style=\"width:100%;height:auto;display:block\">';",
-"  for(var g=0;g<=4;g++){var gv=max*g/4, gy=y(gv);",
-"    s+='<line x1=\"'+L+'\" y1=\"'+gy+'\" x2=\"'+(W-R)+'\" y2=\"'+gy+'\" stroke=\"'+C.ash+'\"/>';",
-"    s+='<text x=\"'+(L-8)+'\" y=\"'+(gy+4)+'\" text-anchor=\"end\" font-size=\"10\" fill=\"'+C.mute+'\" font-family=\"monospace\">'+F(gv)+'</text>';}",
-"  if(ref){var ry=y(ref);",
-"    s+='<line x1=\"'+L+'\" y1=\"'+ry+'\" x2=\"'+(W-R)+'\" y2=\"'+ry+'\" stroke=\"'+C.avg+'\" stroke-width=\"1.5\" stroke-dasharray=\"6 4\"/>';",
-"    s+='<text x=\"'+(W-R)+'\" y=\"'+(ry-6)+'\" text-anchor=\"end\" font-size=\"10\" fill=\"'+C.avg+'\" font-family=\"monospace\">'+esc(refLabel||'avg')+' '+F(ref)+'</text>';}",
-"  series.forEach(function(se,si){",
-"    var col=LINE[si%LINE.length], pts=[];",
-"    se.vals.forEach(function(v,i){ if(v!=null) pts.push(x(i)+','+y(v)); });",
-"    if(si===0&&series.length===1) s+='<polygon points=\"'+L+','+(T+ih)+' '+pts.join(' ')+' '+x(se.vals.length-1)+','+(T+ih)+'\" fill=\"'+col+'\" opacity=\".10\"/>';",
-"    s+='<polyline points=\"'+pts.join(' ')+'\" fill=\"none\" stroke=\"'+col+'\" stroke-width=\"2.5\" stroke-linejoin=\"round\"/>';",
-"    se.vals.forEach(function(v,i){ if(v==null)return;",
-"      s+='<circle cx=\"'+x(i)+'\" cy=\"'+y(v)+'\" r=\"9\" fill=\"transparent\"><title>'+esc(se.name)+' · '+esc(labels[i])+' — '+F(v)+' T</title></circle>';",
-"      s+='<circle cx=\"'+x(i)+'\" cy=\"'+y(v)+'\" r=\"2.6\" fill=\"'+col+'\" pointer-events=\"none\"/>';});});",
-"  var step=Math.ceil(n/12);",
-"  labels.forEach(function(d,i){ if(i%step) return;",
-"    s+='<text x=\"'+x(i)+'\" y=\"'+(H-12)+'\" text-anchor=\"middle\" font-size=\"10\" fill=\"'+C.mute+'\" font-family=\"monospace\">'+esc(d)+'</text>';});",
-"  return s+'</svg>'+(series.length>1?legendOf(series.map(function(s,i){return {name:s.name,c:LINE[i%LINE.length]};})):'');",
-"}",
-
-// ── horizontal bars ───────────────────────────────────────────────────
-"function barChart(items, sel, clickable){",
-"  var W=860,rowH=27,L=215,R=100,pad=6;",
-"  var H=Math.max(items.length*rowH+pad*2,40);",
-"  var max=Math.max.apply(null,items.map(function(o){return o.v;}))||1;",
-"  var s='<svg viewBox=\"0 0 '+W+' '+H+'\" preserveAspectRatio=\"xMidYMin meet\" style=\"width:100%;height:auto;display:block\">';",
-"  items.forEach(function(o,i){",
-"    var y=pad+i*rowH, bw=(W-L-R)*(o.v/max), on=(sel===o.name);",
-"    var nm=o.name.length>29?o.name.slice(0,28)+'\\u2026':o.name;",
-"    s+='<g class=\"'+(clickable?'bar':'')+'\" data-name=\"'+esc(o.name)+'\"'+(clickable?' style=\"cursor:pointer\"':'')+'>';",
-"    s+='<rect x=\"0\" y=\"'+y+'\" width=\"'+W+'\" height=\"'+(rowH-3)+'\" fill=\"'+(on?'rgba(184,98,10,.10)':'transparent')+'\"/>';",
-"    s+='<text x=\"'+(L-10)+'\" y=\"'+(y+rowH/2+1)+'\" text-anchor=\"end\" font-size=\"11.5\" fill=\"'+C.ink+'\" font-weight=\"'+(on?'700':'500')+'\">'+esc(nm)+'<title>'+esc(o.name)+'</title></text>';",
-"    s+='<rect x=\"'+L+'\" y=\"'+(y+4)+'\" width=\"'+Math.max(bw,1)+'\" height=\"'+(rowH-11)+'\" fill=\"'+(on?C.live:'rgba(184,98,10,.55)')+'\"/>';",
-"    s+='<text x=\"'+(L+bw+8)+'\" y=\"'+(y+rowH/2+1)+'\" font-size=\"11\" fill=\"'+C.ink+'\" font-family=\"monospace\" font-weight=\"600\">'+F(o.v)+'</text>';",
-"    s+='</g>';});",
-"  return s+'</svg>';",
-"}",
-
-// ── diverging bars: today against a customer's own pace ───────────────
-"function divChart(items){",
-"  var W=860,rowH=26,L=215,pad=6,mid=L+(W-L-70)/2;",
-"  var H=Math.max(items.length*rowH+pad*2,40);",
-"  var max=Math.max.apply(null,items.map(function(o){return Math.abs(o.d);}))||1;",
-"  var half=(W-L-70)/2;",
-"  var s='<svg viewBox=\"0 0 '+W+' '+H+'\" preserveAspectRatio=\"xMidYMin meet\" style=\"width:100%;height:auto;display:block\">';",
-"  s+='<line x1=\"'+mid+'\" y1=\"0\" x2=\"'+mid+'\" y2=\"'+H+'\" stroke=\"'+C.ash+'\" stroke-width=\"1.5\"/>';",
-"  items.forEach(function(o,i){",
-"    var y=pad+i*rowH, w=half*(Math.abs(o.d)/max), up=o.d>=0;",
-"    var nm=o.name.length>29?o.name.slice(0,28)+'\\u2026':o.name;",
-"    s+='<text x=\"'+(L-10)+'\" y=\"'+(y+rowH/2+1)+'\" text-anchor=\"end\" font-size=\"11.5\" fill=\"'+C.ink+'\">'+esc(nm)+'<title>'+esc(o.name)+'</title></text>';",
-"    s+='<rect x=\"'+(up?mid:mid-w)+'\" y=\"'+(y+4)+'\" width=\"'+Math.max(w,1)+'\" height=\"'+(rowH-11)+'\" fill=\"'+(up?C.up:C.down)+'\" opacity=\".85\"><title>'+esc(o.name)+' — '+(up?'+':'')+F(o.d)+' T vs its own average</title></rect>';",
-"    s+='<text x=\"'+(W-64)+'\" y=\"'+(y+rowH/2+1)+'\" font-size=\"11\" font-family=\"monospace\" font-weight=\"600\" fill=\"'+(up?C.up:C.down)+'\">'+(up?'+':'')+F(o.d)+'</text>';});",
-"  return s+'</svg>';",
-"}",
-
-// ── stacked columns ───────────────────────────────────────────────────
-"function stackChart(days, series){",
-"  var W=860,H=260,L=68,R=14,T=16,B=34;",
-"  var n=days.length, iw=W-L-R, ih=H-T-B;",
-"  var totals=days.map(function(_,i){var t=0;series.forEach(function(s){t+=s.vals[i]||0;});return t;});",
-"  var max=(Math.max.apply(null,totals)||1)*1.12;",
-"  var bw=Math.max(4,Math.min(30,iw/n*0.68));",
-"  var x=function(i){return L+iw*(i+0.5)/n;};",
-"  var s='<svg viewBox=\"0 0 '+W+' '+H+'\" preserveAspectRatio=\"xMidYMid meet\" style=\"width:100%;height:auto;display:block\">';",
-"  for(var g=0;g<=4;g++){var gv=max*g/4, gy=T+ih-(gv/max)*ih;",
-"    s+='<line x1=\"'+L+'\" y1=\"'+gy+'\" x2=\"'+(W-R)+'\" y2=\"'+gy+'\" stroke=\"'+C.ash+'\"/>';",
-"    s+='<text x=\"'+(L-8)+'\" y=\"'+(gy+4)+'\" text-anchor=\"end\" font-size=\"10\" fill=\"'+C.mute+'\" font-family=\"monospace\">'+F(gv)+'</text>';}",
-"  days.forEach(function(d,i){ var acc=0;",
-"    series.forEach(function(se,si){ var v=se.vals[i]||0; if(!v) return;",
-"      var h=(v/max)*ih, yy=T+ih-((acc+v)/max)*ih; acc+=v;",
-"      s+='<rect x=\"'+(x(i)-bw/2)+'\" y=\"'+yy+'\" width=\"'+bw+'\" height=\"'+h+'\" fill=\"'+PAL[si%PAL.length]+'\"><title>'+esc(d)+' \\u00b7 '+esc(se.name)+' — '+F(v)+' T</title></rect>';});});",
-"  var step=Math.ceil(n/12);",
-"  days.forEach(function(d,i){ if(i%step) return;",
-"    s+='<text x=\"'+x(i)+'\" y=\"'+(H-12)+'\" text-anchor=\"middle\" font-size=\"10\" fill=\"'+C.mute+'\" font-family=\"monospace\">'+esc(d)+'</text>';});",
-"  return s+'</svg>'+legendOf(series.map(function(se,i){return {name:se.name,c:PAL[i%PAL.length]};}));",
-"}",
-
-// ── customer × day heatmap ────────────────────────────────────────────
-"function heatChart(labels, rows){",
-"  var L=215,cw=Math.max(14,Math.min(30,(860-L-20)/labels.length)),rh=20,W=L+cw*labels.length+20;",
-"  var H=rows.length*rh+30;",
-"  var max=0; rows.forEach(function(r){r.vals.forEach(function(v){if(v>max)max=v;});});",
-"  max=max||1;",
-"  var s='<svg viewBox=\"0 0 '+W+' '+H+'\" preserveAspectRatio=\"xMidYMin meet\" style=\"width:100%;height:auto;display:block\">';",
-"  labels.forEach(function(d,i){ if(labels.length>16&&i%2) return;",
-"    s+='<text x=\"'+(L+cw*i+cw/2)+'\" y=\"12\" text-anchor=\"middle\" font-size=\"9\" fill=\"'+C.mute+'\" font-family=\"monospace\">'+esc(d)+'</text>';});",
-"  rows.forEach(function(r,ri){ var y=20+ri*rh;",
-"    var nm=r.name.length>29?r.name.slice(0,28)+'\\u2026':r.name;",
-"    s+='<text x=\"'+(L-10)+'\" y=\"'+(y+rh/2+3)+'\" text-anchor=\"end\" font-size=\"11\" fill=\"'+C.ink+'\">'+esc(nm)+'<title>'+esc(r.name)+'</title></text>';",
-"    r.vals.forEach(function(v,i){",
-"      var o=v>0?(0.12+0.88*Math.pow(v/max,0.6)):0;",
-"      s+='<rect x=\"'+(L+cw*i)+'\" y=\"'+(y+1)+'\" width=\"'+(cw-1.5)+'\" height=\"'+(rh-3)+'\" fill=\"'+(v>0?C.live:C.soft)+'\" opacity=\"'+(v>0?o:1)+'\" stroke=\"'+C.ash+'\" stroke-width=\".5\"><title>'+esc(r.name)+' \\u00b7 '+esc(labels[i])+' — '+(v>0?F(v)+' T':'no lifting')+'</title></rect>';});});",
-"  return s+'</svg>';",
-"}",
-"function legendOf(items){",
-"  return '<div class=\"lg\">'+items.map(function(o){return '<span><i style=\"background:'+o.c+'\"></i>'+esc(o.name)+'</span>';}).join('')+'</div>';",
-"}",
-
-// ── data table behind each chart ──────────────────────────────────────
-"function dataTable(cols, rows){",
-"  var h='<table class=\"dt\"><thead><tr>'+cols.map(function(c,i){return '<th'+(i?' class=\"n\"':'')+'>'+esc(c)+'</th>';}).join('')+'</tr></thead><tbody>';",
-"  rows.forEach(function(r){ h+='<tr>'+r.map(function(v,i){return i?'<td class=\"n\">'+(typeof v==='number'?F(v):esc(v))+'</td>':'<td>'+esc(v)+'</td>';}).join('')+'</tr>';});",
-"  return h+'</tbody></table>';",
-"}",
-"var cid=0;",
-"function card(title,sub,chart,cols,rows){",
-"  var id='cd'+(cid++);",
-"  return '<div class=\"chart\"><div class=\"ch-h\"><div><div class=\"ch-t\">'+esc(title)+'</div><div class=\"ch-s\">'+esc(sub)+'</div></div>'",
-"    +(cols?'<button class=\"dbtn\" data-t=\"'+id+'\">Show data</button>':'')+'</div><div class=\"ch-b\" id=\"'+id+'_c\">'+chart+'</div>'",
-"    +(cols?'<div class=\"ch-d\" id=\"'+id+'\" style=\"display:none\">'+dataTable(cols,rows)+'</div>':'')+'</div>';",
-"}",
-
-// ── panel 1 ───────────────────────────────────────────────────────────
-"var h1=el('charts_p1');",
-"if(h1 && P){",
-"  var out='';",
-"  if(CH.kpi){",
-"    var proj=P.avgDay*P.dim, pace=null;",
-"    if(PR && PR.daysLifted){ var priorToDate=PR.dayTotals.slice(0,P.daysLifted).reduce(function(a,b){return a+b;},0);",
-"      if(priorToDate>0) pace=((P.total-priorToDate)/priorToDate)*100; }",
-"    var k=[['On '+P.onLabel,F(P.onTotal),C.live],['Month to date',F(P.total),C.ink],",
-"           ['Avg / day',F(P.avgDay),C.avg],['Projected '+P.label,F(proj),C.ink],",
-"           ['Days lifted',P.daysLifted+' of '+P.dim,C.ink],['Customers',String(P.customers.length),C.ink]];",
-"    if(pace!==null) k.splice(4,0,['vs '+PR.label+' same point',(pace>=0?'+':'')+pace.toFixed(1)+'%',pace>=0?C.up:C.down]);",
-"    out+='<div class=\"kpis\">'+k.map(function(o){return '<div class=\"kpi\"><span>'+esc(o[0])+'</span><b style=\"color:'+o[2]+'\">'+esc(o[1])+'</b></div>';}).join('')+'</div>';",
-"  }",
-"  if(CH.trend) out+=card('Daily despatch to power sector',P.label+' \\u00b7 dashed line is the daily average',",
-"     multiLine(P.dayLabels,[{name:P.label,vals:P.dayTotals}],P.avgDay,'avg'),",
-"     ['Date','Tonnes'],P.dayLabels.map(function(d,i){return [d,P.dayTotals[i]];}));",
-"  if(CH.cumulative){",
-"    var maxLen=0; M.forEach(function(m){if(m.dayLabels.length>maxLen)maxLen=m.dayLabels.length;});",
-"    var lbl=[]; for(var i=0;i<maxLen;i++) lbl.push(String(i+1).padStart(2,'0'));",
-"    var ser=M.map(function(m){var run=0; return {name:m.label,vals:lbl.map(function(_,i){",
-"        if(i>=m.dayTotals.length) return null; run+=m.dayTotals[i]; return run;})};});",
-"    out+=card('Progressive total',M.length>1?'Running total, month against month':'Running total through '+P.label,",
-"      multiLine(lbl,ser),['Day'].concat(M.map(function(m){return m.label;})),",
-"      lbl.map(function(d,i){return [d].concat(ser.map(function(s){return s.vals[i]==null?'':s.vals[i];}));}));",
-"  }",
-"  if(CH.ranking){",
-"    var top=P.customers.slice(0,14);",
-"    out+=card('Customers by month to date',P.label+' \\u00b7 tap a bar to chart that customer',",
-"      barChart(top.map(function(c){return {name:c.name,v:c.mtd};}),null,true),",
-"      ['Customer','Month to date','Avg / day','On '+P.onLabel],",
-"      top.map(function(c){return [c.name,c.mtd,c.avg,c.on];}));",
-"    out+='<div id=\"top_host\"></div>';",
-"  }",
-"  if(CH.deviation){",
-"    var dv=P.customers.map(function(c){return {name:c.name,d:c.on-c.avg,on:c.on,avg:c.avg};})",
-"      .sort(function(a,b){return b.d-a.d;}).slice(0,16);",
-"    out+=card('On '+P.onLabel+' against each customer\\u2019s own average',",
-"      'Green lifted more than its month average, red less',divChart(dv),",
-"      ['Customer','On '+P.onLabel,'Avg / day','Difference'],",
-"      dv.map(function(o){return [o.name,o.on,o.avg,o.d];}));",
-"  }",
-"  if(CH.customer) out+='<div id=\"one_host\"></div>';",
-"  if(CH.heatmap){",
-"    var hr=P.customers.slice(0,18).map(function(c){return {name:c.name,vals:c.days};});",
-"    out+=card('Customer \\u00d7 day','Darker means more lifted; blank means none that day \\u00b7 '+P.label,",
-"      heatChart(P.dayLabels,hr),['Customer'].concat(P.dayLabels),",
-"      hr.map(function(r){return [r.name].concat(r.vals);}));",
-"  }",
-"  if(CH.monthly && M.length>1){",
-"    out+=card('Month on month','Total road despatch to the power sector',",
-"      barChart(M.slice().reverse().map(function(m){return {name:m.label,v:m.total};}),null,false),",
-"      ['Month','Total','Avg / day','Days lifted'],",
-"      M.slice().reverse().map(function(m){return [m.label,m.total,m.avgDay,m.daysLifted];}));",
-"  }",
-"  h1.innerHTML=out;",
-"  window.__one=function(name){",
-"    var c=null; P.customers.forEach(function(x){if(x.name===name)c=x;});",
-"    if(!c||!el('one_host')) return;",
-"    var ser=[{name:P.label,vals:c.days}];",
-"    if(PR){var p2=null; PR.customers.forEach(function(x){if(x.name===name)p2=x;});",
-"      if(p2) ser.push({name:PR.label,vals:p2.days});}",
-"    el('one_host').innerHTML=card(c.name,'Daily lifting \\u00b7 dashed line is its own average',",
-"      multiLine(P.dayLabels,ser,c.avg,'avg'),",
-"      ['Date'].concat(ser.map(function(s){return s.name;})),",
-"      P.dayLabels.map(function(d,i){return [d].concat(ser.map(function(s){return s.vals[i]==null?'':s.vals[i];}));}));",
-"    if(el('top_host')) el('top_host').innerHTML='';",
-"    [].forEach.call(document.querySelectorAll('.bar'),function(g){",
-"      g.parentNode.parentNode.querySelectorAll('rect');});",
-"    wire();",
-"  };",
-"  if(CH.customer && P.customers.length) window.__one(P.customers[0].name);",
-"}",
-
-// ── panel 2 ───────────────────────────────────────────────────────────
-"var h2=el('charts_p2');",
-"if(h2 && D.sources.length && P){",
-"  var o2='';",
-"  D.sources.forEach(function(s){",
-"    var real=s.cols.map(function(c,i){return {c:c,i:i};}).filter(function(o){return !o.c.isSub;});",
-"    if(CH.split){",
-"      var items=real.map(function(o){return {name:o.c.label,v:s.mtd[o.i]};}).filter(function(o){return o.v>0;})",
-"        .sort(function(a,b){return b.v-a.v;});",
-"      var tot=items.reduce(function(a,b){return a+b.v;},0);",
-"      if(items.length) o2+=card(s.name+' \\u2014 source split','Month to date by colliery \\u00b7 '+P.label,",
-"        barChart(items,null,false),['Colliery','Month to date','Share'],",
-"        items.map(function(o){return [o.name,o.v,(tot?(o.v/tot*100).toFixed(1):'0')+'%'];}));",
-"    }",
-"    if(CH.stacked){",
-"      var ser=real.map(function(o){return {name:o.c.label,vals:s.days.map(function(d){return d.v[o.i]||0;})};})",
-"        .filter(function(se){return se.vals.some(function(v){return v>0;});});",
-"      if(ser.length&&s.days.length) o2+=card(s.name+' \\u2014 daily by colliery','Stacked tonnes per day \\u00b7 '+P.label,",
-"        stackChart(s.days.map(function(d){return d.d;}),ser),",
-"        ['Date'].concat(ser.map(function(se){return se.name;})).concat(['Total']),",
-"        s.days.map(function(d,i){return [d.d].concat(ser.map(function(se){return se.vals[i];})).concat([d.total]);}));",
-"    }",
-"  });",
-"  h2.innerHTML=o2;",
-"}",
-
-// ── wiring ────────────────────────────────────────────────────────────
-"function wire(){",
-"  [].forEach.call(document.querySelectorAll('.dbtn'),function(b){",
-"    b.onclick=function(){var t=el(b.getAttribute('data-t')); if(!t)return; var on=t.style.display!=='none';",
-"      t.style.display=on?'none':'block'; b.textContent=on?'Show data':'Hide data';};});",
-"  [].forEach.call(document.querySelectorAll('.bar'),function(g){",
-"    g.onclick=function(){ if(window.__one) window.__one(g.getAttribute('data-name')); };});",
-"  [].forEach.call(document.querySelectorAll('table.rpt'),function(tb){",
-"    var body=tb.querySelector('.rpt-body'); if(!body||tb.__w) return; tb.__w=1;",
-"    [].forEach.call(tb.querySelectorAll('thead th'),function(th,i){",
-"      th.onclick=function(){",
-"        var dir=th.getAttribute('data-dir')==='desc'?'asc':'desc';",
-"        [].forEach.call(tb.querySelectorAll('thead th'),function(x){x.removeAttribute('data-dir');",
-"          var a=x.querySelector('.ar'); if(a)a.parentNode.removeChild(a);});",
-"        th.setAttribute('data-dir',dir);",
-"        var rows=[].slice.call(body.rows);",
-"        rows.sort(function(a,b){",
-"          var av=a.cells[i].getAttribute('data-v'), bv=b.cells[i].getAttribute('data-v');",
-"          if(av!==null&&bv!==null) return dir==='desc'?bv-av:av-bv;",
-"          var at=a.cells[i].textContent,bt=b.cells[i].textContent;",
-"          return dir==='desc'?bt.localeCompare(at):at.localeCompare(bt);});",
-"        rows.forEach(function(r){body.appendChild(r);});",
-"        th.insertAdjacentHTML('beforeend',' <span class=\"ar\">'+(dir==='desc'?'\\u25BC':'\\u25B2')+'</span>');};});",
-"    [].forEach.call(body.rows,function(r){r.onclick=function(){r.className=r.className?'':'pin';};});});",
-"  [].forEach.call(document.querySelectorAll('[data-search]'),function(inp){",
-"    inp.oninput=function(){var tb=el(inp.getAttribute('data-search')),q=inp.value.trim().toUpperCase();",
-"      [].forEach.call(tb.querySelectorAll('.rpt-body tr'),function(r){",
-"        r.style.display=(!q||r.cells[0].textContent.toUpperCase().indexOf(q)>-1)?'':'none';});};});",
-"  [].forEach.call(document.querySelectorAll('[data-days]'),function(btn){",
-"    btn.onclick=function(){var tb=el(btn.getAttribute('data-days')),on=btn.getAttribute('data-on')==='1';",
-"      btn.setAttribute('data-on',on?'0':'1'); btn.textContent=(on?'Show':'Hide')+' day-by-day';",
-"      [].forEach.call(tb.querySelectorAll('[data-k=\"day\"]'),function(e){e.style.display=on?'none':'';});};});",
-"}",
-"wire();",
-"})();",
-].join('\n');
-
 // ── HTML ───────────────────────────────────────────────────────────────
 // A self-contained themed table. text/html is on Android's shareable list,
 // so this goes to WhatsApp like the PDF does, and Excel opens .html tables
@@ -3847,164 +3532,31 @@ function rpHtmlCellStyle(kind, rowKind) {
 }
 
 // ── HTML export configuration ─────────────────────────────────────────
-const RP_NL = String.fromCharCode(10);
-
-const RP_CHARTS = [
-  ['kpi',        'Headline figures',        'Month to date, average, pace and projected month-end'],
-  ['trend',      'Daily despatch trend',    'Sector total per day against the daily average'],
-  ['cumulative', 'Progressive curve',       'Running total, overlaid across the months you pick'],
-  ['ranking',    'Customers by lifting',    'Ranked bars; tap one to chart it'],
-  ['deviation',  'On-date vs own average',  'Who ran above or below their own pace today'],
-  ['customer',   'Customer daily trend',    'Drill-down line for the customer you tap'],
-  ['heatmap',    'Customer × day heatmap',  'Where the gaps are, at a glance'],
-  ['monthly',    'Month-on-month totals',   'Needs more than one month selected'],
-  ['split',      'Source split',            'Customer report: month-to-date by colliery'],
-  ['stacked',    'Daily by colliery',       'Customer report: stacked columns per day'],
-];
-function rpHtmlCfg() {
-  const pr = appSettings.powerReport || {};
-  const h  = pr.html || {};
-  const charts = {};
-  RP_CHARTS.forEach(c => { charts[c[0]] = h.charts ? h.charts[c[0]] !== false : true; });
-  return {
-    mode:   h.mode === 'static' ? 'static' : 'interactive',
-    tables: h.tables !== false,
-    months: Array.isArray(h.months) ? h.months.slice() : [],
-    charts,
-  };
-}
-
-// Every month that has stored figures, newest first.
-function rpHistMonths() {
-  const set = {};
-  Object.keys((rpHist && rpHist.days) || {}).forEach(k => { set[k.slice(0,7)] = 1; });
-  if (allRows.length) Object.keys(rpFileDayMaps()).forEach(k => { set[k.slice(0,7)] = 1; });
-  return Object.keys(set).sort().reverse();
-}
-
-// Day maps for any month, with the loaded file overriding stored history.
-function rpDaysOfMonth(mk) {
-  const Y = +mk.slice(0,4), M = +mk.slice(5,7);
-  const dim = new Date(Y, M, 0).getDate();
-  const fm  = allRows.length ? rpFileDayMaps() : {};
-  const key = rpActiveKey();
-  const days = {};
-  for (let d = 1; d <= dim; d++) {
-    const k = `${Y}-${String(M).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    if (fm[k] && (allDaysMode || key === k)) days[d] = { pc: fm[k].pc, cut: fm[k].cut, live: true };
-    else if (rpHist && rpHist.days[k]) days[d] = { pc: rpHist.days[k].pc || {}, cut: rpHist.days[k].cut || '', live: false };
-  }
-  return { key: mk, Y, M, dim, days, label: RP_MON[M-1] + '-' + Y };
-}
-
-// One month rolled up the way the charts want it.
-function rpMonthSummary(mk) {
-  const m  = rpDaysOfMonth(mk);
-  const pr = appSettings.powerReport || {};
-  const r1 = (pr.parties || []).filter(p => p.r1);
-  const dayList = [];
-  for (let d = 1; d <= m.dim; d++) if (m.days[d]) dayList.push(d);
-
-  const customers = r1.map(p => {
-    const codes = rpCodesOf(p);
-    const vals = dayList.map(d => rpSumParty(m.days[d].pc, codes));
-    const mtd = vals.reduce((a,b) => a+b, 0);
-    return { name: p.name || codes[0], mtd, avg: dayList.length ? mtd / dayList.length : 0,
-             on: vals.length ? vals[vals.length-1] : 0, days: vals };
-  }).filter(c => c.mtd > 0).sort((a,b) => b.mtd - a.mtd);
-
-  const totals = dayList.map((d,i) => customers.reduce((s,c) => s + c.days[i], 0));
-  const total  = totals.reduce((a,b) => a+b, 0);
-  const lastD  = dayList.length ? dayList[dayList.length-1] : 0;
-
-  return {
-    key: mk, label: m.label, dim: m.dim,
-    dayLabels: dayList.map(d => String(d).padStart(2,'0')),
-    dayTotals: totals, total,
-    avgDay: dayList.length ? total / dayList.length : 0,
-    daysLifted: dayList.length,
-    lastDay: lastD,
-    onLabel: lastD ? String(lastD).padStart(2,'0') + ' ' + RP_MON[m.M-1].toUpperCase() : m.label,
-    onTotal: totals.length ? totals[totals.length-1] : 0,
-    cut: lastD && m.days[lastD] ? m.days[lastD].cut : '',
-    customers,
-  };
-}
-
-// Customer-report blocks for one month.
-function rpSourceSummary(mk) {
-  const m  = rpDaysOfMonth(mk);
-  const pr = appSettings.powerReport || {};
-  const split = c => (c.colCodes || '').split(',').map(x => x.trim()).filter(Boolean);
-  const dayList = [];
-  for (let d = 1; d <= m.dim; d++) if (m.days[d]) dayList.push(d);
-
-  return (pr.parties || []).filter(p => p.r2).map(p => {
-    const codes = rpCodesOf(p);
-    const cols  = (p.cols || []);
-    return {
-      name: p.name || codes[0],
-      cols: cols.map(c => ({ label: c.label || c.colCodes, isSub: !!c.isSubtotal })),
-      mtd:  cols.map(c => dayList.reduce((s,d) => s + rpSumPartyColl(m.days[d].pc, codes, split(c)), 0)),
-      days: dayList.map(d => {
-        const v = cols.map(c => rpSumPartyColl(m.days[d].pc, codes, split(c)));
-        return { d: String(d).padStart(2,'0'), v,
-                 total: cols.reduce((s,c,i) => s + (c.isSubtotal ? 0 : v[i]), 0) };
-      }),
-    };
-  });
-}
-
-// Everything the charts need, as plain data, embedded in the export.
-function rpChartData() {
-  const cfg = rpHtmlCfg();
-  const md  = rpMonthData();
-  const cur = md ? `${md.Y}-${String(md.M).padStart(2,'0')}` : (rpHistMonths()[0] || null);
-  let keys = cfg.months.length ? cfg.months.slice().sort() : (cur ? [cur] : []);
-  if (cur && keys.indexOf(cur) < 0 && cfg.months.length === 0) keys.push(cur);
-  keys = keys.filter((k,i,a) => a.indexOf(k) === i).sort();
-
-  const months = keys.map(rpMonthSummary).filter(m => m.daysLifted);
-  const primary = months.length ? months[months.length - 1] : null;
-  const prior   = months.length > 1 ? months[months.length - 2] : null;
-
-  return {
-    months, primaryKey: primary ? primary.key : null,
-    priorKey: prior ? prior.key : null,
-    sources: primary ? rpSourceSummary(primary.key) : [],
-    charts: cfg.charts, mode: cfg.mode,
-    colors: { ink: RP_H.ink, ash: RP_H.ash, mute: RP_H.mute, live: RP_H.live,
-              avg: RP_H.avg, paper: RP_H.paper, soft: RP_H.soft,
-              up: '#2f7d5f', down: '#b5442f' },
-  };
-}
-
 function rpHtmlCard(t, idx) {
   const cond = "font-family:'IBM Plex Sans Condensed','IBM Plex Sans',Arial,sans-serif;";
-  const tid = 'rpt' + idx;
 
   let head = '<thead><tr>';
-  t.head.forEach((c, i) => {
+  t.head.forEach(c => {
     const align = c.k === 'lead' ? 'left' : 'right';
     const col = c.k === 'on' ? RP_H.live : c.k === 'avg' ? RP_H.avg : RP_H.mute;
-    head += `<th data-i="${i}" data-k="${c.k}" style="border:1px solid ${RP_H.ash};padding:8px 9px;${cond}font-size:10px;font-weight:700;` +
-            `letter-spacing:.1em;text-transform:uppercase;color:${col};background:${RP_H.paper};text-align:${align};cursor:pointer;` +
+    head += `<th style="border:1px solid ${RP_H.ash};padding:8px 9px;${cond}font-size:10px;font-weight:700;` +
+            `letter-spacing:.1em;text-transform:uppercase;color:${col};background:${RP_H.paper};text-align:${align};` +
             `${c.k === 'sub' ? 'font-style:italic;border-left:1px dashed ' + RP_H.mute + ';' : ''}` +
             `${c.k === 'on' ? 'border-left:2px solid ' + RP_H.live + ';' : ''}">${rpEsc(c.t)}</th>`;
   });
   head += '</tr></thead>';
 
   const rowHtml = r => {
-    let h = `<tr data-k="${r.k}">`;
+    let h = '<tr>';
     r.cells.forEach((c, i) => {
       const k = t.head[i] ? t.head[i].k : 'num';
       const isNum = typeof c.v === 'number' && isFinite(c.v);
       const isZero = isNum && Math.round(c.v) === 0;
       const txt = isNum ? (isZero ? '·' : rpNum(c.v)) : rpEsc(c.v);
       // x:num for Excel, data-v for the sort — browsers ignore the first
-      const attrs = isNum ? ` x:num="${Math.round(c.v * 100) / 100}" data-v="${Math.round(c.v * 100) / 100}"` : '';
+      const attrs = isNum ? ` x:num="${Math.round(c.v * 100) / 100}"` : '';
       const zero = isZero ? `color:${r.k === 'sum' ? 'rgba(245,247,249,.4)' : RP_H.zero};` : '';
-      h += `<td data-k="${k}" style="${rpHtmlCellStyle(k, r.k)}${zero}"${attrs}>${txt}</td>`;
+      h += `<td style="${rpHtmlCellStyle(k, r.k)}${zero}"${attrs}>${txt}</td>`;
     });
     return h + '</tr>';
   };
@@ -4038,17 +3590,9 @@ function rpHtmlCard(t, idx) {
 
   // In interactive mode the chart dashboard carries the headline figures, so
   // the table card would only repeat them; static mode has nothing else.
-  const kpiHtml = rpHtmlCfg().mode === 'interactive' ? '' :
-    `<div class="kpis">` + kpis.map(([l, v]) =>
-      `<div class="kpi"><span>${rpEsc(l)}</span><b>${rpEsc(v)}</b></div>`).join('') + `</div>`;
+  const kpiHtml = `<div class="kpis">` + kpis.map(([l, v]) =>
+    `<div class="kpi"><span>${rpEsc(l)}</span><b>${rpEsc(v)}</b></div>`).join('') + `</div>`;
 
-  const hasDays = t.head.some(h => h.k === 'day');
-  const controls = rpHtmlCfg().mode !== 'interactive' ? '' :
-    `<div class="ctl">
-       <input type="search" placeholder="Filter ${t.sheet === 'Power sector' ? 'customers' : 'dates'}…" data-search="${tid}">
-       ${hasDays ? `<button data-days="${tid}" data-on="1">Hide day-by-day</button>` : ''}
-       <span class="hint">Tap a column heading to sort</span>
-     </div>`;
 
   return `<div class="card">
        <div class="cap">
@@ -4056,8 +3600,7 @@ function rpHtmlCard(t, idx) {
          <div class="cap-m">${rpEsc(t.meta || '')}</div>
        </div>
        ${kpiHtml}
-       ${controls}
-       <div class="scroll"><table id="${tid}" class="rpt" cellspacing="0" cellpadding="0" style="border-collapse:collapse;width:100%;">
+       <div class="scroll"><table class="rpt" cellspacing="0" cellpadding="0" style="border-collapse:collapse;width:100%;">
          ${head}
          <tbody class="rpt-ref">${refRows}</tbody>
          <tbody class="rpt-body">${dataRows}</tbody>
@@ -4070,7 +3613,6 @@ function rpHtmlCard(t, idx) {
 function rpBuildHtml() {
   const cond = "font-family:'IBM Plex Sans Condensed','IBM Plex Sans',Arial,sans-serif;";
   const mono = "font-family:'IBM Plex Mono',Consolas,monospace;";
-  const cfg = rpHtmlCfg();
   let n = 0;
   const groups = [
     { id: 'p1', label: 'Power Sector', tables: _rpTables.filter(t => t.sheet === 'Power sector') },
@@ -4086,13 +3628,7 @@ function rpBuildHtml() {
     ? `<div class="tabbar">` + groups.map(g => `<label for="rt_${g.id}">${rpEsc(g.label)}</label>`).join('') + `</div>`
     : '';
   const panels = groups.map(g =>
-    `<div class="panel ${g.id}">` +
-    (cfg.mode === 'interactive' ? `<div id="charts_${g.id}"></div>` : '') +
-    (cfg.tables
-      ? (cfg.mode === 'interactive' ? `<div class="sec">Underlying report</div>` : '') +
-        g.tables.map(t => rpHtmlCard(t, n++)).join('')
-      : '') +
-    `</div>`).join('');
+    `<div class="panel ${g.id}">${g.tables.map(t => rpHtmlCard(t, n++)).join('')}</div>`).join('');
   const rules = groups.map(g =>
     `#rt_${g.id}:checked ~ #wrap .${g.id}{display:block}\n` +
     `#rt_${g.id}:checked ~ #wrap .tabbar label[for="rt_${g.id}"]{color:${RP_H.live};border-color:${RP_H.live};background:rgba(217,122,6,.09)}`
@@ -4133,22 +3669,6 @@ body{margin:0;padding:18px;background:${RP_H.soft};-webkit-text-size-adjust:100%
 .rpt th .ar{color:${RP_H.live};font-size:9px}
 .foot{padding:7px 15px;${mono}font-size:10px;color:${RP_H.mute};border-top:1px solid ${RP_H.ash}}
 .stamp{${cond}font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:${RP_H.mute};padding:2px 2px 10px}
-.sec{${cond}font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${RP_H.mute};margin:26px 2px 10px;border-top:1px solid ${RP_H.ash};padding-top:12px}
-.chart{margin:0 0 18px;border:1px solid ${RP_H.ash};background:${RP_H.paper}}
-.ch-h{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:12px 15px 10px;border-bottom:1px solid ${RP_H.ash}}
-.ch-t{${cond}font-size:13px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:${RP_H.ink}}
-.ch-s{${mono}font-size:10px;color:${RP_H.mute};margin-top:3px}
-.ch-b{padding:12px 10px 6px}
-.ch-d{padding:0 15px 14px;overflow-x:auto}
-.dbtn{flex:none;padding:6px 11px;cursor:pointer;border:1px solid ${RP_H.ash};background:transparent;color:${RP_H.mute};${cond}font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
-.dbtn:hover{border-color:${RP_H.live};color:${RP_H.live}}
-.dt{border-collapse:collapse;width:100%;${mono}font-size:11px;margin-top:4px}
-.dt th,.dt td{border:1px solid ${RP_H.ash};padding:4px 8px;text-align:left;white-space:nowrap}
-.dt th{${cond}font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${RP_H.mute};background:${RP_H.soft}}
-.dt .n{text-align:right}
-.lg{display:flex;flex-wrap:wrap;gap:10px;padding:8px 6px 2px;${cond}font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:${RP_H.mute}}
-.lg i{display:inline-block;width:10px;height:10px;margin-right:5px;vertical-align:-1px}
-.bar rect,.pt{transition:none}
 ${rules}
 @media print{.tabbar,.ctl{display:none}.panel{display:block !important}}
 </style>
@@ -4160,7 +3680,6 @@ ${tabBar}
 ${panels}
 <div class="stamp">MCL road despatch · generated ${rpEsc(new Date().toLocaleString('en-IN'))}</div>
 </div>
-${cfg.mode === 'interactive' ? RP_NL + '<scr' + 'ipt>' + RP_NL + 'var RPD = ' + JSON.stringify(rpChartData()) + ';' + RP_NL + RP_DASH_JS + RP_NL + '<' + '/scr' + 'ipt>' : ''}
 </body>
 </html>`;
 
