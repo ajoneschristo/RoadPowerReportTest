@@ -1247,7 +1247,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B22-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B23-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -3086,21 +3086,29 @@ function renderRp1(md) {
   const dayCols = [];
   for (let d = 1; d <= lastDay; d++) if (md.days[d]) dayCols.push(d);
 
+  const sh = rpShow(1, daywise);
+  // months pinned in Saved days, each contributing a Total and an Avg column
+  const refs = (sh.total || sh.avg) ? rpPinnedMonths() : [];
+
   let rows = parties.map(p => {
     const codes = rpCodesOf(p);
     const vals = {};
     let prog = 0, cnt = 0;
     dayCols.forEach(d => { const v = rpSumParty(md.days[d].pc, codes); vals[d] = v; prog += v; cnt++; });
-    return { name: p.name || codes[0], codes, vals, prog, cnt, today: vals[actD] || 0 };
+    // worked out before the filter runs, so a customer idle this month keeps
+    // its pinned-month history instead of vanishing and taking those tonnes
+    // out of the column totals
+    const refVals = refs.map(ref => rpSumParty(ref.pc, codes));
+    const refSum  = refVals.reduce((a,b) => a+b, 0);
+    return { name: p.name || codes[0], codes, vals, prog, cnt, refVals, refSum,
+             today: vals[actD] || 0 };
   });
 
-  rows = rows.filter(r => r.prog > 0).sort((a,b) => b.prog - a.prog);
+  // hide a customer only when it has lifted nothing in any period on show
+  rows = rows.filter(r => r.prog > 0 || r.refSum > 0)
+             .sort((a,b) => (b.prog - a.prog) || (b.refSum - a.refSum));
 
   const cut  = (md.days[actD] && md.days[actD].cut) || '';
-
-  const sh = rpShow(1, daywise);
-  // months pinned in Saved days, each contributing a Total and an Avg column
-  const refs = (sh.total || sh.avg) ? rpPinnedMonths() : [];
 
   // With a pinned month in play the headings repeat the month name on every
   // column, which eats width — so the month moves up into a grouping row and
@@ -3168,7 +3176,7 @@ function renderRp1(md) {
       { v: r.today },
     ];
     refs.forEach((ref, ri) => {
-      const t = rpSumParty(ref.pc, r.codes);
+      const t = r.refVals[ri] || 0;
       refTot[ri] = (refTot[ri] || 0) + t;
       if (sh.total) cells.push({ v: t });
       if (sh.avg)   cells.push({ v: ref.days ? t / ref.days : 0 });
