@@ -990,6 +990,13 @@ body.dark .rp-card {
 }
 .rp-t thead tr.rp-grp th.rp-grp-off { background: var(--paper); border-color: var(--paper); }
 .rp-t thead tr.rp-grp th.rp-grp-on  { border-bottom: 2px solid var(--ink); }
+.rp-t thead tr.rp-grp th.rp-grp-note {
+  background: var(--paper); text-align: left; color: var(--mute);
+  font-family: var(--mono); font-size: 9px; letter-spacing: .04em; text-transform: none;
+}
+.rp-t thead tr.rp-grp th.rp-grp-live {
+  background: var(--paper); color: var(--live); border-left: 2px solid var(--live);
+}
 .rp-t thead th.rp-on   { color: var(--live); }
 .rp-t thead th.rp-day  { font-family: var(--mono); letter-spacing: 0; font-size: 10px; }
 
@@ -1240,7 +1247,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B21-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B22-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -2997,7 +3004,8 @@ function rpTableHTML(t) {
   if (t.groups && t.groups.length) {
     h += '<tr class="rp-grp">';
     t.groups.forEach(g => {
-      h += `<th colspan="${g.span}" class="${g.t ? 'rp-grp-on' : 'rp-grp-off'}">${rpEsc(g.t)}</th>`;
+      const cls = g.k === 'note' ? 'rp-grp-note' : g.k === 'on' ? 'rp-grp-live' : g.t ? 'rp-grp-on' : 'rp-grp-off';
+      h += `<th colspan="${g.span}" class="${cls}">${rpEsc(g.t)}</th>`;
     });
     h += '</tr>';
   }
@@ -3102,23 +3110,50 @@ function renderRp1(md) {
     { t: 'Customer',    k: 'lead' },
     { t: rpOnLabel(md), k: 'on'   },
   ];
-  const groups = grouped ? [{ t: '', span: 2 }] : null;
+  // The two lead cells of the grouping row were empty; they now carry the unit
+  // and a label for the on-date column.
+  const groups = grouped
+    ? [{ t: 'Figs. in Tonnes', span: 1, k: 'note' }, { t: 'On date', span: 1, k: 'on' }]
+    : null;
 
-  refs.forEach(r => {
-    let n = 0;
-    if (sh.total) { head.push({ t: 'Total',     k: 'key' }); n++; }
-    if (sh.avg)   { head.push({ t: 'Avg / day', k: 'avg' }); n++; }
-    if (n) groups.push({ t: r.label, span: n });
-  });
+  // With one measure the month name repeats down every column, so the measure
+  // goes up into the grouping row instead and the months sit under it.
+  const pinBoth = sh.total && sh.avg;
+  if (pinBoth) {
+    refs.forEach(r => {
+      head.push({ t: 'Total', k: 'key' });
+      head.push({ t: 'Avg / day', k: 'avg' });
+      groups.push({ t: r.label, span: 2 });
+    });
+  } else if (refs.length) {
+    refs.forEach(r => head.push({ t: r.label, k: sh.total ? 'key' : 'avg' }));
+    groups.push({ t: sh.total ? 'Total' : 'Avg / day', span: refs.length });
+  }
 
-  let cn = 0;
-  if (sh.ctotal) { head.push({ t: grouped ? 'Total'     : 'Month to date', k: 'key' }); cn++; }
-  if (sh.cavg)   { head.push({ t: 'Avg / day', k: 'avg' }); cn++; }
-  if (grouped && cn) groups.push({ t: md.monLabel, span: cn });
+  const curBoth = sh.ctotal && sh.cavg;
+  if (curBoth) {
+    head.push({ t: grouped ? 'Total' : 'Month to date', k: 'key' });
+    head.push({ t: 'Avg / day', k: 'avg' });
+    if (grouped) groups.push({ t: md.monLabel, span: 2 });
+  } else if (sh.ctotal || sh.cavg) {
+    head.push({ t: grouped ? md.monLabel : (sh.ctotal ? 'Month to date' : 'Avg / day'),
+                k: sh.ctotal ? 'key' : 'avg' });
+    if (grouped) groups.push({ t: sh.ctotal ? 'Total' : 'Avg / day', span: 1 });
+  }
 
   if (daywise) {
     dayCols.forEach(d => head.push({ t: rpDayNum(d), k: 'day' }));
     if (grouped && dayCols.length) groups.push({ t: md.monLabel + ' day-by-day', span: dayCols.length });
+  }
+
+  // fold neighbouring groups that say the same thing into one wider cell
+  if (groups) {
+    for (let i = groups.length - 1; i > 0; i--) {
+      const a = groups[i - 1], b = groups[i];
+      if (a.k || b.k || !b.t || a.t !== b.t) continue;
+      a.span += b.span;
+      groups.splice(i, 1);
+    }
   }
 
   const outRows = [];
@@ -3155,13 +3190,12 @@ function renderRp1(md) {
   outRows.push({ k: 'sum', cells: sumCells });
 
   const t = {
-    groups,
     sheet: 'Power sector',
     title: 'Road despatch to power sector',
     meta:  `${md.monLabel} · as on ${rpOnLabel(md)}${cut ? ' · cut-off ' + cut : ''}`,
     metaHtml: `${rpEsc(md.monLabel)} · as on <b>${rpEsc(rpOnLabel(md))}</b>${cut ? ' · cut-off ' + rpEsc(cut) : ''}`,
-    foot:  'Figs. in Tonnes',
-    head, rows: outRows,
+    foot:  grouped ? '' : 'Figs. in Tonnes',
+    head, rows: outRows, groups,
   };
   _rpTables.push(t);
   const card = rpCard(t);
@@ -3572,10 +3606,18 @@ function rpHtmlCard(t, idx) {
   if (t.groups && t.groups.length) {
     head += '<tr>';
     t.groups.forEach(g => {
-      head += `<th colspan="${g.span}" style="border:1px solid ${RP_H.ash};padding:6px 9px;${cond}font-size:10px;` +
-              `font-weight:700;letter-spacing:.12em;text-transform:uppercase;text-align:center;` +
-              `color:${RP_H.ink};background:${g.t ? RP_H.soft : RP_H.paper};` +
-              `${g.t ? 'border-bottom:2px solid ' + RP_H.ink + ';' : ''}">${rpEsc(g.t)}</th>`;
+      let st = `border:1px solid ${RP_H.ash};padding:6px 9px;font-size:10px;font-weight:700;`;
+      if (g.k === 'note') {
+        st += `font-family:'IBM Plex Mono',Consolas,monospace;font-size:9px;text-align:left;` +
+              `color:${RP_H.mute};background:${RP_H.paper};`;
+      } else if (g.k === 'on') {
+        st += `${cond}letter-spacing:.12em;text-transform:uppercase;text-align:center;` +
+              `color:${RP_H.live};background:${RP_H.paper};border-left:2px solid ${RP_H.live};`;
+      } else {
+        st += `${cond}letter-spacing:.12em;text-transform:uppercase;text-align:center;color:${RP_H.ink};` +
+              `background:${g.t ? RP_H.soft : RP_H.paper};${g.t ? 'border-bottom:2px solid ' + RP_H.ink + ';' : ''}`;
+      }
+      head += `<th colspan="${g.span}" style="${st}">${rpEsc(g.t)}</th>`;
     });
     head += '</tr>';
   }
