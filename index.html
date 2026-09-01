@@ -982,6 +982,14 @@ body.dark .rp-card {
   background: var(--paper);
 }
 .rp-t thead th.rp-lead { text-align: left; }
+/* grouping row — the month sits here so the columns below stay narrow */
+.rp-t thead tr.rp-grp th {
+  text-align: center; font-size: 10px; letter-spacing: .12em;
+  color: var(--ink); background: var(--ash-soft);
+  padding-top: 6px; padding-bottom: 5px;
+}
+.rp-t thead tr.rp-grp th.rp-grp-off { background: var(--paper); border-color: var(--paper); }
+.rp-t thead tr.rp-grp th.rp-grp-on  { border-bottom: 2px solid var(--ink); }
 .rp-t thead th.rp-on   { color: var(--live); }
 .rp-t thead th.rp-day  { font-family: var(--mono); letter-spacing: 0; font-size: 10px; }
 
@@ -1232,7 +1240,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B20-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B21-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -2985,7 +2993,15 @@ function rpCellCls(k) {
 }
 
 function rpTableHTML(t) {
-  let h = '<thead><tr>';
+  let h = '<thead>';
+  if (t.groups && t.groups.length) {
+    h += '<tr class="rp-grp">';
+    t.groups.forEach(g => {
+      h += `<th colspan="${g.span}" class="${g.t ? 'rp-grp-on' : 'rp-grp-off'}">${rpEsc(g.t)}</th>`;
+    });
+    h += '</tr>';
+  }
+  h += '<tr>';
   t.head.forEach(c => h += `<th class="${c.k === 'lead' ? 'rp-lead' : c.k === 'on' ? 'rp-on' : c.k === 'sub' ? 'rp-sub' : c.k === 'day' ? 'rp-day' : c.k === 'avg' ? 'rp-avgc' : ''}">${rpEsc(c.t)}</th>`);
   h += '</tr></thead><tbody>';
   t.rows.forEach(r => {
@@ -3077,17 +3093,33 @@ function renderRp1(md) {
   const sh = rpShow(1, daywise);
   // months pinned in Saved days, each contributing a Total and an Avg column
   const refs = (sh.total || sh.avg) ? rpPinnedMonths() : [];
+
+  // With a pinned month in play the headings repeat the month name on every
+  // column, which eats width — so the month moves up into a grouping row and
+  // the columns below it say only Total / Avg.
+  const grouped = refs.length > 0;
   const head = [
     { t: 'Customer',    k: 'lead' },
     { t: rpOnLabel(md), k: 'on'   },
   ];
+  const groups = grouped ? [{ t: '', span: 2 }] : null;
+
   refs.forEach(r => {
-    if (sh.total) head.push({ t: r.label + ' total',     k: 'key' });
-    if (sh.avg)   head.push({ t: r.label + ' avg / day', k: 'avg' });
+    let n = 0;
+    if (sh.total) { head.push({ t: 'Total',     k: 'key' }); n++; }
+    if (sh.avg)   { head.push({ t: 'Avg / day', k: 'avg' }); n++; }
+    if (n) groups.push({ t: r.label, span: n });
   });
-  if (sh.ctotal) head.push({ t: 'Month to date', k: 'key' });
-  if (sh.cavg)   head.push({ t: 'Avg / day',     k: 'avg' });
-  if (daywise) dayCols.forEach(d => head.push({ t: rpDayNum(d), k: 'day' }));
+
+  let cn = 0;
+  if (sh.ctotal) { head.push({ t: grouped ? 'Total'     : 'Month to date', k: 'key' }); cn++; }
+  if (sh.cavg)   { head.push({ t: 'Avg / day', k: 'avg' }); cn++; }
+  if (grouped && cn) groups.push({ t: md.monLabel, span: cn });
+
+  if (daywise) {
+    dayCols.forEach(d => head.push({ t: rpDayNum(d), k: 'day' }));
+    if (grouped && dayCols.length) groups.push({ t: md.monLabel + ' day-by-day', span: dayCols.length });
+  }
 
   const outRows = [];
   let tToday = 0, tProg = 0, tAvg = 0;
@@ -3123,6 +3155,7 @@ function renderRp1(md) {
   outRows.push({ k: 'sum', cells: sumCells });
 
   const t = {
+    groups,
     sheet: 'Power sector',
     title: 'Road despatch to power sector',
     meta:  `${md.monLabel} · as on ${rpOnLabel(md)}${cut ? ' · cut-off ' + cut : ''}`,
@@ -3535,7 +3568,18 @@ function rpHtmlCellStyle(kind, rowKind) {
 function rpHtmlCard(t, idx) {
   const cond = "font-family:'IBM Plex Sans Condensed','IBM Plex Sans',Arial,sans-serif;";
 
-  let head = '<thead><tr>';
+  let head = '<thead>';
+  if (t.groups && t.groups.length) {
+    head += '<tr>';
+    t.groups.forEach(g => {
+      head += `<th colspan="${g.span}" style="border:1px solid ${RP_H.ash};padding:6px 9px;${cond}font-size:10px;` +
+              `font-weight:700;letter-spacing:.12em;text-transform:uppercase;text-align:center;` +
+              `color:${RP_H.ink};background:${g.t ? RP_H.soft : RP_H.paper};` +
+              `${g.t ? 'border-bottom:2px solid ' + RP_H.ink + ';' : ''}">${rpEsc(g.t)}</th>`;
+    });
+    head += '</tr>';
+  }
+  head += '<tr>';
   t.head.forEach(c => {
     const align = c.k === 'lead' ? 'left' : 'right';
     const col = c.k === 'on' ? RP_H.live : c.k === 'avg' ? RP_H.avg : RP_H.mute;
@@ -3725,6 +3769,9 @@ function rpSheetXml(tables) {
     maxCols = Math.max(maxCols, t.head.length);
     push([{ v: t.title, s: RP_S.title, span: t.head.length }]);
     push([{ v: t.meta,  s: RP_S.meta,  span: t.head.length }]);
+    if (t.groups && t.groups.length) {
+      push(t.groups.map(g => ({ v: g.t, s: RP_S.head, span: g.span })));
+    }
     push(t.head.map(h => ({ v: h.t, s: RP_S.head })));
     t.rows.forEach(r => {
       push(r.cells.map((c, i) => {
@@ -3754,9 +3801,11 @@ function rpSheetXml(tables) {
   rows.forEach(r => {
     if (!r.cells.length) { xml += `<row r="${r.r}"/>`; return; }
     xml += `<row r="${r.r}">`;
-    r.cells.forEach((c, i) => {
-      const ref = rpColLetter(i + 1) + r.r;
-      if (c.span && c.span > 1) merges.push(`${rpColLetter(1)}${r.r}:${rpColLetter(c.span)}${r.r}`);
+    let col = 0;                                  // 0-based write position
+    r.cells.forEach(c => {
+      const span = c.span && c.span > 1 ? c.span : 1;
+      const ref  = rpColLetter(col + 1) + r.r;
+      if (span > 1) merges.push(`${rpColLetter(col + 1)}${r.r}:${rpColLetter(col + span)}${r.r}`);
       if (typeof c.v === 'number' && isFinite(c.v)) {
         xml += `<c r="${ref}" s="${c.s}"><v>${Math.round(c.v * 100) / 100}</v></c>`;
       } else if (c.v === '' || c.v == null) {
@@ -3764,12 +3813,12 @@ function rpSheetXml(tables) {
       } else {
         xml += `<c r="${ref}" s="${c.s}" t="inlineStr"><is><t xml:space="preserve">${rpXmlEsc(c.v)}</t></is></c>`;
       }
+      // the rest of a merged range still needs cells, or the borders break up
+      for (let k = 1; k < span; k++) xml += `<c r="${rpColLetter(col + 1 + k) + r.r}" s="${c.s}"/>`;
+      col += span;
     });
     // pad the row so the border grid stays square
-    for (let i = r.cells.length; i < maxCols; i++) {
-      if (r.cells.length === 1 && r.cells[0].span) break;
-      xml += `<c r="${rpColLetter(i + 1) + r.r}" s="${RP_S.num}"/>`;
-    }
+    for (let i = col; i < maxCols; i++) xml += `<c r="${rpColLetter(i + 1) + r.r}" s="${RP_S.num}"/>`;
     xml += '</row>';
   });
 
