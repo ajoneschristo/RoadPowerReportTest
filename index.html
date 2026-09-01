@@ -1136,6 +1136,24 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 .rp-dtot  { font-family:var(--mono); font-size:12px; text-align:right; color:var(--text); }
 .rp-dpairs{ font-family:var(--mono); font-size:10px; text-align:right; color:var(--dim); }
 
+/* monthwise total / avg grid */
+.rp-sgrid { border:1.5px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:10px; }
+.rp-sgrid-h {
+  padding:7px 10px; background:var(--bg); border-bottom:1px solid var(--border);
+  font-family:'IBM Plex Sans Condensed',sans-serif; font-size:11px; font-weight:700;
+  letter-spacing:.09em; text-transform:uppercase; color:var(--text);
+}
+.rp-srow { display:grid; grid-template-columns:1fr 84px 84px; align-items:center; gap:4px; padding:0 10px; }
+.rp-srow.hd span {
+  padding:6px 2px; font-size:9px; font-weight:700; letter-spacing:.07em;
+  text-transform:uppercase; color:var(--dim); text-align:center;
+}
+.rp-srow.hd span:first-child { text-align:left; }
+.rp-srow.bd { border-top:1px solid var(--border); padding-top:7px; padding-bottom:7px; }
+.rp-srow.bd label { font-size:11.5px; color:var(--text); }
+.rp-srow.bd div { text-align:center; }
+.rp-srow.bd input { width:16px; height:16px; accent-color:#d97a06; cursor:pointer; }
+
 /* html export settings */
 .rp-modes { display:flex; gap:8px; flex-wrap:wrap; }
 .rp-mode {
@@ -1214,7 +1232,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B18-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B19-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1325,7 +1343,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 
   <div class="rp-tabs">
     <button class="rp-tab on" id="rpTab1" onclick="rpSwitch(1)">Power Sector</button>
-    <button class="rp-tab"    id="rpTab2" onclick="rpSwitch(2)">Source-wise</button>
+    <button class="rp-tab"    id="rpTab2" onclick="rpSwitch(2)">Customer</button>
     <label class="rp-sw" title="Show or hide the day-by-day breakdown for this report">
       <input type="checkbox" id="rpDaywiseTgl" onchange="rpToggleDaywise()">
       <span class="rp-sw-track"><span class="rp-sw-knob"></span></span>
@@ -1370,6 +1388,17 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
         <div class="stt-hint" style="margin-top:4px;">
           JSON file inside the <strong>epass-db</strong> repo holding the day-wise history.
           Keep the test app on a <em>different</em> filename from production.
+        </div>
+      </div>
+
+      <div class="stt-section">
+        <div class="stt-section-hdr">
+          <label class="stt-label">Show / Hide Monthwise Total &amp; Avg</label>
+        </div>
+        <div id="rpShowGrids"></div>
+        <div class="stt-hint" style="margin-top:6px;">
+          Each report answers separately depending on whether its day-by-day switch is on,
+          so a wide day-by-day view can drop the summary columns while the compact view keeps them.
         </div>
       </div>
 
@@ -1425,14 +1454,14 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
         <div class="stt-hint" style="margin-top:6px;">
           <strong>Power</strong> — treated as power sector, its figures are written to the history file.
           <strong>R1</strong> — appears as a row in <em>Road Despatch to Power Sector</em>.
-          <strong>R2</strong> — gets a source-wise block in the second report.
+          <strong>R2</strong> — gets a block in the Customer report.
           Ticking R1 or R2 ticks Power automatically. One row per party code, so a party with several codes needs each code ticked.
         </div>
       </div>
 
       <div class="stt-section">
         <div class="stt-section-hdr">
-          <label class="stt-label">Source-wise Report — Customers &amp; Columns</label>
+          <label class="stt-label">Customer Report — Customers &amp; Columns</label>
           <button class="stt-add-btn" onclick="openRpAddR2()">+ Add customer</button>
         </div>
         <div id="rpR2Body"></div>
@@ -1870,7 +1899,7 @@ function toggleTheme() {
 //  ROAD POWER REPORT  (v4 test build)
 //  · Settings pane  : pick POWER parties, Report-1 rows, Report-2 blocks
 //  · History store  : epass-db repo, separate JSON file
-//  · Report views   : "Road Despatch to Power Sector" + "Source-wise Daywise"
+//  · Report views   : "Road Despatch to Power Sector" + "Customer" (source-wise daywise)
 // ═══════════════════════════════════════════════════════
 
 const RP_MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -1972,7 +2001,16 @@ function rpDefaults() { return { historyPath: 'roadpower-history-test.json', par
 
 function openRpSettings() {
   const pr = appSettings.powerReport || rpDefaults();
-  _rpDraft = { historyPath: pr.historyPath || 'roadpower-history-test.json', sel: {}, html: rpHtmlCfg() };
+  const shDef = rpShowDefaults();
+  const shCur = pr.show || {};
+  ['r1','r2'].forEach(k => ['on','off'].forEach(m => {
+    if (shCur[k] && shCur[k][m]) {
+      shDef[k][m].total = shCur[k][m].total !== false;
+      shDef[k][m].avg   = shCur[k][m].avg   !== false;
+    }
+  }));
+  _rpDraft = { historyPath: pr.historyPath || 'roadpower-history-test.json', sel: {},
+               html: rpHtmlCfg(), show: shDef };
   (pr.parties || []).forEach(p => {
     const codes = rpCodesOf(p);
     _rpDraft.sel[codes[0]] = {
@@ -1991,6 +2029,7 @@ function openRpSettings() {
   document.getElementById('rpChipRecent').classList.add('on');
   document.getElementById('rpChipSel').classList.remove('on');
   rpBuildPartyIndex(true);
+  renderRpShowGrids();
   renderRpHtmlOpts();
   renderRpParties();
   renderRpR2();
@@ -2094,7 +2133,7 @@ function renderRpParties() {
   }
 }
 
-// ── Add a customer to the source-wise report ──────────────────────────
+// ── Add a customer to the Customer report ─────────────────────────────
 function openRpAddR2() {
   document.getElementById('rpAddSearch').value = '';
   renderRpAddR2();
@@ -2234,6 +2273,32 @@ function rpResetMerges() {
   renderRpParties(); renderRpR2();
 }
 
+// ── Monthwise Total / Avg visibility ──────────────────────────────────
+function renderRpShowGrids() {
+  const wrap = document.getElementById('rpShowGrids');
+  wrap.innerHTML = '';
+  [['r1', 'Power Sector Report'], ['r2', 'Customer Report']].forEach(([key, label]) => {
+    const box = document.createElement('div');
+    box.className = 'rp-sgrid';
+    box.innerHTML =
+      `<div class="rp-sgrid-h">${label}</div>
+       <div class="rp-srow hd"><span></span><span>Show Average</span><span>Show Total</span></div>`;
+    [['off', 'If day-by-day disabled'], ['on', 'If day-by-day enabled']].forEach(([mode, text]) => {
+      const row = document.createElement('div');
+      row.className = 'rp-srow bd';
+      const m = _rpDraft.show[key][mode];
+      row.innerHTML = `<label>${text}</label>` +
+        `<div><input type="checkbox" data-f="avg"   ${m.avg   !== false ? 'checked' : ''}></div>` +
+        `<div><input type="checkbox" data-f="total" ${m.total !== false ? 'checked' : ''}></div>`;
+      row.querySelectorAll('input').forEach(cb => {
+        cb.onchange = () => { m[cb.dataset.f] = cb.checked; };
+      });
+      box.appendChild(row);
+    });
+    wrap.appendChild(box);
+  });
+}
+
 // ── HTML export settings ──────────────────────────────────────────────
 function rpSetHtmlMode(mode) {
   _rpDraft.html.mode = mode;
@@ -2324,7 +2389,7 @@ function renderRpR2() {
     box.querySelector('[data-a="auto"]').onclick = () => rpAutoCols(code);
     box.querySelector('[data-a="add"]').onclick  = () => { s.cols.push({label:'',colCodes:'',isSubtotal:false}); renderRpR2(); };
     box.querySelector('[data-a="rm"]').onclick  = () => {
-      if (!confirm(`Take "${s.name || code}" out of the source-wise report?\n\nIts colliery columns are forgotten. The customer stays in the power sector report.`)) return;
+      if (!confirm(`Take "${s.name || code}" out of the Customer report?\n\nIts colliery columns are forgotten. The customer stays in the power sector report.`)) return;
       s.r2 = false; renderRpParties(); renderRpR2();
     };
 
@@ -2378,7 +2443,7 @@ async function saveRpSettings() {
   });
   for (const p of parties) {
     if (p.r2 && (!p.cols || !p.cols.length)) {
-      status.textContent = `"${p.name || p.code}" is in the source-wise report but has no colliery columns.`;
+      status.textContent = `"${p.name || p.code}" is in the Customer report but has no colliery columns.`;
       status.style.color = '#e05'; return;
     }
     if (p.r2 && !p.cols.some(c => !c.isSubtotal)) {
@@ -2394,6 +2459,7 @@ async function saveRpSettings() {
     r2Daywise: pr0.r2Daywise !== false,
     r2Months:  pr0.r2Months || [],        // owned by the Saved days view
     html:      _rpDraft.html,
+    show:      _rpDraft.show,
     parties,
   } });
 
@@ -2616,7 +2682,7 @@ async function saveRpAllDays() {
 }
 
 // ── Saved days: review what is stored, clear any of it ────────────────
-// Months whose Total and Avg / day appear in the source-wise report.
+// Months whose Total and Avg / day appear in the Customer report.
 let _rpPins = new Set();
 
 async function openRpDays() {
@@ -2674,7 +2740,7 @@ function renderRpDays() {
       <span class="rp-dmeta">${mk.length} day${mk.length > 1 ? 's' : ''}</span>
       <span class="rp-dmtot">Total ${rpNum(tot) || '0'}</span>
       <span class="rp-dmavg">Avg / day ${rpNum(avg) || '0'}</span>
-      <button class="rp-pin${pinned ? ' on' : ''}" data-pin="${m}" title="Show this month's Total and Avg / day in the source-wise report">${pinned ? '★ Shown' : '☆ Show'}</button>
+      <button class="rp-pin${pinned ? ' on' : ''}" data-pin="${m}" title="Show this month's Total and Avg / day in the Customer report">${pinned ? '★ Shown' : '☆ Show'}</button>
     </div>`;
     mk.forEach(k => {
       const rec = days[k];
@@ -2950,6 +3016,21 @@ function rpDaywise(which) {
   return pr[which === 1 ? 'r1Daywise' : 'r2Daywise'] !== false;
 }
 
+// Whether the monthly Total and Average are shown. Each report keeps a
+// separate answer for day-by-day on and day-by-day off, because the two
+// views get read for different reasons.
+function rpShowDefaults() {
+  return { r1: { on: { total: true, avg: true }, off: { total: true, avg: true } },
+           r2: { on: { total: true, avg: true }, off: { total: true, avg: true } } };
+}
+function rpShow(which, daywise) {
+  const pr = appSettings.powerReport || {};
+  const sh = pr.show || {};
+  const r  = sh[which === 1 ? 'r1' : 'r2'] || {};
+  const m  = r[daywise ? 'on' : 'off'] || {};
+  return { total: m.total !== false, avg: m.avg !== false };
+}
+
 // Every rendered table is kept as a model, so the screen, the PDF and the
 // workbook all come from one description instead of three.
 //   head : [{ t, k }]                       k = lead | on | key | num | sub | day
@@ -3005,7 +3086,7 @@ function renderRpReports() {
   const n1 = (pr.parties || []).filter(p => p.r1).length;
   const n2 = (pr.parties || []).filter(p => p.r2).length;
   sub.textContent = md
-    ? `${md.monLabel} · ${Object.keys(md.days).length} day(s) of data · ${n1} customer rows · ${n2} source-wise block(s)`
+    ? `${md.monLabel} · ${Object.keys(md.days).length} day(s) of data · ${n1} customer rows · ${n2} customer block(s)`
     : 'No data yet — load a despatch file or save a day.';
   _rpTables = [];
   renderRp1(md);
@@ -3056,12 +3137,13 @@ function renderRp1(md) {
 
   const cut  = (md.days[actD] && md.days[actD].cut) || '';
 
+  const sh = rpShow(1, daywise);
   const head = [
-    { t: 'Customer',      k: 'lead' },
-    { t: rpOnLabel(md),   k: 'on'   },
-    { t: 'Month to date', k: 'key'  },
-    { t: 'Avg / day',     k: 'avg'  },
+    { t: 'Customer',    k: 'lead' },
+    { t: rpOnLabel(md), k: 'on'   },
   ];
+  if (sh.total) head.push({ t: 'Month to date', k: 'key' });
+  if (sh.avg)   head.push({ t: 'Avg / day',     k: 'avg' });
   if (daywise) dayCols.forEach(d => head.push({ t: rpDayNum(d), k: 'day' }));
 
   const outRows = [];
@@ -3074,14 +3156,16 @@ function renderRp1(md) {
       { v: r.name, title: r.name + ' · ' + r.codes.join(', '),
         html: rpEsc(r.name) + (r.codes.length > 1 ? ` <span class="rp-codes">${r.codes.length} codes</span>` : '') },
       { v: r.today },
-      { v: r.prog },
-      { v: r.cnt ? r.prog / r.cnt : 0 },
     ];
+    if (sh.total) cells.push({ v: r.prog });
+    if (sh.avg)   cells.push({ v: r.cnt ? r.prog / r.cnt : 0 });
     if (daywise) dayCols.forEach(d => cells.push({ v: r.vals[d] || 0 }));
     outRows.push({ k: 'data', cells });
   });
 
-  const sumCells = [{ v: 'All customers' }, { v: tToday }, { v: tProg }, { v: tAvg }];
+  const sumCells = [{ v: 'All customers' }, { v: tToday }];
+  if (sh.total) sumCells.push({ v: tProg });
+  if (sh.avg)   sumCells.push({ v: tAvg });
   if (daywise) dayCols.forEach(d => sumCells.push({ v: dayTotals[d] || 0 }));
   outRows.push({ k: 'sum', cells: sumCells });
 
@@ -3101,7 +3185,7 @@ function renderRp1(md) {
 }
 
 // ═══════════════════════════════════════════════════════
-//  REPORT 2 — Source-wise daywise lifting
+//  REPORT 2 — Customer report (source-wise daywise)
 // ═══════════════════════════════════════════════════════
 function renderRp2(md) {
   const pane = document.getElementById('rpPane2');
@@ -3145,12 +3229,13 @@ function renderRp2(md) {
       gTot += t;
     });
 
+    const sh = rpShow(2, daywise);
     const outRows = [];
     refMonths.forEach(ref => {
       const pv = cols.map(c => rpSumPartyColl(ref.pc, codes, splitCodes(c)));
       const pt = real.reduce((s,c) => s + rpSumPartyColl(ref.pc, codes, splitCodes(c)), 0);
-      outRows.push({ k: 'ref', cells: [{ v: ref.label + ' total' }, ...pv.map(v => ({ v })), { v: pt }] });
-      outRows.push({ k: 'avg', cells: [{ v: ref.label + ' avg / day' }, ...pv.map(v => ({ v: v / ref.days })), { v: pt / ref.days }] });
+      if (sh.total) outRows.push({ k: 'ref', cells: [{ v: ref.label + ' total' }, ...pv.map(v => ({ v })), { v: pt }] });
+      if (sh.avg)   outRows.push({ k: 'avg', cells: [{ v: ref.label + ' avg / day' }, ...pv.map(v => ({ v: v / ref.days })), { v: pt / ref.days }] });
     });
 
     const dayRow = (label, d) => {
@@ -3160,15 +3245,15 @@ function renderRp2(md) {
     if (daywise) dayList.forEach(d => outRows.push(dayRow(`${rpDayNum(d)} ${RP_MON[md.M-1]}`, d)));
     else if (md.days[actD]) outRows.push(dayRow(rpOnLabel(md), actD));
 
-    outRows.push({ k: 'sum', cells: [{ v: 'Month to date' }, ...sums.map(v => ({ v })), { v: gTot }] });
     const n = dayList.length;
-    outRows.push({ k: 'avg', cells: [{ v: 'Avg / day' }, ...sums.map(v => ({ v: n ? v / n : 0 })), { v: n ? gTot / n : 0 }] });
+    if (sh.total) outRows.push({ k: 'sum', cells: [{ v: 'Month to date' }, ...sums.map(v => ({ v })), { v: gTot }] });
+    if (sh.avg)   outRows.push({ k: 'avg', cells: [{ v: 'Avg / day' }, ...sums.map(v => ({ v: n ? v / n : 0 })), { v: n ? gTot / n : 0 }] });
 
     const t = {
-      sheet: 'Source-wise',
+      sheet: 'Customer',
       title: p.name || codes[0],
-      meta:  `Source-wise · ${md.monLabel} · as on ${rpOnLabel(md)}`,
-      metaHtml: `Source-wise · ${rpEsc(md.monLabel)} · as on <b>${rpEsc(rpOnLabel(md))}</b>`,
+      meta:  `Customer · ${md.monLabel} · as on ${rpOnLabel(md)}`,
+      metaHtml: `Customer · ${rpEsc(md.monLabel)} · as on <b>${rpEsc(rpOnLabel(md))}</b>`,
       foot:  'Figs. in Tonnes',
       head, rows: outRows,
     };
@@ -3773,8 +3858,8 @@ const RP_CHARTS = [
   ['customer',   'Customer daily trend',    'Drill-down line for the customer you tap'],
   ['heatmap',    'Customer × day heatmap',  'Where the gaps are, at a glance'],
   ['monthly',    'Month-on-month totals',   'Needs more than one month selected'],
-  ['split',      'Source split',            'Source-wise: month-to-date by colliery'],
-  ['stacked',    'Daily by colliery',       'Source-wise: stacked columns per day'],
+  ['split',      'Source split',            'Customer report: month-to-date by colliery'],
+  ['stacked',    'Daily by colliery',       'Customer report: stacked columns per day'],
 ];
 function rpHtmlCfg() {
   const pr = appSettings.powerReport || {};
@@ -3846,7 +3931,7 @@ function rpMonthSummary(mk) {
   };
 }
 
-// Source-wise blocks for one month.
+// Customer-report blocks for one month.
 function rpSourceSummary(mk) {
   const m  = rpDaysOfMonth(mk);
   const pr = appSettings.powerReport || {};
@@ -3989,7 +4074,7 @@ function rpBuildHtml() {
   let n = 0;
   const groups = [
     { id: 'p1', label: 'Power Sector', tables: _rpTables.filter(t => t.sheet === 'Power sector') },
-    { id: 'p2', label: 'Source-wise',  tables: _rpTables.filter(t => t.sheet === 'Source-wise')  },
+    { id: 'p2', label: 'Customer',     tables: _rpTables.filter(t => t.sheet === 'Customer')     },
   ].filter(g => g.tables.length);
 
   // Tabs stay pure CSS so they still work if scripts are blocked; the sorting,
@@ -4232,7 +4317,7 @@ async function rpExportXlsx() {
   rpLockBtns(true, 'rpXlsBtn', 'Building…');
   try {
     const t1 = _rpTables.filter(t => t.sheet === 'Power sector');
-    const t2 = _rpTables.filter(t => t.sheet === 'Source-wise');
+    const t2 = _rpTables.filter(t => t.sheet === 'Customer');
     const enc = new TextEncoder();
     const files = {
       '[Content_Types].xml': enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
@@ -4252,7 +4337,7 @@ async function rpExportXlsx() {
         '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ' +
         'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' +
         '<sheet name="Power Sector" sheetId="1" r:id="rId1"/>' +
-        '<sheet name="Source-wise" sheetId="2" r:id="rId2"/>' +
+        '<sheet name="Customer" sheetId="2" r:id="rId2"/>' +
         '</sheets></workbook>'),
       'xl/_rels/workbook.xml.rels': enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
         '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
@@ -4370,7 +4455,7 @@ async function loadSettingsFromGitHub() {
     rpSetStatus('⚠ Could not load settings — ' + e.message, true);
   }
   const fixed = rpNormalizeCols();
-  if (fixed) rpSetStatus(`Repaired ${fixed} source-wise column(s) that were all marked as roll-ups, which left the Total blank. Open ⚙ and save to keep the fix.`, true);
+  if (fixed) rpSetStatus(`Repaired ${fixed} Customer-report column(s) that were all marked as roll-ups, which left the Total blank. Open ⚙ and save to keep the fix.`, true);
   buildCodeToMine();
 }
 
@@ -4625,7 +4710,7 @@ loadDbFromGitHub();
     <div class="stt-header">
       <div>
         <div class="stt-title">Add a customer</div>
-        <div class="stt-title-sub">Gets its own source-wise block, with columns filled from the collieries it lifts from</div>
+        <div class="stt-title-sub">Gets its own block in the Customer report, with columns filled from the collieries it lifts from</div>
       </div>
       <button class="stt-close" onclick="closeRpAddR2()">✕</button>
     </div>
@@ -4655,7 +4740,7 @@ loadDbFromGitHub();
       <div class="stt-section">
         <div class="rp-list-wrap"><div class="rp-scroll" id="rpDaysList" style="max-height:400px;"></div></div>
         <div class="stt-hint" style="margin-top:6px;">
-          <strong>☆ Show</strong> puts that month's Total and Avg / day into the source-wise report as comparison rows — pin as many as you like.
+          <strong>☆ Show</strong> puts that month's Total and Avg / day into the Customer report as comparison rows — pin as many as you like.
           The tick boxes are for selecting days to total or clear; clearing a day removes its figures from both reports, and you put it back by loading that day's despatch file and saving it again.
         </div>
       </div>
