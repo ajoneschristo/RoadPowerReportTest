@@ -911,6 +911,8 @@ body.dark {
   --band:     #212a35;
   --band-ink: #f5f7f9;
   --zero:     #a9b3be;
+  --cf:       #d3dde8;      /* coalfield total band */
+  --cf-rule:  #4a5a6d;
   --avg:      #123a8a;
   --avg-band: #9cc4ff;      /* averages sitting on the dark totals band */
   --live-band:#f5a742;
@@ -931,6 +933,8 @@ body.dark .rp-card {
   --band:     #0b1017;
   --band-ink: #e7edf4;
   --zero:     #4a5665;
+  --cf:       #2c3a4b;
+  --cf-rule:  #8fa3ba;
   --avg:      #7fa8f5;
   --avg-band: #9cc4ff;
   --live-band:#f5a742;
@@ -940,7 +944,7 @@ body.dark .rp-card {
 .rp-light .rp-card {
   --paper:#f5f7f9; --ink:#151a21; --ash:#ccd4dd; --ash-soft:#e6ebf0;
   --mute:#74808e; --live:#b8620a; --live-bar:rgba(217,122,6,.17);
-  --band:#212a35; --band-ink:#f5f7f9; --zero:#a9b3be; --avg:#123a8a;
+  --band:#212a35; --band-ink:#f5f7f9; --zero:#a9b3be; --avg:#123a8a; --cf:#d3dde8; --cf-rule:#4a5a6d;
   --avg-band:#9cc4ff; --live-band:#f5a742;
 }
 
@@ -1065,6 +1069,20 @@ body.dark .rp-card {
   font-family: 'IBM Plex Sans Condensed', sans-serif;
   letter-spacing: .06em; text-transform: uppercase; font-size: 11px;
 }
+/* coalfield totals: a solid slate band with a rule above, so a group reads as
+   finished; the collieries above it sit indented */
+.rp-t tr.rp-cf td {
+  background: var(--cf); font-weight: 700;
+  border-top: 2px solid var(--cf-rule);
+}
+.rp-t tr.rp-cf td.rp-lead {
+  background: var(--cf); color: var(--ink); font-size: 11.5px; letter-spacing: .08em;
+}
+.rp-t tbody tr.rp-cf:hover td { background: var(--cf); }
+.rp-t tr.rp-ind td.rp-lead .rp-nm { padding-left: 16px; position: relative; }
+.rp-t tr.rp-ind td.rp-lead .rp-nm::before {
+  content: ''; position: absolute; left: 4px; top: 50%; width: 6px; height: 1px; background: var(--mute);
+}
 .rp-t tr.rp-avg td.rp-lead {
   background: var(--ash-soft); color: var(--avg);
   font-family: 'IBM Plex Sans Condensed', sans-serif;
@@ -1153,6 +1171,12 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 
 /* reports: show / order */
 .rp-rlist { border:1.5px solid var(--border); border-radius:8px; overflow:hidden; }
+.rp-rsub {
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  margin:10px 2px 6px; font-family:'IBM Plex Sans Condensed',sans-serif; font-size:11px;
+  font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--mid);
+}
+.rp-rsub:first-of-type { margin-top:2px; }
 .rp-rrow {
   display:grid; grid-template-columns:22px 1fr 30px 30px 48px; align-items:center; gap:6px;
   padding:8px 10px; border-top:1px solid var(--border);
@@ -1278,7 +1302,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B25-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B27-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1390,6 +1414,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
   <div class="rp-tabs">
     <button class="rp-tab on" id="rpTab1" onclick="rpSwitch(1)">Power Sector</button>
     <button class="rp-tab"    id="rpTab3" onclick="rpSwitch(3)">Sourcewise</button>
+    <button class="rp-tab"    id="rpTab4" onclick="rpSwitch(4)">MCL</button>
     <button class="rp-tab"    id="rpTab2" onclick="rpSwitch(2)">Customer</button>
     <label class="rp-sw" title="Show or hide the day-by-day breakdown for this report">
       <input type="checkbox" id="rpDaywiseTgl" onchange="rpToggleDaywise()">
@@ -1410,6 +1435,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
   <div id="rpStatus" class="rp-note"></div>
   <div class="rp-tblwrap" id="rpPane1"></div>
   <div class="rp-tblwrap" id="rpPane3" style="display:none;"></div>
+  <div class="rp-tblwrap" id="rpPane4" style="display:none;"></div>
   <div class="rp-tblwrap" id="rpPane2" style="display:none;"></div>
 
 </div><!-- /dashboard -->
@@ -1432,11 +1458,16 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
         <div class="stt-section-hdr">
           <label class="stt-label">Reports</label>
         </div>
-        <div class="rp-rlist" id="rpReportList"></div>
+        <div class="rp-rsub">In the app</div>
+        <div class="rp-rlist" id="rpReportListApp"></div>
+        <div class="rp-rsub">
+          <span>In exports — PDF, Excel &amp; HTML</span>
+          <button class="rp-mini-btn" onclick="rpExportsMatchApp()">Same as app</button>
+        </div>
+        <div class="rp-rlist" id="rpReportListExp"></div>
         <div class="stt-hint" style="margin-top:6px;">
-          Tick the reports to show and use the arrows to set their order.
-          The same order is used for the tabs here and for the PDF, Excel and HTML exports;
-          a report that's switched off is left out of all of them.
+          Tick the reports to show and use the arrows to set their order — separately for the tabs
+          in the app and for the exported files. Share sends a picture of the tab that's open, so it follows the app.
         </div>
       </div>
 
@@ -2038,13 +2069,13 @@ function openRpSettings() {
   const pr = appSettings.powerReport || rpDefaults();
   const shDef = rpShowDefaults();
   const shCur = pr.show || {};
-  ['r1','r2','r3'].forEach(k => ['on','off'].forEach(m => {
+  ['r1','r2','r3','r4'].forEach(k => ['on','off'].forEach(m => {
     const cur = shCur[k] && shCur[k][m];
     if (!cur) return;
     RP_SHOW_KEYS.forEach(f => { if (cur[f] !== undefined) shDef[k][m][f] = cur[f] !== false; });
   }));
   _rpDraft = { historyPath: pr.historyPath || 'roadpower-history-test.json', sel: {},
-               show: shDef, reports: rpReportList(pr.reports) };
+               show: shDef, reports: rpReportList(pr.reports), exportReports: rpExportList(pr) };
   (pr.parties || []).forEach(p => {
     const codes = rpCodesOf(p);
     _rpDraft.sel[codes[0]] = {
@@ -2063,7 +2094,7 @@ function openRpSettings() {
   document.getElementById('rpChipRecent').classList.add('on');
   document.getElementById('rpChipSel').classList.remove('on');
   rpBuildPartyIndex(true);
-  renderRpReportList();
+  renderRpReportLists();
   renderRpShowGrids();
   renderRpParties();
   renderRpR2();
@@ -2308,10 +2339,12 @@ function rpResetMerges() {
 }
 
 // ── Monthwise Total / Avg visibility ──────────────────────────────────
-// ── Reports: show / hide and order ────────────────────────────────────
-function renderRpReportList() {
-  const wrap = document.getElementById('rpReportList');
-  const list = _rpDraft.reports;
+// ── Reports: show / hide and order, for the app and for exports ───────
+function renderRpReportLists() { renderRpReportList('app'); renderRpReportList('exp'); }
+
+function renderRpReportList(kind) {
+  const wrap = document.getElementById(kind === 'app' ? 'rpReportListApp' : 'rpReportListExp');
+  const list = kind === 'app' ? _rpDraft.reports : _rpDraft.exportReports;
   wrap.innerHTML = `<div class="rp-rrow hd"><span class="c">#</span><span>Report</span>
     <span class="c" style="grid-column:span 2;">Order</span><span class="c">Show</span></div>`;
   let pos = 0;
@@ -2329,7 +2362,7 @@ function renderRpReportList() {
         const j = i + (+b.dataset.d);
         if (j < 0 || j >= list.length) return;
         [list[i], list[j]] = [list[j], list[i]];
-        renderRpReportList(); renderRpShowGrids();
+        renderRpReportList(kind); renderRpShowGrids();
       };
     });
     const cb = row.querySelector('input');
@@ -2337,14 +2370,20 @@ function renderRpReportList() {
       if (!cb.checked && list.filter(x => x.show).length === 1) {
         cb.checked = true;
         const st = document.getElementById('rpSettingsStatus');
-        st.textContent = 'At least one report has to stay on.'; st.style.color = '#e05';
+        st.textContent = `At least one report has to stay on ${kind === 'app' ? 'in the app' : 'in exports'}.`;
+        st.style.color = '#e05';
         return;
       }
       r.show = cb.checked;
-      renderRpReportList(); renderRpShowGrids();
+      renderRpReportList(kind); renderRpShowGrids();
     };
     wrap.appendChild(row);
   });
+}
+
+function rpExportsMatchApp() {
+  _rpDraft.exportReports = _rpDraft.reports.map(r => ({ id: r.id, show: r.show }));
+  renderRpReportList('exp'); renderRpShowGrids();
 }
 
 function renderRpShowGrids() {
@@ -2352,11 +2391,16 @@ function renderRpShowGrids() {
   wrap.innerHTML = '';
   // grids follow the report order chosen above; a switched-off report keeps
   // its settings but is dimmed
-  _rpDraft.reports.map(r => ['r' + r.id, RP_REPORTS[r.id].name + ' Report', r.show]).forEach(([key, label, on]) => {
+  const inExp = id => (_rpDraft.exportReports.find(x => x.id === id) || {}).show;
+  _rpDraft.reports.map(r => {
+    const a = r.show, e = inExp(r.id);
+    const note = a && e ? '' : a ? ' · app only' : e ? ' · exports only' : ' · switched off';
+    return ['r' + r.id, RP_REPORTS[r.id].name + ' Report', a || e, note];
+  }).forEach(([key, label, on, note]) => {
     const box = document.createElement('div');
     box.className = 'rp-sgrid' + (on ? '' : ' off');
     box.innerHTML =
-      `<div class="rp-sgrid-h">${label}${on ? '' : ' · switched off'}</div>
+      `<div class="rp-sgrid-h">${label}${note}</div>
        <div class="rp-srow hd"><span></span>
          <span>Show<br>Average</span><span>Show<br>Total</span>
          <span>Show Average<br>(current month)</span><span>Show Total<br>(current month)</span>
@@ -2490,9 +2534,11 @@ async function saveRpSettings() {
     r1Daywise: pr0.r1Daywise !== false,   // owned by the switch above the report
     r2Daywise: pr0.r2Daywise !== false,
     r3Daywise: pr0.r3Daywise !== false,
+    r4Daywise: pr0.r4Daywise !== false,
     r2Months:  pr0.r2Months || [],        // owned by the Saved days view
     show:      _rpDraft.show,
-    reports:   _rpDraft.reports.map(r => ({ id: r.id, show: r.show })),
+    reports:       _rpDraft.reports.map(r => ({ id: r.id, show: r.show })),
+    exportReports: _rpDraft.exportReports.map(r => ({ id: r.id, show: r.show })),
     parties,
   } });
 
@@ -2579,21 +2625,29 @@ function rpFileDayMaps(force) {
     const key = rpKeyFromDMY(rowGWDate[i]);
     if (!key) continue;
     let e = out[key];
-    if (!e) e = out[key] = { cut: '', mins: -1, pc: {} };
+    if (!e) e = out[key] = { cut: '', mins: -1, pc: {}, all: {} };
     if (rowMins[i] > e.mins) {
       e.mins = rowMins[i];
       e.cut  = (idxGWTime >= 0 && allRows[i][idxGWTime]) ? allRows[i][idxGWTime].trim() : '';
     }
+    // every trip counts toward its colliery's all-sector total (MCL report);
+    // a DO missing from the database is kept under '?'
+    const net = rowGross[i] - rowTar[i];
     const rec = mclhoDB[rowDO[i]];
+    const cc  = rec ? (String(rec.collieryCode || '').trim() || '?') : '?';
+    e.all[cc] = (e.all[cc] || 0) + net;
     if (!rec) continue;
     const pc = String(rec.partyCode || '').trim();
     if (!pc) continue;
     if (usePower && !powerSet.has(pc)) continue;
     const k = pc + '|' + String(rec.collieryCode || '').trim();
-    e.pc[k] = (e.pc[k] || 0) + (rowGross[i] - rowTar[i]);
+    e.pc[k] = (e.pc[k] || 0) + net;
   }
   // round to 2dp to keep the stored file small
-  for (const d in out) for (const k in out[d].pc) out[d].pc[k] = Math.round(out[d].pc[k] * 100) / 100;
+  for (const d in out) {
+    for (const k in out[d].pc)  out[d].pc[k]  = Math.round(out[d].pc[k]  * 100) / 100;
+    for (const k in out[d].all) out[d].all[k] = Math.round(out[d].all[k] * 100) / 100;
+  }
   _rpFileMaps = out;
   return out;
 }
@@ -2618,6 +2672,7 @@ async function saveRpDay() {
 
   const fmk = rpFileDayMaps()[key];
   const pc  = fmk ? fmk.pc : {};
+  const all = fmk ? fmk.all : {};
   const tot = Object.values(pc).reduce((a,b) => a+b, 0);
   const cut = (fmk && fmk.cut) || rpCutLabel();
   const existing = rpHist && rpHist.days && rpHist.days[key];
@@ -2633,7 +2688,7 @@ async function saveRpDay() {
   const old = btn.textContent; btn.textContent = 'Saving…'; btn.disabled = true;
   try {
     await loadRpHistory(true);                       // always re-read for a fresh SHA
-    rpHist.days[key] = { cut, pc };
+    rpHist.days[key] = { cut, pc, all };
     rpHist.updated = new Date().toISOString();
 
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(rpHist))));
@@ -2692,7 +2747,7 @@ async function saveRpAllDays() {
   const btn = document.getElementById('rpSaveDayBtn');
   const old = btn.textContent; btn.textContent = 'Saving…'; btn.disabled = true;
   try {
-    keys.forEach(k => { rpHist.days[k] = { cut: fm[k].cut, pc: fm[k].pc }; });
+    keys.forEach(k => { rpHist.days[k] = { cut: fm[k].cut, pc: fm[k].pc, all: fm[k].all }; });
     rpHist.updated = new Date().toISOString();
 
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(rpHist))));
@@ -2922,6 +2977,7 @@ async function rpPersistPrefs() {
         r1Daywise: pr.r1Daywise !== false,
         r2Daywise: pr.r2Daywise !== false,
         r3Daywise: pr.r3Daywise !== false,
+        r4Daywise: pr.r4Daywise !== false,
         r2Months:  pr.r2Months || [],
       }),
     });
@@ -2941,7 +2997,7 @@ async function rpPersistPrefs() {
 function rpSwitch(n) {
   _rpTab = n;
   rpSyncDaywiseToggle();
-  [1, 2, 3].forEach(i => {
+  [1, 2, 3, 4].forEach(i => {
     document.getElementById('rpTab' + i).classList.toggle('on', n === i);
     document.getElementById('rpPane' + i).style.display = n === i ? 'block' : 'none';
   });
@@ -2968,10 +3024,10 @@ function rpMonthData() {
     // the file wins over history for the active date, and for every date in
     // the file when the consolidated tab is on
     const useFile = fm[k] && (allDaysMode || key === k);
-    let pc = null, cut = '', live = false;
-    if (useFile) { pc = fm[k].pc; cut = fm[k].cut; live = true; }
-    else if (rpHist && rpHist.days[k]) { pc = rpHist.days[k].pc || {}; cut = rpHist.days[k].cut || ''; }
-    if (pc) { days[d] = { pc, cut, live }; lastDay = d; }
+    let pc = null, all = null, cut = '', live = false;
+    if (useFile) { pc = fm[k].pc; all = fm[k].all; cut = fm[k].cut; live = true; }
+    else if (rpHist && rpHist.days[k]) { pc = rpHist.days[k].pc || {}; all = rpHist.days[k].all || null; cut = rpHist.days[k].cut || ''; }
+    if (pc) { days[d] = { pc, all, cut, live }; lastDay = d; }
   }
   // previous month totals (for the Report-2 header block)
   const pm = M === 1 ? { Y: Y-1, M: 12 } : { Y, M: M-1 };
@@ -3002,7 +3058,7 @@ function rpCodesOf(p) {
 }
 // Roll every stored day of one month ("2026-07") into a single map.
 function rpAggMonth(mk) {
-  const out = { key: mk, days: 0, pc: {},
+  const out = { key: mk, days: 0, pc: {}, daysAll: 0, all: {},
                 label: RP_MON[+mk.slice(5,7) - 1] + '-' + mk.slice(0,4) };
   const src = (rpHist && rpHist.days) || {};
   Object.keys(src).forEach(k => {
@@ -3010,6 +3066,10 @@ function rpAggMonth(mk) {
     out.days++;
     const pc = src[k].pc || {};
     for (const kk in pc) out.pc[kk] = (out.pc[kk] || 0) + pc[kk];
+    if (src[k].all) {                       // days saved before B27 have no all-sector totals
+      out.daysAll++;
+      for (const cc in src[k].all) out.all[cc] = (out.all[cc] || 0) + src[k].all[cc];
+    }
   });
   return out;
 }
@@ -3049,16 +3109,17 @@ function rpOnLabel(md) {
   if (!md.onKey) return md.monLabel;
   return rpDayNum(md.onDay) + ' ' + RP_MON[md.M-1].toUpperCase();
 }
-// Report ids stay stable (1 Power Sector, 2 Customer, 3 Sourcewise) so saved
+// Report ids stay stable (1 Power Sector, 2 Customer, 3 Sourcewise, 4 MCL) so saved
 // settings keep their meaning. Which ones show, and in what order, is
 // powerReport.reports = [{ id, show }] — one list drives the tabs, the PDF,
 // the Excel sheets and the HTML tabs alike.
 const RP_REPORTS = {
   1: { name: 'Power Sector', sheet: 'Power sector', hint: 'One row per customer' },
-  3: { name: 'Sourcewise',   sheet: 'Sourcewise',   hint: 'One row per colliery, grouped by coalfield' },
+  3: { name: 'Sourcewise',   sheet: 'Sourcewise',   hint: 'Power-sector despatch by colliery' },
+  4: { name: 'MCL',          sheet: 'MCL',          hint: 'All despatch by colliery, power and non-power' },
   2: { name: 'Customer',     sheet: 'Customer',     hint: 'Colliery split for each customer, day by day' },
 };
-const RP_DEFAULT_ORDER = [1, 3, 2];
+const RP_DEFAULT_ORDER = [1, 3, 4, 2];
 function rpReportList(saved) {
   if (saved === undefined) saved = (appSettings.powerReport || {}).reports;
   const out = [], seen = new Set();
@@ -3071,6 +3132,14 @@ function rpReportList(saved) {
   return out;
 }
 function rpVisibleReports() { return rpReportList().filter(r => r.show).map(r => r.id); }
+
+// Exports (PDF, Excel, HTML) keep their own list. Until one is saved they
+// follow the app, so nothing changes for anyone who never sets it.
+function rpExportList(pr) {
+  pr = pr || appSettings.powerReport || {};
+  return rpReportList(pr.exportReports !== undefined ? pr.exportReports : pr.reports);
+}
+function rpExportReports() { return rpExportList().filter(r => r.show).map(r => r.id); }
 
 // Put the tab buttons in the configured order and hide the switched-off ones.
 function rpApplyReportTabs() {
@@ -3100,7 +3169,7 @@ const RP_SHOW_KEYS = ['avg', 'total', 'cavg', 'ctotal'];
 function rpShowDefaults() {
   const blank = () => ({ total: true, avg: true, ctotal: true, cavg: true });
   return { r1: { on: blank(), off: blank() }, r2: { on: blank(), off: blank() },
-           r3: { on: blank(), off: blank() } };
+           r3: { on: blank(), off: blank() }, r4: { on: blank(), off: blank() } };
 }
 function rpShow(which, daywise) {
   const pr = appSettings.powerReport || {};
@@ -3141,7 +3210,7 @@ function rpTableHTML(t) {
   t.head.forEach(c => h += `<th class="${c.k === 'lead' ? 'rp-lead' : c.k === 'on' ? 'rp-on' : c.k === 'sub' ? 'rp-sub' : c.k === 'day' ? 'rp-day' : c.k === 'avg' ? 'rp-avgc' : ''}">${rpEsc(c.t)}</th>`);
   h += '</tr></thead><tbody>';
   t.rows.forEach(r => {
-    h += `<tr${r.k === 'sum' ? ' class="rp-sum"' : r.k === 'avg' ? ' class="rp-avg"' : r.k === 'ref' ? ' class="rp-ref"' : r.k === 'cf' ? ' class="rp-ref rp-cf"' : ''}>`;
+    h += `<tr${r.k === 'sum' ? ' class="rp-sum"' : r.k === 'avg' ? ' class="rp-avg"' : r.k === 'ref' ? ' class="rp-ref"' : r.k === 'cf' ? ' class="rp-ref rp-cf"' : r.ind ? ' class="rp-ind"' : ''}>`;
     r.cells.forEach((c, i) => {
       const k = t.head[i] ? t.head[i].k : 'num';
       const isNum = typeof c.v === 'number' && isFinite(c.v);
@@ -3179,9 +3248,10 @@ function renderRpReports() {
     : 'No data yet — load a despatch file or save a day.';
   _rpTables = [];
   const vis = rpVisibleReports();
-  const RENDER = { 1: renderRp1, 2: renderRp2, 3: renderRp3 };
-  [1, 2, 3].forEach(id => { if (vis.indexOf(id) < 0) document.getElementById('rpPane' + id).innerHTML = ''; });
-  vis.forEach(id => RENDER[id](md));        // _rpTables comes out in display order
+  const need = vis.concat(rpExportReports().filter(id => vis.indexOf(id) < 0));
+  const RENDER = { 1: renderRp1, 2: renderRp2, 3: renderRp3, 4: renderRp4 };
+  [1, 2, 3, 4].forEach(id => { if (need.indexOf(id) < 0) document.getElementById('rpPane' + id).innerHTML = ''; });
+  need.forEach(id => RENDER[id](md));
   rpApplyReportTabs();
   if (vis.indexOf(_rpTab) < 0) _rpTab = vis[0];
   rpSwitch(_rpTab);
@@ -3190,7 +3260,8 @@ function renderRpReports() {
 
 function rpSyncExportBtns() {
   if (_rpBusy) return;
-  const on = _rpTables.length > 0;
+  const sheets = rpExportReports().map(id => RP_REPORTS[id].sheet);
+  const on = _rpTables.some(t => sheets.indexOf(t.sheet) >= 0);
   ['rpShareBtn','rpPdfBtn','rpXlsBtn','rpHtmlBtn'].forEach(id => {
     const b = document.getElementById(id);
     if (b) { b.disabled = !on; b.style.opacity = on ? '1' : '.4'; }
@@ -3411,11 +3482,23 @@ function rpCollieryName(code) {
   return _rpCollNames[code] || code;
 }
 
+// Sourcewise (power sector only) and MCL (all despatch) share one renderer:
+// colliery rows grouped by coalfield, coalfield totals, then the grand total.
 function renderRp3(md) {
-  const pane = document.getElementById('rpPane3');
+  rpRenderCollieries(md, { id: 3, sheet: 'Sourcewise', source: 'power',
+    title: 'Sourcewise road despatch to power sector' });
+}
+function renderRp4(md) {
+  rpRenderCollieries(md, { id: 4, sheet: 'MCL', source: 'all',
+    title: 'MCL road despatch — all sectors' });
+}
+
+function rpRenderCollieries(md, cfg) {
+  const pane = document.getElementById('rpPane' + cfg.id);
   pane.innerHTML = '';
-  const powerSet = rpPowerCodes();
-  if (!powerSet.size) {
+  const isAll = cfg.source === 'all';
+  const powerSet = isAll ? null : rpPowerCodes();
+  if (!isAll && !powerSet.size) {
     pane.innerHTML = '<div class="rp-card"><div class="rp-empty">No customers are ticked as <strong>Power</strong> yet, so there is no power-sector despatch to split by colliery. Open ⚙ to pick them.</div></div>';
     return;
   }
@@ -3426,40 +3509,49 @@ function renderRp3(md) {
   }
   if (!md) { pane.innerHTML = '<div class="rp-card"><div class="rp-empty">Nothing to show. Load a despatch file, or reload the saved history.</div></div>'; return; }
 
-  const daywise = rpDaywise(3);
+  const daywise = rpDaywise(cfg.id);
   const lastDay = md.lastDay || 0;
-  const actD    = md.onDay || 0;
   const dayCols = [];
-  for (let d = 1; d <= lastDay; d++) if (md.days[d]) dayCols.push(d);
+  let missing = 0;                         // days stored before all-sector totals were kept
+  for (let d = 1; d <= lastDay; d++) {
+    if (!md.days[d]) continue;
+    if (isAll && !md.days[d].all) { missing++; continue; }
+    dayCols.push(d);
+  }
+  // the on-date column follows the report's own last day with figures
+  const actD = dayCols.indexOf(md.onDay) >= 0 ? md.onDay : (dayCols.length ? dayCols[dayCols.length - 1] : 0);
 
-  const sh   = rpShow(3, daywise);
-  const refs = (sh.total || sh.avg) ? rpPinnedMonths() : [];
+  const sh = rpShow(cfg.id, daywise);
+  const pinned = (sh.total || sh.avg) ? rpPinnedMonths() : [];
+  // for MCL a pinned month counts only the days that carry all-sector totals;
+  // one with none at all is left out rather than shown as zero
+  const allRefs = pinned.map(r => isAll ? { label: r.label, days: r.daysAll, map: r.all, short: r.days - r.daysAll }
+                                        : { label: r.label, days: r.days, map: rpByColliery(r.pc, powerSet), short: 0 });
+  const refs = allRefs.filter(r => r.days > 0);
+  const dropped = allRefs.filter(r => r.days === 0);
 
-  // roll every period up to collieries once, then measure any set of codes
   const dayColl = {};
-  dayCols.forEach(d => { dayColl[d] = rpByColliery(md.days[d].pc, powerSet); });
-  const refColl = refs.map(ref => rpByColliery(ref.pc, powerSet));
+  dayCols.forEach(d => { dayColl[d] = isAll ? md.days[d].all : rpByColliery(md.days[d].pc, powerSet); });
 
   const measure = codes => {
-    const sum = map => codes.reduce((a, c) => a + (map[c] || 0), 0);
+    const sum = map => codes.reduce((a, c) => a + ((map && map[c]) || 0), 0);
     const vals = {};
     let prog = 0;
     dayCols.forEach(d => { const v = sum(dayColl[d]); vals[d] = v; prog += v; });
-    const refVals = refColl.map(sum);
+    const refVals = refs.map(r => sum(r.map));
     return { vals, prog, cnt: dayCols.length, today: vals[actD] || 0,
              refVals, refSum: refVals.reduce((a, b) => a + b, 0) };
   };
-  // a row stays hidden only when it has nothing in any period on show
   const live = x => x.prog > 0 || x.refSum > 0;
 
-  // anything lifted from a colliery that settings doesn't list
   const known = new Set();
   cf.groups.forEach(g => g.mines.forEach(m => m.codes.forEach(c => known.add(c))));
   const seen = new Set();
-  Object.values(dayColl).concat(refColl).forEach(m => Object.keys(m).forEach(c => seen.add(c)));
-  const otherCodes = [...seen].filter(c => !known.has(c)).sort();
+  Object.values(dayColl).concat(refs.map(r => r.map || {})).forEach(m => Object.keys(m || {}).forEach(c => seen.add(c)));
+  const otherCodes = [...seen].filter(c => c !== '?' && !known.has(c)).sort();
 
-  const { head, groups, grouped } = rpSummaryHead(md, sh, refs, dayCols, daywise, 'Colliery');
+  const onMd = Object.assign({}, md, { onDay: actD, onKey: actD ? md.onKey : null });
+  const { head, groups, grouped } = rpSummaryHead(onMd, sh, refs, dayCols, daywise, 'Colliery');
   const cells = (label, x, title) =>
     rpSummaryCells(title ? { v: label, title } : { v: label }, x, refs, sh, dayCols, daywise);
 
@@ -3468,7 +3560,10 @@ function renderRp3(md) {
   cf.groups.forEach(g => {
     const rows = g.mines.map(m => ({ m, x: measure(m.codes) })).filter(o => live(o.x));
     if (!rows.length) return;
-    rows.forEach(o => { outRows.push({ k: 'data', cells: cells(o.m.name, o.x, o.m.codes.join(', ')) }); shown++; });
+    rows.forEach(o => {
+      outRows.push({ k: 'data', ind: !!g.label, cells: cells(o.m.name, o.x, o.m.codes.join(', ')) });
+      shown++;
+    });
     if (g.label) {
       const all = [];
       g.mines.forEach(m => m.codes.forEach(c => all.push(c)));
@@ -3483,23 +3578,42 @@ function renderRp3(md) {
       shown++;
     }
   }
-  const everything = [...known].concat(otherCodes);
+  if (isAll) {
+    const x = measure(['?']);
+    if (live(x)) {
+      outRows.push({ k: 'data', cells: cells('Unknown — DO not in database', x,
+        'Trips whose DO number is missing from the DO database, so their colliery is not known') });
+      shown++;
+    }
+  }
+  const everything = [...known].concat(otherCodes, isAll ? ['?'] : []);
   outRows.push({ k: 'sum', cells: cells(cf.grandLabel + ' Total', measure(everything)) });
+
+  // tell the reader when some stored days can't contribute
+  const notes = [];
+  if (!grouped) notes.push('Figs. in Tonnes');
+  if (isAll) {
+    const shortRefs = refs.filter(r => r.short > 0);
+    if (missing) notes.push(`${missing} day${missing > 1 ? 's' : ''} this month saved before all-sector figures were kept — load ${missing > 1 ? 'those files' : 'that file'} and save again to include ${missing > 1 ? 'them' : 'it'}`);
+    shortRefs.forEach(r => notes.push(`${r.label}: ${r.days} of ${r.days + r.short} days have all-sector figures`));
+    dropped.forEach(r => notes.push(`${r.label} left out — its saved days predate all-sector figures`));
+  }
 
   const cut = (md.days[actD] && md.days[actD].cut) || '';
   const t = {
-    sheet: 'Sourcewise',
-    title: 'Sourcewise road despatch to power sector',
-    meta:  `${md.monLabel} · as on ${rpOnLabel(md)}${cut ? ' · cut-off ' + cut : ''}`,
-    metaHtml: `${rpEsc(md.monLabel)} · as on <b>${rpEsc(rpOnLabel(md))}</b>${cut ? ' · cut-off ' + rpEsc(cut) : ''}`,
-    foot:  grouped ? '' : 'Figs. in Tonnes',
+    sheet: cfg.sheet,
+    title: cfg.title,
+    meta:  `${md.monLabel} · as on ${rpOnLabel(onMd)}${cut ? ' · cut-off ' + cut : ''}`,
+    metaHtml: `${rpEsc(md.monLabel)} · as on <b>${rpEsc(rpOnLabel(onMd))}</b>${cut ? ' · cut-off ' + rpEsc(cut) : ''}`,
+    foot:  notes.join(' · '),
     head, rows: outRows, groups,
   };
   _rpTables.push(t);
   const card = rpCard(t);
   pane.appendChild(card);
-  if (!shown) card.querySelector('.rp-scrollx').innerHTML =
-    '<div class="rp-empty">No power-sector lifting from any colliery this month.</div>';
+  if (!shown) card.querySelector('.rp-scrollx').innerHTML = isAll
+    ? '<div class="rp-empty">No despatch with colliery figures this month yet. Days saved before this build only carry power-sector figures — load a despatch file to see it here.</div>'
+    : '<div class="rp-empty">No power-sector lifting from any colliery this month.</div>';
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3728,7 +3842,7 @@ async function rpShareOrSave(blob, fname, type, title, onBlocked) {
 // ── every report card, rendered off-screen in the light palette ────────
 async function rpSnapCards(onProgress) {
   const cards = [];
-  rpVisibleReports().map(i => 'rpPane' + i).forEach(id => {
+  rpExportReports().map(i => 'rpPane' + i).forEach(id => {
     document.getElementById(id).querySelectorAll('.rp-card').forEach(c => {
       if (c.querySelector('.rp-t')) cards.push(c);
     });
@@ -3867,6 +3981,7 @@ const RP_H = {
   paper: '#f5f7f9', ink: '#151a21', ash: '#ccd4dd', soft: '#e6ebf0',
   mute: '#74808e', live: '#b8620a', band: '#212a35', bandInk: '#f5f7f9',
   zero: '#a9b3be', avg: '#123a8a', avgBand: '#9cc4ff', liveBand: '#f5a742',
+  cf: '#d3dde8', cfRule: '#4a5a6d',
 };
 
 function rpHtmlCellStyle(kind, rowKind) {
@@ -3881,6 +3996,12 @@ function rpHtmlCellStyle(kind, rowKind) {
     if (kind === 'avg')  return `${base}color:${RP_H.avgBand};`;
     if (kind === 'sub')  return `${base}color:rgba(245,247,249,.55);font-style:italic;`;
     return `${base}color:${RP_H.bandInk};`;
+  }
+  if (rowKind === 'cf') {
+    const cfb = `${b}background:${RP_H.cf};font-weight:700;border-top:2px solid ${RP_H.cfRule};`;
+    if (kind === 'lead') return `${cfb}${cond}color:${RP_H.ink};font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;text-align:left;`;
+    const col = kind === 'on' ? RP_H.live : kind === 'avg' ? RP_H.avg : RP_H.ink;
+    return `${cfb}${mono}color:${col};text-align:right;${kind === 'sub' ? 'font-style:italic;' : ''}`;
   }
   if (rowKind === 'avg' || rowKind === 'ref') {
     const col = rowKind === 'avg' ? RP_H.avg : RP_H.ink;
@@ -3940,7 +4061,8 @@ function rpHtmlCard(t, idx) {
       // x:num for Excel, data-v for the sort — browsers ignore the first
       const attrs = isNum ? ` x:num="${Math.round(c.v * 100) / 100}"` : '';
       const zero = isZero ? `color:${r.k === 'sum' ? 'rgba(245,247,249,.4)' : RP_H.zero};` : '';
-      h += `<td style="${rpHtmlCellStyle(k, r.k === 'cf' ? 'ref' : r.k)}${zero}"${attrs}>${txt}</td>`;
+      const ind = (r.ind && k === 'lead') ? 'padding-left:26px;' : '';
+      h += `<td style="${rpHtmlCellStyle(k, r.k)}${zero}${ind}"${attrs}>${txt}</td>`;
     });
     return h + '</tr>';
   };
@@ -3963,11 +4085,11 @@ function rpHtmlCard(t, idx) {
   };
   const push = (label, val) => { if (val != null && val !== '') kpis.push([label, typeof val === 'number' ? rpNum(val) : val]); };
   const onLab = (t.head.find(h => h.k === 'on') || {}).t || '';
-  if (t.sheet === 'Power sector' || t.sheet === 'Sourcewise') {
+  if (t.sheet === 'Power sector' || t.sheet === 'Sourcewise' || t.sheet === 'MCL') {
     push(onLab, pick(sum, 'on'));
     push('Month to date', pick(sum, 'key'));
     push('Avg / day', pick(sum, 'avg'));
-    kpis.push([t.sheet === 'Sourcewise' ? 'Collieries' : 'Customers', String(nData)]);
+    kpis.push([t.sheet === 'Power sector' ? 'Customers' : 'Collieries', String(nData)]);
   } else {
     push('Month to date', pick(sum, 'on'));
     push('Avg / day', pick(avg, 'on'));
@@ -3998,7 +4120,7 @@ function rpBuildHtml() {
   const cond = "font-family:'IBM Plex Sans Condensed','IBM Plex Sans',Arial,sans-serif;";
   const mono = "font-family:'IBM Plex Mono',Consolas,monospace;";
   let n = 0;
-  const groups = rpVisibleReports().map(id => ({
+  const groups = rpExportReports().map(id => ({
     id: 'p' + id, label: RP_REPORTS[id].name,
     tables: _rpTables.filter(t => t.sheet === RP_REPORTS[id].sheet),
   })).filter(g => g.tables.length);
@@ -4097,7 +4219,8 @@ function rpColLetter(n) {           // 1 → A
 }
 
 // style ids written into styles.xml below
-const RP_S = { title:1, meta:2, head:3, lead:4, num:5, key:6, on:7, sub:8, sumLead:9, sum:10, avgLead:11, avg:12, avgCol:13, ref:14 };
+const RP_S = { title:1, meta:2, head:3, lead:4, num:5, key:6, on:7, sub:8, sumLead:9, sum:10, avgLead:11, avg:12, avgCol:13, ref:14,
+                cfLead:15, cf:16, leadIn:17 };
 
 function rpSheetXml(tables) {
   let rowNo = 0, maxCols = 1;
@@ -4117,10 +4240,12 @@ function rpSheetXml(tables) {
       push(r.cells.map((c, i) => {
         const k = t.head[i] ? t.head[i].k : 'num';
         let s;
-        if (k === 'lead') s = r.k === 'sum' ? RP_S.sumLead : (r.k === 'avg' || r.k === 'ref' || r.k === 'cf') ? RP_S.avgLead : RP_S.lead;
+        if (k === 'lead') s = r.k === 'sum' ? RP_S.sumLead : r.k === 'cf' ? RP_S.cfLead
+                            : (r.k === 'avg' || r.k === 'ref') ? RP_S.avgLead : r.ind ? RP_S.leadIn : RP_S.lead;
         else if (r.k === 'sum') s = RP_S.sum;
+        else if (r.k === 'cf')  s = RP_S.cf;
         else if (r.k === 'avg') s = RP_S.avg;
-        else if (r.k === 'ref' || r.k === 'cf') s = RP_S.ref;
+        else if (r.k === 'ref') s = RP_S.ref;
         else if (k === 'avg') s = RP_S.avgCol;
         else if (k === 'on')  s = RP_S.on;
         else if (k === 'key') s = RP_S.key;
@@ -4174,7 +4299,7 @@ function rpStylesXml() {
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
   '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
     `<numFmts count="1"><numFmt numFmtId="164" formatCode="${IND}"/></numFmts>` +
-    '<fonts count="8">' +
+    '<fonts count="9">' +
       '<font><sz val="10"/><name val="IBM Plex Sans"/></font>' +                                    // 0 body
       '<font><b/><sz val="13"/><name val="IBM Plex Sans"/></font>' +                                // 1 title
       '<font><sz val="9"/><color rgb="FF74808E"/><name val="IBM Plex Sans"/></font>' +              // 2 meta
@@ -4183,21 +4308,25 @@ function rpStylesXml() {
       '<font><b/><sz val="10"/><color rgb="FFB8620A"/><name val="IBM Plex Sans"/></font>' +         // 5 live
       '<font><i/><sz val="10"/><color rgb="FF74808E"/><name val="IBM Plex Sans"/></font>' +         // 6 roll-up
       '<font><b/><sz val="10"/><color rgb="FF123A8A"/><name val="IBM Plex Sans"/></font>' +         // 7 average
+      '<font><b/><sz val="10"/><color rgb="FF151A21"/><name val="IBM Plex Sans"/></font>' +         // 8 coalfield
     '</fonts>' +
-    '<fills count="5">' +
+    '<fills count="6">' +
       '<fill><patternFill patternType="none"/></fill>' +
       '<fill><patternFill patternType="gray125"/></fill>' +
       '<fill><patternFill patternType="solid"><fgColor rgb="FFE6EBF0"/><bgColor indexed="64"/></patternFill></fill>' +   // 2 head
       '<fill><patternFill patternType="solid"><fgColor rgb="FF212A35"/><bgColor indexed="64"/></patternFill></fill>' +   // 3 band
       '<fill><patternFill patternType="solid"><fgColor rgb="FFF0F3F6"/><bgColor indexed="64"/></patternFill></fill>' +   // 4 avg
+      '<fill><patternFill patternType="solid"><fgColor rgb="FFD3DDE8"/><bgColor indexed="64"/></patternFill></fill>' +   // 5 coalfield
     '</fills>' +
-    '<borders count="2">' +
+    '<borders count="3">' +
       '<border><left/><right/><top/><bottom/><diagonal/></border>' +
       '<border><left style="thin"><color rgb="FF9AA5B1"/></left><right style="thin"><color rgb="FF9AA5B1"/></right>' +
       '<top style="thin"><color rgb="FF9AA5B1"/></top><bottom style="thin"><color rgb="FF9AA5B1"/></bottom><diagonal/></border>' +
+      '<border><left style="thin"><color rgb="FF9AA5B1"/></left><right style="thin"><color rgb="FF9AA5B1"/></right>' +
+      '<top style="medium"><color rgb="FF4A5A6D"/></top><bottom style="thin"><color rgb="FF9AA5B1"/></bottom><diagonal/></border>' +
     '</borders>' +
     '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-    '<cellXfs count="15">' +
+    '<cellXfs count="18">' +
       '<xf xfId="0" numFmtId="0" fontId="0" fillId="0" borderId="0"/>' +                                                                                     // 0 normal
       '<xf xfId="0" numFmtId="0" fontId="1" fillId="0" borderId="1" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>' +   // 1 title
       '<xf xfId="0" numFmtId="0" fontId="2" fillId="0" borderId="1" applyFont="1" applyBorder="1"/>' +                                                       // 2 meta
@@ -4213,6 +4342,9 @@ function rpStylesXml() {
       '<xf xfId="0" numFmtId="164" fontId="7" fillId="4" borderId="1" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>' +                 // 12 avg
       '<xf xfId="0" numFmtId="164" fontId="7" fillId="0" borderId="1" applyNumberFormat="1" applyFont="1" applyBorder="1"/>' +                                // 13 avg column
       '<xf xfId="0" numFmtId="164" fontId="3" fillId="4" borderId="1" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>' +                  // 14 month total
+      '<xf xfId="0" numFmtId="0" fontId="8" fillId="5" borderId="2" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left"/></xf>' +  // 15 coalfield lead
+      '<xf xfId="0" numFmtId="164" fontId="8" fillId="5" borderId="2" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>' +                 // 16 coalfield
+      '<xf xfId="0" numFmtId="0" fontId="0" fillId="0" borderId="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" indent="2"/></xf>' +     // 17 colliery lead
     '</cellXfs>' +
     '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
     '<dxfs count="0"/>' +
@@ -4224,7 +4356,7 @@ async function rpExportXlsx() {
   if (!_rpTables.length) { alert('Nothing to export yet — the reports are empty.'); return; }
   rpLockBtns(true, 'rpXlsBtn', 'Building…');
   try {
-    const sheets = rpVisibleReports()
+    const sheets = rpExportReports()
       .map(id => ({ name: RP_REPORTS[id].name, tables: _rpTables.filter(t => t.sheet === RP_REPORTS[id].sheet) }))
       .filter(sh => sh.tables.length);
     if (!sheets.length) throw new Error('nothing to export');
