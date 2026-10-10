@@ -1247,7 +1247,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B23-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B24-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1358,6 +1358,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 
   <div class="rp-tabs">
     <button class="rp-tab on" id="rpTab1" onclick="rpSwitch(1)">Power Sector</button>
+    <button class="rp-tab"    id="rpTab3" onclick="rpSwitch(3)">Sourcewise</button>
     <button class="rp-tab"    id="rpTab2" onclick="rpSwitch(2)">Customer</button>
     <label class="rp-sw" title="Show or hide the day-by-day breakdown for this report">
       <input type="checkbox" id="rpDaywiseTgl" onchange="rpToggleDaywise()">
@@ -1377,6 +1378,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
   <div class="rp-note" id="rpViewSub">—</div>
   <div id="rpStatus" class="rp-note"></div>
   <div class="rp-tblwrap" id="rpPane1"></div>
+  <div class="rp-tblwrap" id="rpPane3" style="display:none;"></div>
   <div class="rp-tblwrap" id="rpPane2" style="display:none;"></div>
 
 </div><!-- /dashboard -->
@@ -1993,7 +1995,7 @@ function openRpSettings() {
   const pr = appSettings.powerReport || rpDefaults();
   const shDef = rpShowDefaults();
   const shCur = pr.show || {};
-  ['r1','r2'].forEach(k => ['on','off'].forEach(m => {
+  ['r1','r2','r3'].forEach(k => ['on','off'].forEach(m => {
     const cur = shCur[k] && shCur[k][m];
     if (!cur) return;
     RP_SHOW_KEYS.forEach(f => { if (cur[f] !== undefined) shDef[k][m][f] = cur[f] !== false; });
@@ -2265,7 +2267,7 @@ function rpResetMerges() {
 function renderRpShowGrids() {
   const wrap = document.getElementById('rpShowGrids');
   wrap.innerHTML = '';
-  [['r1', 'Power Sector Report'], ['r2', 'Customer Report']].forEach(([key, label]) => {
+  [['r1', 'Power Sector Report'], ['r3', 'Sourcewise Report'], ['r2', 'Customer Report']].forEach(([key, label]) => {
     const box = document.createElement('div');
     box.className = 'rp-sgrid';
     box.innerHTML =
@@ -2402,6 +2404,7 @@ async function saveRpSettings() {
     historyPath: histPath,
     r1Daywise: pr0.r1Daywise !== false,   // owned by the switch above the report
     r2Daywise: pr0.r2Daywise !== false,
+    r3Daywise: pr0.r3Daywise !== false,
     r2Months:  pr0.r2Months || [],        // owned by the Saved days view
     show:      _rpDraft.show,
     parties,
@@ -2626,7 +2629,7 @@ async function saveRpAllDays() {
 }
 
 // ── Saved days: review what is stored, clear any of it ────────────────
-// Months whose Total and Avg / day appear in the Customer report.
+// Months whose Total and Avg / day appear in all three reports.
 let _rpPins = new Set();
 
 async function openRpDays() {
@@ -2684,7 +2687,7 @@ function renderRpDays() {
       <span class="rp-dmeta">${mk.length} day${mk.length > 1 ? 's' : ''}</span>
       <span class="rp-dmtot">Total ${rpNum(tot) || '0'}</span>
       <span class="rp-dmavg">Avg / day ${rpNum(avg) || '0'}</span>
-      <button class="rp-pin${pinned ? ' on' : ''}" data-pin="${m}" title="Show this month's Total and Avg / day in the Customer report">${pinned ? '★ Shown' : '☆ Show'}</button>
+      <button class="rp-pin${pinned ? ' on' : ''}" data-pin="${m}" title="Show this month's Total and Avg / day in the reports">${pinned ? '★ Shown' : '☆ Show'}</button>
     </div>`;
     mk.forEach(k => {
       const rec = days[k];
@@ -2807,7 +2810,7 @@ function rpSyncDaywiseToggle() {
 // survives a reload and follows you to another device.
 let _rpPrefTimer = null;
 function rpToggleDaywise() {
-  const key = _rpTab === 1 ? 'r1Daywise' : 'r2Daywise';
+  const key = rpDwKey(_rpTab);
   const pr = appSettings.powerReport = appSettings.powerReport || {};
   pr[key] = !rpDaywise(_rpTab);
   renderRpReports();
@@ -2832,6 +2835,7 @@ async function rpPersistPrefs() {
       powerReport: Object.assign({}, onDisk.powerReport || {}, {
         r1Daywise: pr.r1Daywise !== false,
         r2Daywise: pr.r2Daywise !== false,
+        r3Daywise: pr.r3Daywise !== false,
         r2Months:  pr.r2Months || [],
       }),
     });
@@ -2851,10 +2855,10 @@ async function rpPersistPrefs() {
 function rpSwitch(n) {
   _rpTab = n;
   rpSyncDaywiseToggle();
-  document.getElementById('rpTab1').classList.toggle('on', n === 1);
-  document.getElementById('rpTab2').classList.toggle('on', n === 2);
-  document.getElementById('rpPane1').style.display = n === 1 ? 'block' : 'none';
-  document.getElementById('rpPane2').style.display = n === 2 ? 'block' : 'none';
+  RP_TAB_ORDER.forEach(i => {
+    document.getElementById('rpTab' + i).classList.toggle('on', n === i);
+    document.getElementById('rpPane' + i).style.display = n === i ? 'block' : 'none';
+  });
 }
 
 // Build day → { 'party|colliery': qty } for the month of the active date,
@@ -2959,9 +2963,13 @@ function rpOnLabel(md) {
   if (!md.onKey) return md.monLabel;
   return rpDayNum(md.onDay) + ' ' + RP_MON[md.M-1].toUpperCase();
 }
+// Report ids stay stable (1 Power Sector, 2 Customer, 3 Sourcewise) so saved
+// settings keep their meaning; RP_TAB_ORDER is only the order they appear in.
+const RP_TAB_ORDER = [1, 3, 2];
+function rpDwKey(which) { return 'r' + which + 'Daywise'; }
 function rpDaywise(which) {
   const pr = appSettings.powerReport || {};
-  return pr[which === 1 ? 'r1Daywise' : 'r2Daywise'] !== false;
+  return pr[rpDwKey(which)] !== false;
 }
 
 // Whether the monthly Total and Average are shown. Each report keeps a
@@ -2972,12 +2980,13 @@ function rpDaywise(which) {
 const RP_SHOW_KEYS = ['avg', 'total', 'cavg', 'ctotal'];
 function rpShowDefaults() {
   const blank = () => ({ total: true, avg: true, ctotal: true, cavg: true });
-  return { r1: { on: blank(), off: blank() }, r2: { on: blank(), off: blank() } };
+  return { r1: { on: blank(), off: blank() }, r2: { on: blank(), off: blank() },
+           r3: { on: blank(), off: blank() } };
 }
 function rpShow(which, daywise) {
   const pr = appSettings.powerReport || {};
   const sh = pr.show || {};
-  const r  = sh[which === 1 ? 'r1' : 'r2'] || {};
+  const r  = sh['r' + which] || {};
   const m  = r[daywise ? 'on' : 'off'] || {};
   return { total:  m.total  !== false, avg:  m.avg  !== false,
            ctotal: m.ctotal !== false, cavg: m.cavg !== false };
@@ -3013,7 +3022,7 @@ function rpTableHTML(t) {
   t.head.forEach(c => h += `<th class="${c.k === 'lead' ? 'rp-lead' : c.k === 'on' ? 'rp-on' : c.k === 'sub' ? 'rp-sub' : c.k === 'day' ? 'rp-day' : c.k === 'avg' ? 'rp-avgc' : ''}">${rpEsc(c.t)}</th>`);
   h += '</tr></thead><tbody>';
   t.rows.forEach(r => {
-    h += `<tr${r.k === 'sum' ? ' class="rp-sum"' : r.k === 'avg' ? ' class="rp-avg"' : r.k === 'ref' ? ' class="rp-ref"' : ''}>`;
+    h += `<tr${r.k === 'sum' ? ' class="rp-sum"' : r.k === 'avg' ? ' class="rp-avg"' : r.k === 'ref' ? ' class="rp-ref"' : r.k === 'cf' ? ' class="rp-ref rp-cf"' : ''}>`;
     r.cells.forEach((c, i) => {
       const k = t.head[i] ? t.head[i].k : 'num';
       const isNum = typeof c.v === 'number' && isFinite(c.v);
@@ -3051,6 +3060,7 @@ function renderRpReports() {
     : 'No data yet — load a despatch file or save a day.';
   _rpTables = [];
   renderRp1(md);
+  renderRp3(md);
   renderRp2(md);
   rpSwitch(_rpTab);
   rpSyncExportBtns();
@@ -3063,6 +3073,80 @@ function rpSyncExportBtns() {
     const b = document.getElementById(id);
     if (b) { b.disabled = !on; b.style.opacity = on ? '1' : '.4'; }
   });
+}
+
+// Column headings shared by the Power Sector and Sourcewise reports: on-date,
+// pinned months, the current month, then the day columns — with a grouping row
+// whenever a pinned month is in play.
+function rpSummaryHead(md, sh, refs, dayCols, daywise, leadLabel) {
+  // With a pinned month in play the headings repeat the month name on every
+  // column, which eats width — so the month moves up into a grouping row and
+  // the columns below it say only Total / Avg.
+  const grouped = refs.length > 0;
+  const head = [
+    { t: leadLabel,     k: 'lead' },
+    { t: rpOnLabel(md), k: 'on'   },
+  ];
+  // The two lead cells of the grouping row carry the unit and a label for the
+  // on-date column.
+  const groups = grouped
+    ? [{ t: 'Figs. in Tonnes', span: 1, k: 'note' }, { t: 'On date', span: 1, k: 'on' }]
+    : null;
+
+  // With one measure the month name repeats down every column, so the measure
+  // goes up into the grouping row instead and the months sit under it.
+  const pinBoth = sh.total && sh.avg;
+  if (pinBoth) {
+    refs.forEach(r => {
+      head.push({ t: 'Total', k: 'key' });
+      head.push({ t: 'Avg / day', k: 'avg' });
+      groups.push({ t: r.label, span: 2 });
+    });
+  } else if (refs.length) {
+    refs.forEach(r => head.push({ t: r.label, k: sh.total ? 'key' : 'avg' }));
+    groups.push({ t: sh.total ? 'Total' : 'Avg / day', span: refs.length });
+  }
+
+  const curBoth = sh.ctotal && sh.cavg;
+  if (curBoth) {
+    head.push({ t: grouped ? 'Total' : 'Month to date', k: 'key', cur: true });
+    head.push({ t: 'Avg / day', k: 'avg', cur: true });
+    if (grouped) groups.push({ t: md.monLabel, span: 2 });
+  } else if (sh.ctotal || sh.cavg) {
+    head.push({ t: grouped ? md.monLabel : (sh.ctotal ? 'Month to date' : 'Avg / day'),
+                k: sh.ctotal ? 'key' : 'avg', cur: true });
+    if (grouped) groups.push({ t: sh.ctotal ? 'Total' : 'Avg / day', span: 1 });
+  }
+
+  if (daywise) {
+    dayCols.forEach(d => head.push({ t: rpDayNum(d), k: 'day' }));
+    if (grouped && dayCols.length) groups.push({ t: md.monLabel + ' day-by-day', span: dayCols.length });
+  }
+
+  // fold neighbouring groups that say the same thing into one wider cell
+  if (groups) {
+    for (let i = groups.length - 1; i > 0; i--) {
+      const a = groups[i - 1], b = groups[i];
+      if (a.k || b.k || !b.t || a.t !== b.t) continue;
+      a.span += b.span;
+      groups.splice(i, 1);
+    }
+  }
+  return { head, groups, grouped };
+}
+
+// One row's cells in the same column order rpSummaryHead lays out.
+function rpSummaryCells(lead, x, refs, sh, dayCols, daywise) {
+  const cells = [lead, { v: x.today }];
+  refs.forEach((ref, ri) => {
+    const t = x.refVals[ri] || 0;
+    if (sh.total) cells.push({ v: t });
+    if (sh.avg)   cells.push({ v: ref.days ? t / ref.days : 0 });
+  });
+  if (sh.ctotal) cells.push({ v: x.prog });
+  if (sh.cavg)   cells.push({ v: x.cnt ? x.prog / x.cnt : 0 });
+  if (daywise) dayCols.forEach(d => cells.push({ v: x.vals[d] || 0 }));
+  return cells;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3110,59 +3194,7 @@ function renderRp1(md) {
 
   const cut  = (md.days[actD] && md.days[actD].cut) || '';
 
-  // With a pinned month in play the headings repeat the month name on every
-  // column, which eats width — so the month moves up into a grouping row and
-  // the columns below it say only Total / Avg.
-  const grouped = refs.length > 0;
-  const head = [
-    { t: 'Customer',    k: 'lead' },
-    { t: rpOnLabel(md), k: 'on'   },
-  ];
-  // The two lead cells of the grouping row were empty; they now carry the unit
-  // and a label for the on-date column.
-  const groups = grouped
-    ? [{ t: 'Figs. in Tonnes', span: 1, k: 'note' }, { t: 'On date', span: 1, k: 'on' }]
-    : null;
-
-  // With one measure the month name repeats down every column, so the measure
-  // goes up into the grouping row instead and the months sit under it.
-  const pinBoth = sh.total && sh.avg;
-  if (pinBoth) {
-    refs.forEach(r => {
-      head.push({ t: 'Total', k: 'key' });
-      head.push({ t: 'Avg / day', k: 'avg' });
-      groups.push({ t: r.label, span: 2 });
-    });
-  } else if (refs.length) {
-    refs.forEach(r => head.push({ t: r.label, k: sh.total ? 'key' : 'avg' }));
-    groups.push({ t: sh.total ? 'Total' : 'Avg / day', span: refs.length });
-  }
-
-  const curBoth = sh.ctotal && sh.cavg;
-  if (curBoth) {
-    head.push({ t: grouped ? 'Total' : 'Month to date', k: 'key' });
-    head.push({ t: 'Avg / day', k: 'avg' });
-    if (grouped) groups.push({ t: md.monLabel, span: 2 });
-  } else if (sh.ctotal || sh.cavg) {
-    head.push({ t: grouped ? md.monLabel : (sh.ctotal ? 'Month to date' : 'Avg / day'),
-                k: sh.ctotal ? 'key' : 'avg' });
-    if (grouped) groups.push({ t: sh.ctotal ? 'Total' : 'Avg / day', span: 1 });
-  }
-
-  if (daywise) {
-    dayCols.forEach(d => head.push({ t: rpDayNum(d), k: 'day' }));
-    if (grouped && dayCols.length) groups.push({ t: md.monLabel + ' day-by-day', span: dayCols.length });
-  }
-
-  // fold neighbouring groups that say the same thing into one wider cell
-  if (groups) {
-    for (let i = groups.length - 1; i > 0; i--) {
-      const a = groups[i - 1], b = groups[i];
-      if (a.k || b.k || !b.t || a.t !== b.t) continue;
-      a.span += b.span;
-      groups.splice(i, 1);
-    }
-  }
+  const { head, groups, grouped } = rpSummaryHead(md, sh, refs, dayCols, daywise, 'Customer');
 
   const outRows = [];
   let tToday = 0, tProg = 0, tAvg = 0;
@@ -3170,21 +3202,10 @@ function renderRp1(md) {
   rows.forEach(r => {
     tToday += r.today; tProg += r.prog; tAvg += r.cnt ? r.prog / r.cnt : 0;
     dayCols.forEach(d => dayTotals[d] = (dayTotals[d] || 0) + (r.vals[d] || 0));
-    const cells = [
-      { v: r.name, title: r.name + ' · ' + r.codes.join(', '),
-        html: rpEsc(r.name) + (r.codes.length > 1 ? ` <span class="rp-codes">${r.codes.length} codes</span>` : '') },
-      { v: r.today },
-    ];
-    refs.forEach((ref, ri) => {
-      const t = r.refVals[ri] || 0;
-      refTot[ri] = (refTot[ri] || 0) + t;
-      if (sh.total) cells.push({ v: t });
-      if (sh.avg)   cells.push({ v: ref.days ? t / ref.days : 0 });
-    });
-    if (sh.ctotal) cells.push({ v: r.prog });
-    if (sh.cavg)   cells.push({ v: r.cnt ? r.prog / r.cnt : 0 });
-    if (daywise) dayCols.forEach(d => cells.push({ v: r.vals[d] || 0 }));
-    outRows.push({ k: 'data', cells });
+    refs.forEach((ref, ri) => { refTot[ri] = (refTot[ri] || 0) + (r.refVals[ri] || 0); });
+    const lead = { v: r.name, title: r.name + ' · ' + r.codes.join(', '),
+      html: rpEsc(r.name) + (r.codes.length > 1 ? ` <span class="rp-codes">${r.codes.length} codes</span>` : '') };
+    outRows.push({ k: 'data', cells: rpSummaryCells(lead, r, refs, sh, dayCols, daywise) });
   });
 
   const sumCells = [{ v: 'All customers' }, { v: tToday }];
@@ -3210,6 +3231,153 @@ function renderRp1(md) {
   pane.appendChild(card);
   if (!rows.length) card.querySelector('.rp-scrollx').innerHTML =
     '<div class="rp-empty">No lifting recorded against any of the picked customers this month.</div>';
+}
+
+// ═══════════════════════════════════════════════════════
+//  REPORT 3 — Sourcewise (collierywise road despatch to power sector)
+// ═══════════════════════════════════════════════════════
+
+// Coalfields read from settings.mines exactly as ePassViewer's
+// buildDynamicMaps reads them: mines up to an isTotal row belong to that
+// coalfield, and the isGrandTotal row closes the list.
+function rpCoalfields() {
+  const mines = appSettings.mines || [];
+  const groups = [];
+  let pending = [];
+  for (const m of mines) {
+    if (m.isGrandTotal) break;
+    if (m.isTotal) { groups.push({ label: m.label, mines: pending }); pending = []; continue; }
+    const codes = (m.colCodes || '').split(',').map(c => c.trim()).filter(Boolean);
+    pending.push({ name: m.collieryName || m.label, codes });
+  }
+  // mines listed after the last coalfield total still get rows, just no subtotal
+  if (pending.length) groups.push({ label: null, mines: pending });
+  const grand = mines.find(m => m.isGrandTotal);
+  return { groups, grandLabel: grand ? grand.label : 'MCL' };
+}
+
+// Every party code ticked Power, merged members included.
+function rpPowerCodes() {
+  const set = new Set();
+  ((appSettings.powerReport || {}).parties || []).filter(p => p.power)
+    .forEach(p => rpCodesOf(p).forEach(c => set.add(String(c))));
+  return set;
+}
+
+// One day map ('party|colliery' → t) rolled up to colliery → t, power parties only.
+function rpByColliery(pc, powerSet) {
+  const out = {};
+  for (const k in pc) {
+    const bar = k.indexOf('|');
+    if (!powerSet.has(k.slice(0, bar))) continue;
+    const cc = k.slice(bar + 1);
+    out[cc] = (out[cc] || 0) + pc[k];
+  }
+  return out;
+}
+
+// Colliery names for codes that aren't in settings, read off the DO database.
+let _rpCollNames = null, _rpCollNamesN = -1;
+function rpCollieryName(code) {
+  if (!_rpCollNames || _rpCollNamesN !== mclhoCount) {   // rebuilt whenever the DO database changes
+    _rpCollNames = {}; _rpCollNamesN = mclhoCount;
+    for (const k in mclhoDB) {
+      const r = mclhoDB[k], c = String(r.collieryCode || '').trim();
+      if (c && !_rpCollNames[c] && r.collieryName) _rpCollNames[c] = rpDecode(r.collieryName);
+    }
+  }
+  return _rpCollNames[code] || code;
+}
+
+function renderRp3(md) {
+  const pane = document.getElementById('rpPane3');
+  pane.innerHTML = '';
+  const powerSet = rpPowerCodes();
+  if (!powerSet.size) {
+    pane.innerHTML = '<div class="rp-card"><div class="rp-empty">No customers are ticked as <strong>Power</strong> yet, so there is no power-sector despatch to split by colliery. Open ⚙ to pick them.</div></div>';
+    return;
+  }
+  const cf = rpCoalfields();
+  if (!cf.groups.length) {
+    pane.innerHTML = '<div class="rp-card"><div class="rp-empty">No collieries in settings. The colliery list and coalfield grouping come from the same settings ePass Viewer uses.</div></div>';
+    return;
+  }
+  if (!md) { pane.innerHTML = '<div class="rp-card"><div class="rp-empty">Nothing to show. Load a despatch file, or reload the saved history.</div></div>'; return; }
+
+  const daywise = rpDaywise(3);
+  const lastDay = md.lastDay || 0;
+  const actD    = md.onDay || 0;
+  const dayCols = [];
+  for (let d = 1; d <= lastDay; d++) if (md.days[d]) dayCols.push(d);
+
+  const sh   = rpShow(3, daywise);
+  const refs = (sh.total || sh.avg) ? rpPinnedMonths() : [];
+
+  // roll every period up to collieries once, then measure any set of codes
+  const dayColl = {};
+  dayCols.forEach(d => { dayColl[d] = rpByColliery(md.days[d].pc, powerSet); });
+  const refColl = refs.map(ref => rpByColliery(ref.pc, powerSet));
+
+  const measure = codes => {
+    const sum = map => codes.reduce((a, c) => a + (map[c] || 0), 0);
+    const vals = {};
+    let prog = 0;
+    dayCols.forEach(d => { const v = sum(dayColl[d]); vals[d] = v; prog += v; });
+    const refVals = refColl.map(sum);
+    return { vals, prog, cnt: dayCols.length, today: vals[actD] || 0,
+             refVals, refSum: refVals.reduce((a, b) => a + b, 0) };
+  };
+  // a row stays hidden only when it has nothing in any period on show
+  const live = x => x.prog > 0 || x.refSum > 0;
+
+  // anything lifted from a colliery that settings doesn't list
+  const known = new Set();
+  cf.groups.forEach(g => g.mines.forEach(m => m.codes.forEach(c => known.add(c))));
+  const seen = new Set();
+  Object.values(dayColl).concat(refColl).forEach(m => Object.keys(m).forEach(c => seen.add(c)));
+  const otherCodes = [...seen].filter(c => !known.has(c)).sort();
+
+  const { head, groups, grouped } = rpSummaryHead(md, sh, refs, dayCols, daywise, 'Colliery');
+  const cells = (label, x, title) =>
+    rpSummaryCells(title ? { v: label, title } : { v: label }, x, refs, sh, dayCols, daywise);
+
+  const outRows = [];
+  let shown = 0;
+  cf.groups.forEach(g => {
+    const rows = g.mines.map(m => ({ m, x: measure(m.codes) })).filter(o => live(o.x));
+    if (!rows.length) return;
+    rows.forEach(o => { outRows.push({ k: 'data', cells: cells(o.m.name, o.x, o.m.codes.join(', ')) }); shown++; });
+    if (g.label) {
+      const all = [];
+      g.mines.forEach(m => m.codes.forEach(c => all.push(c)));
+      outRows.push({ k: 'cf', cells: cells(g.label + ' Total', measure(all)) });
+    }
+  });
+  if (otherCodes.length) {
+    const x = measure(otherCodes);
+    if (live(x)) {
+      outRows.push({ k: 'data', cells: cells('Other collieries', x,
+        otherCodes.map(c => rpCollieryName(c) + ' (' + c + ')').join(', ')) });
+      shown++;
+    }
+  }
+  const everything = [...known].concat(otherCodes);
+  outRows.push({ k: 'sum', cells: cells(cf.grandLabel + ' Total', measure(everything)) });
+
+  const cut = (md.days[actD] && md.days[actD].cut) || '';
+  const t = {
+    sheet: 'Sourcewise',
+    title: 'Sourcewise road despatch to power sector',
+    meta:  `${md.monLabel} · as on ${rpOnLabel(md)}${cut ? ' · cut-off ' + cut : ''}`,
+    metaHtml: `${rpEsc(md.monLabel)} · as on <b>${rpEsc(rpOnLabel(md))}</b>${cut ? ' · cut-off ' + rpEsc(cut) : ''}`,
+    foot:  grouped ? '' : 'Figs. in Tonnes',
+    head, rows: outRows, groups,
+  };
+  _rpTables.push(t);
+  const card = rpCard(t);
+  pane.appendChild(card);
+  if (!shown) card.querySelector('.rp-scrollx').innerHTML =
+    '<div class="rp-empty">No power-sector lifting from any colliery this month.</div>';
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3294,7 +3462,7 @@ function renderRp2(md) {
 // ── Share the visible report as an image ────────────────
 async function shareRpReport() {
   if (_rpBusy) return;
-  const pane = document.getElementById(_rpTab === 1 ? 'rpPane1' : 'rpPane2');
+  const pane = document.getElementById('rpPane' + _rpTab);
   if (!pane.querySelector('.rp-t')) { alert('Nothing to share yet — the report is empty.'); return; }
   rpLockBtns(true, 'rpShareBtn', 'Rendering…');
   const holder = document.createElement('div');
@@ -3438,7 +3606,7 @@ async function rpShareOrSave(blob, fname, type, title, onBlocked) {
 // ── every report card, rendered off-screen in the light palette ────────
 async function rpSnapCards(onProgress) {
   const cards = [];
-  ['rpPane1','rpPane2'].forEach(id => {
+  RP_TAB_ORDER.map(i => 'rpPane' + i).forEach(id => {
     document.getElementById(id).querySelectorAll('.rp-card').forEach(c => {
       if (c.querySelector('.rp-t')) cards.push(c);
     });
@@ -3650,32 +3818,34 @@ function rpHtmlCard(t, idx) {
       // x:num for Excel, data-v for the sort — browsers ignore the first
       const attrs = isNum ? ` x:num="${Math.round(c.v * 100) / 100}"` : '';
       const zero = isZero ? `color:${r.k === 'sum' ? 'rgba(245,247,249,.4)' : RP_H.zero};` : '';
-      h += `<td style="${rpHtmlCellStyle(k, r.k)}${zero}"${attrs}>${txt}</td>`;
+      h += `<td style="${rpHtmlCellStyle(k, r.k === 'cf' ? 'ref' : r.k)}${zero}"${attrs}>${txt}</td>`;
     });
     return h + '</tr>';
   };
 
-  const refRows  = t.rows.filter(r => r.k === 'ref').map(rowHtml).join('');
-  const dataRows = t.rows.filter(r => r.k === 'data').map(rowHtml).join('');
-  const footRows = t.rows.filter(r => r.k === 'sum' || r.k === 'avg').map(rowHtml).join('');
+  // rows go out in the order the report builds them, so coalfield totals stay
+  // under their collieries and a pinned month's average stays beside its total
+  const bodyRows = t.rows.map(rowHtml).join('');
 
   // headline figures, read off the summary rows
   const sum = t.rows.find(r => r.k === 'sum');
   const avg = t.rows.filter(r => r.k === 'avg').slice(-1)[0];
   const nData = t.rows.filter(r => r.k === 'data').length;
   const kpis = [];
+  // headline figures read the current month's columns, never a pinned month's
   const pick = (row, kind) => {
     if (!row) return null;
-    const i = t.head.findIndex(h => h.k === kind);
+    let i = t.head.findIndex(h => h.k === kind && h.cur);
+    if (i < 0 && kind === 'on') i = t.head.findIndex(h => h.k === 'on');
     return i >= 0 && row.cells[i] ? row.cells[i].v : null;
   };
   const push = (label, val) => { if (val != null && val !== '') kpis.push([label, typeof val === 'number' ? rpNum(val) : val]); };
   const onLab = (t.head.find(h => h.k === 'on') || {}).t || '';
-  if (t.sheet === 'Power sector') {
+  if (t.sheet === 'Power sector' || t.sheet === 'Sourcewise') {
     push(onLab, pick(sum, 'on'));
     push('Month to date', pick(sum, 'key'));
     push('Avg / day', pick(sum, 'avg'));
-    kpis.push(['Customers', String(nData)]);
+    kpis.push([t.sheet === 'Sourcewise' ? 'Collieries' : 'Customers', String(nData)]);
   } else {
     push('Month to date', pick(sum, 'on'));
     push('Avg / day', pick(avg, 'on'));
@@ -3696,9 +3866,7 @@ function rpHtmlCard(t, idx) {
        ${kpiHtml}
        <div class="scroll"><table class="rpt" cellspacing="0" cellpadding="0" style="border-collapse:collapse;width:100%;">
          ${head}
-         <tbody class="rpt-ref">${refRows}</tbody>
-         <tbody class="rpt-body">${dataRows}</tbody>
-         <tbody class="rpt-foot">${footRows}</tbody>
+         <tbody>${bodyRows}</tbody>
        </table></div>
        <div class="foot">${rpEsc(t.foot || '')}</div>
      </div>`;
@@ -3710,6 +3878,7 @@ function rpBuildHtml() {
   let n = 0;
   const groups = [
     { id: 'p1', label: 'Power Sector', tables: _rpTables.filter(t => t.sheet === 'Power sector') },
+    { id: 'p3', label: 'Sourcewise',   tables: _rpTables.filter(t => t.sheet === 'Sourcewise')   },
     { id: 'p2', label: 'Customer',     tables: _rpTables.filter(t => t.sheet === 'Customer')     },
   ].filter(g => g.tables.length);
 
@@ -3827,10 +3996,10 @@ function rpSheetXml(tables) {
       push(r.cells.map((c, i) => {
         const k = t.head[i] ? t.head[i].k : 'num';
         let s;
-        if (k === 'lead') s = r.k === 'sum' ? RP_S.sumLead : (r.k === 'avg' || r.k === 'ref') ? RP_S.avgLead : RP_S.lead;
+        if (k === 'lead') s = r.k === 'sum' ? RP_S.sumLead : (r.k === 'avg' || r.k === 'ref' || r.k === 'cf') ? RP_S.avgLead : RP_S.lead;
         else if (r.k === 'sum') s = RP_S.sum;
         else if (r.k === 'avg') s = RP_S.avg;
-        else if (r.k === 'ref') s = RP_S.ref;
+        else if (r.k === 'ref' || r.k === 'cf') s = RP_S.ref;
         else if (k === 'avg') s = RP_S.avgCol;
         else if (k === 'on')  s = RP_S.on;
         else if (k === 'key') s = RP_S.key;
@@ -3935,6 +4104,7 @@ async function rpExportXlsx() {
   rpLockBtns(true, 'rpXlsBtn', 'Building…');
   try {
     const t1 = _rpTables.filter(t => t.sheet === 'Power sector');
+    const t3 = _rpTables.filter(t => t.sheet === 'Sourcewise');
     const t2 = _rpTables.filter(t => t.sheet === 'Customer');
     const enc = new TextEncoder();
     const files = {
@@ -3945,6 +4115,7 @@ async function rpExportXlsx() {
         '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
         '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
         '<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+        '<Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
         '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
         '</Types>'),
       '_rels/.rels': enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
@@ -3955,6 +4126,7 @@ async function rpExportXlsx() {
         '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ' +
         'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' +
         '<sheet name="Power Sector" sheetId="1" r:id="rId1"/>' +
+        '<sheet name="Sourcewise" sheetId="3" r:id="rId4"/>' +
         '<sheet name="Customer" sheetId="2" r:id="rId2"/>' +
         '</sheets></workbook>'),
       'xl/_rels/workbook.xml.rels': enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
@@ -3962,10 +4134,12 @@ async function rpExportXlsx() {
         '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' +
         '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>' +
         '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+        '<Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet3.xml"/>' +
         '</Relationships>'),
       'xl/styles.xml': enc.encode(rpStylesXml()),
       'xl/worksheets/sheet1.xml': enc.encode(rpSheetXml(t1)),
       'xl/worksheets/sheet2.xml': enc.encode(rpSheetXml(t2)),
+      'xl/worksheets/sheet3.xml': enc.encode(rpSheetXml(t3)),
     };
     const blob = _buildZip(files);
     const fname = `Road_Power_Report_${rpStamp()}.xlsx`;
@@ -4358,7 +4532,7 @@ loadDbFromGitHub();
       <div class="stt-section">
         <div class="rp-list-wrap"><div class="rp-scroll" id="rpDaysList" style="max-height:400px;"></div></div>
         <div class="stt-hint" style="margin-top:6px;">
-          <strong>☆ Show</strong> puts that month's Total and Avg / day into the Customer report as comparison rows — pin as many as you like.
+          <strong>☆ Show</strong> puts that month's Total and Avg / day into the reports for comparison — pin as many as you like.
           The tick boxes are for selecting days to total or clear; clearing a day removes its figures from both reports, and you put it back by loading that day's despatch file and saving it again.
         </div>
       </div>
