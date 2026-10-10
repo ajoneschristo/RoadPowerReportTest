@@ -941,6 +941,7 @@ body.dark .rp-card {
 }
 /* snapshots always render light, whatever the app theme is */
 .rp-light .rp-card, .rp-light .rp-card * { color-scheme: light; }
+.rp-nopseudo::before, .rp-nopseudo::after { content: none !important; }
 .rp-light .rp-card {
   --paper:#f5f7f9; --ink:#151a21; --ash:#ccd4dd; --ash-soft:#e6ebf0;
   --mute:#74808e; --live:#b8620a; --live-bar:rgba(217,122,6,.17);
@@ -1235,6 +1236,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 .rp-mode span { display:block; font-size:10px; color:var(--dim); margin-top:3px; line-height:1.45; }
 .rp-mode.on { border-color:#d97a06; background:rgba(217,122,6,.08); }
 .rp-mode.on b { color:#d97a06; }
+.rp-pdfsz { font-style:normal; font-weight:500; font-family:var(--mono); font-size:10px; color:var(--dim); margin-left:4px; }
 .rp-monthpick { display:flex; flex-wrap:wrap; gap:6px; }
 .rp-mchip {
   padding:6px 10px; border-radius:7px; cursor:pointer; white-space:nowrap;
@@ -1302,7 +1304,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B28-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B31-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1476,13 +1478,31 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
           <label class="stt-label">PDF</label>
         </div>
         <div class="rp-modes">
-          <button class="rp-mode" id="rpPdfStd" onclick="rpSetPdfMode('image')">
-            <b>Standard</b><span>A picture of each report exactly as it looks on screen.</span>
+          <button class="rp-mode" id="rpPdfM_image" onclick="rpSetPdfMode('image')">
+            <b>Image <em class="rp-pdfsz" id="rpPdfSz_image"></em></b><span>A picture of each report, exactly as the app shows it. The largest file, and the figures can't be searched or copied.</span>
           </button>
-          <button class="rp-mode" id="rpPdfLight" onclick="rpSetPdfMode('light')">
-            <b>Light</b><span>Drawn as text instead of pictures — a much smaller file, sharp at any zoom, and the figures can be searched and copied.</span>
+          <button class="rp-mode" id="rpPdfM_render" onclick="rpSetPdfMode('render')">
+            <b>Rendered</b><span>Drawn as text and lines — far smaller, sharp at any zoom, and the figures can be searched and copied.</span>
           </button>
         </div>
+        <div id="rpPdfLevels" style="margin-top:10px;">
+          <div class="stt-hint" style="margin:0 0 6px;">Rendered detail</div>
+          <div class="rp-modes">
+            <button class="rp-mode" id="rpPdf_light" onclick="rpSetPdfLevel('light')">
+              <b>Light <em class="rp-pdfsz" id="rpPdfSz_light"></em></b><span>The figures only, in black and white with hairline rules. Smallest, and prints cleanly on any printer.</span>
+            </button>
+            <button class="rp-mode" id="rpPdf_standard" onclick="rpSetPdfLevel('standard')">
+              <b>Standard <em class="rp-pdfsz" id="rpPdfSz_standard"></em></b><span>The app's colours, bands and coalfield totals, in the PDF's standard fonts.</span>
+            </button>
+            <button class="rp-mode" id="rpPdf_high" onclick="rpSetPdfLevel('high')">
+              <b>High <em class="rp-pdfsz" id="rpPdfSz_high"></em></b><span>Looks like the Image PDF — the same layout, colours and IBM Plex fonts as the app — at a fraction of the size.</span>
+            </button>
+          </div>
+          <div class="stt-hint" style="margin-top:6px;">
+            High fetches the app's fonts the first time it's used; without a connection it falls back to the PDF's standard fonts.
+          </div>
+        </div>
+        <div class="stt-hint" style="margin-top:6px;">Sizes are for the reports you'd export right now.</div>
       </div>
 
       <div class="stt-section">
@@ -2090,7 +2110,7 @@ function openRpSettings() {
   }));
   _rpDraft = { historyPath: pr.historyPath || 'roadpower-history-test.json', sel: {},
                show: shDef, reports: rpReportList(pr.reports), exportReports: rpExportList(pr),
-               pdfMode: pr.pdfMode === 'light' ? 'light' : 'image' };
+               pdfLevel: rpPdfLevel(pr), pdfMode: rpPdfMode(pr) };
   (pr.parties || []).forEach(p => {
     const codes = rpCodesOf(p);
     _rpDraft.sel[codes[0]] = {
@@ -2110,7 +2130,9 @@ function openRpSettings() {
   document.getElementById('rpChipSel').classList.remove('on');
   rpBuildPartyIndex(true);
   renderRpReportLists();
+  rpSetPdfLevel(_rpDraft.pdfLevel);
   rpSetPdfMode(_rpDraft.pdfMode);
+  rpPdfEstimate();
   renderRpShowGrids();
   renderRpParties();
   renderRpR2();
@@ -2397,10 +2419,32 @@ function renderRpReportList(kind) {
   });
 }
 
+function rpSetPdfLevel(level) {
+  _rpDraft.pdfLevel = RP_PDF_LEVELS.indexOf(level) >= 0 ? level : 'standard';
+  RP_PDF_LEVELS.forEach(l => document.getElementById('rpPdf_' + l).classList.toggle('on', _rpDraft.pdfLevel === l));
+}
+
 function rpSetPdfMode(mode) {
-  _rpDraft.pdfMode = mode === 'light' ? 'light' : 'image';
-  document.getElementById('rpPdfStd').classList.toggle('on', _rpDraft.pdfMode === 'image');
-  document.getElementById('rpPdfLight').classList.toggle('on', _rpDraft.pdfMode === 'light');
+  _rpDraft.pdfMode = mode === 'image' ? 'image' : 'render';
+  ['image', 'render'].forEach(m => document.getElementById('rpPdfM_' + m).classList.toggle('on', _rpDraft.pdfMode === m));
+  document.getElementById('rpPdfLevels').style.display = _rpDraft.pdfMode === 'render' ? '' : 'none';
+}
+
+// what each kind would weigh for the reports as they stand
+async function rpPdfEstimate() {
+  const tables = rpExportTables();
+  const kb = b => '≈ ' + (b < 1024 * 1024 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1048576).toFixed(1) + ' MB');
+  const img = document.getElementById('rpPdfSz_image');
+  if (img) { try { img.textContent = tables.length ? kb(rpImageEstimate()) : ''; } catch (_) { img.textContent = ''; } }
+  for (const l of RP_PDF_LEVELS) {
+    const el = document.getElementById('rpPdfSz_' + l);
+    if (!el) continue;
+    if (!tables.length) { el.textContent = ''; continue; }
+    try {
+      const b = await rpBuildReportPdf(tables, l);
+      el.textContent = b ? kb(b.size) : '';
+    } catch (_) { el.textContent = ''; }
+  }
 }
 
 function rpExportsMatchApp() {
@@ -2562,6 +2606,7 @@ async function saveRpSettings() {
     reports:       _rpDraft.reports.map(r => ({ id: r.id, show: r.show })),
     exportReports: _rpDraft.exportReports.map(r => ({ id: r.id, show: r.show })),
     pdfMode:       _rpDraft.pdfMode,
+    pdfLevel:      _rpDraft.pdfLevel,
     parties,
   } });
 
@@ -3253,6 +3298,7 @@ function rpTableHTML(t) {
 function rpCard(t) {
   const card = document.createElement('div');
   card.className = 'rp-card';
+  card._rpT = t;
   card.innerHTML =
     `<div class="rp-cap"><h3>${rpEsc(t.title)}</h3><div class="rp-cap-meta">${t.metaHtml || rpEsc(t.meta || '')}</div></div>
      <div class="rp-scrollx"><table class="rp-t">${rpTableHTML(t)}</table></div>
@@ -3862,38 +3908,443 @@ async function rpShareOrSave(blob, fname, type, title, onBlocked) {
   rpSetStatus(`Saved ${fname} to Downloads.`, false);
 }
 
-// ── every report card, rendered off-screen in the light palette ────────
-async function rpSnapCards(onProgress) {
+// ── PDF ────────────────────────────────────────────────────────────────
+// Light and Standard are drawn from the same table model the app renders, as
+// text and lines in the PDF's built-in Helvetica and Courier — no fonts are
+// embedded, and the page streams are deflate-compressed when the browser can.
+// Helvetica and Helvetica-Bold advance widths for characters 32–126 (1/1000 em)
+const RP_PDF_W = {
+  H:  [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,
+       1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,
+       333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584],
+  HB: [278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,
+       975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,
+       333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584],
+};
+// characters outside ASCII that the PDF's WinAnsi encoding can show, with widths
+const RP_PDF_WIN = { '·': 0xB7, '—': 0x97, '–': 0x96, '…': 0x85, '×': 0xD7, '‘': 0x91, '’': 0x92,
+                     '“': 0x93, '”': 0x94, '•': 0x95, '°': 0xB0 };
+const RP_PDF_WX = {
+  H:  { 0xB7: 278, 0x97: 1000, 0x96: 556, 0x85: 1000, 0xD7: 584, 0x91: 222, 0x92: 222, 0x93: 333, 0x94: 333, 0x95: 350, 0xB0: 400 },
+  HB: { 0xB7: 278, 0x97: 1000, 0x96: 556, 0x85: 1000, 0xD7: 584, 0x91: 278, 0x92: 278, 0x93: 500, 0x94: 500, 0x95: 350, 0xB0: 400 },
+};
+const RP_PDF_FONT = { H: '/F1', HB: '/F2', C: '/F3', CB: '/F4' };
+
+const RP_PDF_C = (() => {
+  const hex = h => [1, 3, 5].map(i => (parseInt(h.slice(i, i + 2), 16) / 255).toFixed(3)).join(' ');
+  return {
+    paper: hex('#f5f7f9'), ink: hex('#151a21'), ash: hex('#ccd4dd'), soft: hex('#e6ebf0'),
+    mute: hex('#74808e'), live: hex('#b8620a'), avg: hex('#123a8a'), zero: hex('#a9b3be'),
+    band: hex('#212a35'), bandInk: hex('#f5f7f9'), liveBand: hex('#f5a742'), avgBand: hex('#9cc4ff'),
+    subBand: hex('#a7abb0'), zeroBand: hex('#6d737b'), cf: hex('#d3dde8'), cfRule: hex('#4a5a6d'),
+    onW: 1.6, capRule: 1.4,
+  };
+})();
+// black and white: no fills at all, so it prints cleanly on anything
+const RP_PDF_MONO = (() => {
+  const g = v => `${v} ${v} ${v}`;
+  return {
+    paper: null, ink: g(0), ash: g('0.740'), soft: null, mute: g('0.380'), live: g(0), avg: g(0),
+    zero: g('0.600'), band: null, bandInk: g(0), liveBand: g(0), avgBand: g(0), subBand: g('0.380'),
+    zeroBand: g('0.600'), cf: null, cfRule: g(0), onW: 0.9, capRule: 1,
+  };
+})();
+
+function rpPdfEnc(s) {
+  let str = '';
+  const codes = [];
+  for (const ch of String(s == null ? '' : s)) {
+    const c = ch.charCodeAt(0);
+    if (c >= 32 && c <= 126) {
+      codes.push(c);
+      str += (ch === '(' || ch === ')' || ch === '\\') ? '\\' + ch : ch;
+    } else {
+      const w = RP_PDF_WIN[ch] || 63;
+      codes.push(w);
+      str += w === 63 ? '?' : '\\' + w.toString(8).padStart(3, '0');
+    }
+  }
+  return { str, codes };
+}
+function rpPdfWidth(s, font, size, tc) {
+  const { codes } = rpPdfEnc(s);
+  let w = 0;
+  for (const c of codes) {
+    if (font === 'C' || font === 'CB') w += 600;
+    else if (c >= 32 && c <= 126) w += RP_PDF_W[font][c - 32];
+    else w += RP_PDF_WX[font][c] || 556;
+  }
+  return w / 1000 * size + (tc || 0) * codes.length;
+}
+function rpPdfTxt(c) {
+  if (typeof c.v === 'number' && isFinite(c.v)) return Math.round(c.v) === 0 ? '·' : rpNum(c.v);
+  return String(c.v == null ? '' : c.v);
+}
+
+// how one body cell looks, mirroring the app's theme
+function rpPdfCellStyle(col, row, zero, C) {
+  C = C || RP_PDF_C;
+  let st;
+  if (col === 'lead') {
+    st = row === 'data' ? { font: 'H', size: 8, color: C.ink }
+       : { font: 'HB', size: 7.2, tc: 0.35, upper: true,
+           color: row === 'sum' ? C.bandInk : row === 'avg' ? C.avg : C.ink };
+  } else {
+    const bold = row !== 'data' || col === 'on' || col === 'key' || col === 'avg';
+    st = { font: bold ? 'CB' : 'C', size: (col === 'day' && row === 'data') ? 7.4 : 8, color: C.ink };
+    if (row === 'sum') st.color = col === 'on' ? C.liveBand : col === 'avg' ? C.avgBand : col === 'sub' ? C.subBand : C.bandInk;
+    else if (row === 'avg') st.color = col === 'sub' ? C.mute : C.avg;
+    else if (col === 'on') st.color = C.live;
+    else if (col === 'avg') st.color = C.avg;
+    else if (col === 'sub' || (col === 'day' && row === 'data')) st.color = C.mute;
+    if (zero) st.color = row === 'sum' ? C.zeroBand : C.zero;
+  }
+  st.bg = row === 'sum' ? C.band : row === 'cf' ? C.cf : (row === 'avg' || row === 'ref') ? C.soft : null;
+  return st;
+}
+const RP_PDF_HEAD = { font: 'HB', size: 6.4, tc: 0.5 };
+
+// Drawing helpers in top-down coordinates for a page of known height.
+function rpPdfCtx(pageH, M) {
+  const ops = [];
+  const Y = y => (pageH - y).toFixed(2);
+  const ctx = {
+    ops,
+    fill(x, y, w, h, col) { if (col) ops.push(`${col} rg ${(M + x).toFixed(2)} ${Y(y + h)} ${w.toFixed(2)} ${h.toFixed(2)} re f`); },
+    rect(x, y, w, h, col, wd) { ops.push(`${col} RG ${wd} w ${(M + x).toFixed(2)} ${Y(y + h)} ${w.toFixed(2)} ${h.toFixed(2)} re S`); },
+    line(x1, y1, x2, y2, col, wd, dash) {
+      ops.push(`${col} RG ${wd} w ${dash ? '[2 1.6] 0 d ' : ''}${(M + x1).toFixed(2)} ${Y(y1)} m ${(M + x2).toFixed(2)} ${Y(y2)} l S${dash ? ' [] 0 d' : ''}`);
+    },
+    text(s, x, yBase, font, size, col, tc) {
+      const e = rpPdfEnc(s);
+      ops.push(`BT ${RP_PDF_FONT[font]} ${size} Tf ${col} rg ${tc ? tc + ' Tc ' : ''}${(M + x).toFixed(2)} ${Y(yBase)} Td (${e.str}) Tj${tc ? ' 0 Tc' : ''} ET`);
+    },
+    // fit text into a box: left, right or centred, trimmed with … if it overflows
+    fit(s, x, w, yTop, h, st, align, pad, inset) {
+      const room = w - pad * 2 - (inset || 0);
+      let str = String(s);
+      if (rpPdfWidth(str, st.font, st.size, st.tc) > room) {
+        while (str.length > 1 && rpPdfWidth(str + '…', st.font, st.size, st.tc) > room) str = str.slice(0, -1);
+        str += '…';
+      }
+      const tw = rpPdfWidth(str, st.font, st.size, st.tc);
+      const tx = align === 'right' ? x + w - pad - tw : align === 'center' ? x + (w - tw) / 2 : x + pad + (inset || 0);
+      ctx.text(str, tx, yTop + h / 2 + st.size * 0.35, st.font, st.size, st.color, st.tc);
+    },
+  };
+  return ctx;
+}
+
+// one report table → one page
+//   opt.mono   black and white, hairlines only (Light)
+function rpPdfPage(t, opt) {
+  opt = opt || {};
+  const C = opt.mono ? RP_PDF_MONO : RP_PDF_C;
+  const M = 16, PAD = 5, GH = 14, HH = 17, RH = 14, LEADMAX = 210, CAP = 34;
+  const ncol = t.head.length;
+  const W = new Array(ncol).fill(0);
+  const isZero = c => typeof c.v === 'number' && isFinite(c.v) && Math.round(c.v) === 0;
+
+  // column widths from the widest thing each has to hold
+  t.head.forEach((h, i) => { W[i] = rpPdfWidth(String(h.t).toUpperCase(), 'HB', RP_PDF_HEAD.size, RP_PDF_HEAD.tc); });
+  t.rows.forEach(r => r.cells.forEach((c, i) => {
+    const st = rpPdfCellStyle((t.head[i] || {}).k || 'num', r.k, isZero(c), C);
+    const s = st.upper ? rpPdfTxt(c).toUpperCase() : rpPdfTxt(c);
+    W[i] = Math.max(W[i], rpPdfWidth(s, st.font, st.size, st.tc) + (r.ind && i === 0 ? 10 : 0));
+  }));
+  W[0] = Math.min(W[0], LEADMAX);
+  for (let i = 0; i < ncol; i++) W[i] = Math.ceil(W[i] + PAD * 2);
+  // a grouping heading wider than the columns under it widens the last of them
+  if (t.groups) {
+    let at = 0;
+    t.groups.forEach(g => {
+      const need = rpPdfWidth(String(g.t).toUpperCase(), 'HB', 6.6, 0.6) + PAD * 2;
+      const have = W.slice(at, at + g.span).reduce((a, b) => a + b, 0);
+      if (need > have) W[at + g.span - 1] += Math.ceil(need - have);
+      at += g.span;
+    });
+  }
+  const X = [0];
+  W.forEach((w, i) => X.push(X[i] + w));
+  const TW = X[ncol];
+
+  const title = String(t.title).toUpperCase();
+  const contentW = Math.ceil(Math.max(TW, rpPdfWidth(title, 'HB', 10.5, 1), rpPdfWidth(t.meta || '', 'C', 6.6)));
+  const pageW = contentW + M * 2;
+  const bodyH = (t.groups ? GH : 0) + HH + t.rows.length * RH;
+  const pageH = Math.ceil(M + CAP + bodyH + (t.foot ? 16 : 6) + M);
+  const g = rpPdfCtx(pageH, M);
+  const box = (x, y, w, h) => { if (!opt.mono) g.rect(x, y, w, h, C.ash, 0.5); };
+
+  // ── caption ──
+  if (C.paper) g.ops.push(`${C.paper} rg 0 0 ${pageW} ${pageH} re f`);
+  g.text(title, 0, M + 12, 'HB', 10.5, C.ink, 1);
+  g.text(t.meta || '', 0, M + 24, 'C', 6.6, C.mute);
+  const tableTop = M + CAP;
+  let y = tableTop;
+  g.line(0, y - 1, TW, y - 1, C.ink, C.capRule);
+
+  // ── grouping row ──
+  const groupEdges = [];
+  if (t.groups) {
+    let at = 0;
+    t.groups.forEach(gr => {
+      const x = X[at], w = X[at + gr.span] - x;
+      const labelled = !gr.k && gr.t;
+      g.fill(x, y, w, GH, labelled ? C.soft : C.paper);
+      box(x, y, w, GH);
+      if (gr.k === 'note') g.fit(String(gr.t), x, w, y, GH, { font: 'C', size: 6, color: C.mute }, 'left', PAD);
+      else if (gr.t) g.fit(String(gr.t).toUpperCase(), x, w, y, GH,
+        { font: 'HB', size: 6.6, tc: 0.6, color: gr.k === 'on' ? C.live : C.ink }, 'center', PAD);
+      if (labelled) g.line(x + 1, y + GH, x + w - 1, y + GH, C.ink, opt.mono ? 0.8 : 1.2);
+      groupEdges.push(X[at + gr.span]);
+      at += gr.span;
+    });
+    y += GH;
+  }
+  // ── column headings ──
+  const headTop = y;
+  t.head.forEach((h, i) => {
+    g.fill(X[i], y, W[i], HH, C.paper);
+    box(X[i], y, W[i], HH);
+    g.fit(String(h.t).toUpperCase(), X[i], W[i], y, HH,
+      Object.assign({}, RP_PDF_HEAD, { color: h.k === 'on' ? C.live : h.k === 'avg' ? C.avg : C.mute }),
+      h.k === 'lead' ? 'left' : 'right', PAD);
+  });
+  y += HH;
+
+  // ── body ──
+  const rowTops = [];
+  t.rows.forEach(r => {
+    rowTops.push({ y, k: r.k });
+    r.cells.forEach((c, i) => {
+      const k = (t.head[i] || {}).k || 'num';
+      const st = rpPdfCellStyle(k, r.k, isZero(c), C);
+      g.fill(X[i], y, W[i], RH, st.bg);
+      box(X[i], y, W[i], RH);
+      const s = st.upper ? rpPdfTxt(c).toUpperCase() : rpPdfTxt(c);
+      g.fit(s, X[i], W[i], y, RH, st, k === 'lead' ? 'left' : 'right', PAD, (r.ind && k === 'lead') ? 10 : 0);
+      if (r.ind && k === 'lead') g.line(PAD + 3, y + RH / 2, PAD + 7, y + RH / 2, C.mute, 0.6);
+    });
+    y += RH;
+  });
+  const tableEnd = y;
+
+  // black and white: hairlines instead of filled cells
+  if (opt.mono) {
+    rowTops.forEach(r => g.line(0, r.y, TW, r.y, C.ash, 0.3));
+    for (let i = 1; i < ncol; i++) g.line(X[i], headTop, X[i], tableEnd, C.ash, 0.3);
+    groupEdges.slice(0, -1).forEach(x => g.line(x, tableTop, x, headTop, C.ash, 0.3));
+    g.line(0, headTop + HH, TW, headTop + HH, C.ink, 0.8);
+    rowTops.forEach(r => { if (r.k === 'sum') { g.line(0, r.y, TW, r.y, C.ink, 0.9); g.line(0, r.y + RH, TW, r.y + RH, C.ink, 0.9); } });
+    g.rect(0, tableTop, TW, tableEnd - tableTop, C.ink, 0.6);
+  }
+  rowTops.forEach(r => { if (r.k === 'cf') g.line(0, r.y, TW, r.y, C.cfRule, opt.mono ? 0.9 : 1.5); });
+
+  // column accents drawn over the grid: on-date rule, dashed roll-up columns
+  t.head.forEach((h, i) => {
+    if (h.k === 'on')  g.line(X[i], tableTop, X[i], tableEnd, C.live, C.onW);
+    if (h.k === 'sub') g.line(X[i], tableTop, X[i], tableEnd, C.mute, 0.7, true);
+  });
+  if (t.foot) g.text(t.foot, 0, tableEnd + 12, 'C', 6.4, C.mute);
+
+  return { w: pageW, h: pageH, content: g.ops.join('\n') + '\n' };
+}
+
+
+
+
+
+// Bookmarks and document properties are PDF text strings, which don't use
+// the page fonts' encoding — write them as UTF-16 so dashes and dots survive.
+function rpPdfUtf16(s) {
+  let h = '<FEFF';
+  for (const ch of String(s == null ? '' : s)) {
+    const cp = ch.codePointAt(0);
+    if (cp > 0xFFFF) { const v = cp - 0x10000; h += ((0xD800 + (v >> 10)).toString(16) + (0xDC00 + (v & 0x3FF)).toString(16)).toUpperCase(); }
+    else h += cp.toString(16).padStart(4, '0').toUpperCase();
+  }
+  return h + '>';
+}
+
+async function rpDeflate(u8) {
+  try {
+    if (typeof CompressionStream === 'undefined') return null;
+    const stream = new Blob([u8]).stream().pipeThrough(new CompressionStream('deflate'));
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  } catch (_) { return null; }
+}
+
+// pages: [{ w, h, content, title }]; outline adds bookmarks, one per page.
+// meta.extra adds objects after the standard ones — { key, body } or
+// { key, stream, dict } — where @key@ in a body becomes a reference, and
+// meta.res names them in every page's resources: { Font: { '/P1': key }, … }
+async function rpWritePdf(pages, meta) {
+  meta = meta || {};
+  const enc = new TextEncoder();
+  const data = [];
+  for (const p of pages) {
+    const raw = enc.encode(p.content);
+    const z = await rpDeflate(raw);
+    data.push({ bytes: z || raw, flate: !!z });
+  }
+  const chunks = [];
+  let len = 0;
+  const push = u8 => { chunks.push(u8); len += u8.length; };
+  const pushStr = s => push(enc.encode(s));
+  const objs = [];
+  const obj = (n, body) => { objs[n] = len; pushStr(`${n} 0 obj\n${body}\nendobj\n`); };
+
+  const N = pages.length, outline = !!meta.outline;
+  const base = outline ? 8 : 7;
+  const pageId = i => base + i * 2, contId = i => base + i * 2 + 1;
+  const itemId = i => base + N * 2 + i;
+  const maxObj = base - 1 + N * 2 + (outline ? N : 0);
+  const extra = meta.extra || [], xid = {};
+  extra.forEach((o, i) => { xid[o.key] = maxObj + 1 + i; });
+  const ref = s => s.replace(/@(\w+)@/g, (_, k) => `${xid[k]} 0 R`);
+  const names = d => Object.keys(d || {}).map(nm => ` ${nm} ${xid[d[nm]]} 0 R`).join('');
+  const resX = meta.res || {};
+  const moreRes = ['ExtGState', 'Shading'].map(t => names(resX[t]) ? ` /${t} <<${names(resX[t])} >>` : '').join('');
+  const lastObj = maxObj + extra.length;
+
+  pushStr('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+  obj(1, `<< /Type /Catalog /Pages 2 0 R${outline ? ' /Outlines 7 0 R /PageMode /UseOutlines' : ''} >>`);
+  obj(2, `<< /Type /Pages /Count ${N} /Kids [ ${pages.map((_, i) => pageId(i) + ' 0 R').join(' ')} ] >>`);
+  [['Helvetica', 3], ['Helvetica-Bold', 4], ['Courier', 5], ['Courier-Bold', 6]].forEach(([f, n]) =>
+    obj(n, `<< /Type /Font /Subtype /Type1 /BaseFont /${f} /Encoding /WinAnsiEncoding >>`));
+  if (outline) obj(7, `<< /Type /Outlines /First ${itemId(0)} 0 R /Last ${itemId(N - 1)} 0 R /Count ${N} >>`);
+  pages.forEach((p, i) => {
+    obj(pageId(i), `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${p.w} ${p.h}] ` +
+      `/Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R${names(resX.Font)} >>${moreRes} >> /Contents ${contId(i)} 0 R >>`);
+    objs[contId(i)] = len;
+    pushStr(`${contId(i)} 0 obj\n<< /Length ${data[i].bytes.length}${data[i].flate ? ' /Filter /FlateDecode' : ''} >>\nstream\n`);
+    push(data[i].bytes);
+    pushStr('\nendstream\nendobj\n');
+  });
+  if (outline) pages.forEach((p, i) => {
+    obj(itemId(i), `<< /Title ${rpPdfUtf16(p.title || 'Page ' + (i + 1))} /Parent 7 0 R ` +
+      `/Dest [${pageId(i)} 0 R /XYZ 0 ${p.h} 0]` +
+      `${i > 0 ? ` /Prev ${itemId(i - 1)} 0 R` : ''}${i < N - 1 ? ` /Next ${itemId(i + 1)} 0 R` : ''} >>`);
+  });
+  for (const o of extra) {
+    if (!o.stream) { obj(xid[o.key], ref(o.body)); continue; }
+    const z = await rpDeflate(o.stream);
+    const bytes = z || o.stream;
+    objs[xid[o.key]] = len;
+    pushStr(`${xid[o.key]} 0 obj\n<< ${o.dict || ''}/Length ${bytes.length}${z ? ' /Filter /FlateDecode' : ''} >>\nstream\n`);
+    push(bytes);
+    pushStr('\nendstream\nendobj\n');
+  }
+
+  const d = new Date(), pad = n => String(n).padStart(2, '0');
+  const stamp = `D:${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  const xrefAt = len;
+  pushStr(`xref\n0 ${lastObj + 1}\n0000000000 65535 f \n`);
+  for (let n = 1; n <= lastObj; n++) pushStr(String(objs[n]).padStart(10, '0') + ' 00000 n \n');
+  pushStr(`trailer\n<< /Size ${lastObj + 1} /Root 1 0 R /Info << /Title ${rpPdfUtf16(meta.title || '')}` +
+          `${meta.subject ? ` /Subject ${rpPdfUtf16(meta.subject)}` : ''} /Creator (Road Power Report) /CreationDate (${stamp}) >> >>\n` +
+          `startxref\n${xrefAt}\n%%EOF\n`);
+  const out = new Uint8Array(len);
+  let at = 0;
+  for (const c of chunks) { out.set(c, at); at += c.length; }
+  return new Blob([out], { type: 'application/pdf' });
+}
+
+// How the PDF is made:
+//   image   – each report card photographed and placed on a page as a picture
+//   render  – drawn as text and lines, at one of three levels:
+//     light    – the figures in black and white with hairline rules
+//     standard – the app's colours, bands and coalfield styling
+//     high     – the cards traced as the app lays them out, in the app's own
+//                fonts, so it looks like the image PDF at a fraction of the size
+const RP_PDF_LEVELS = ['light', 'standard', 'high'];
+function rpPdfLevel(pr) {
+  const v = (pr || appSettings.powerReport || {}).pdfLevel;
+  return RP_PDF_LEVELS.indexOf(v) >= 0 ? v : 'standard';
+}
+// older builds stored 'light' here for the drawn PDF
+function rpPdfMode(pr) {
+  return (pr || appSettings.powerReport || {}).pdfMode === 'image' ? 'image' : 'render';
+}
+
+async function rpBuildReportPdf(tables, level) {
+  if (level === 'high') return rpBuildHighPdf();
+  const opt = { mono: level === 'light' };
+  const md = rpMonthData();
+  const asOf = md ? `${md.monLabel} · as on ${rpOnLabel(md)}` : '';
+  const pages = tables.map(t => rpPdfPage(t, opt));
+  return rpWritePdf(pages, { title: 'Road Power Report', subject: asOf });
+}
+
+async function rpExportPdf() {
+  if (_rpBusy) return;
+  const tables = rpExportTables();
+  if (!tables.length) { alert('Nothing to export yet — the reports are empty.'); return; }
+  const image = rpPdfMode() === 'image';
+  rpLockBtns(true, 'rpPdfBtn', image ? 'Rendering…' : 'Building…');
+  try {
+    const blob = image ? await rpBuildImagePdf((i, n) => rpProgress('rpPdfBtn', `Page ${i}/${n}…`))
+                       : await rpBuildReportPdf(tables, rpPdfLevel());
+    if (!blob) { alert('Nothing to export yet — the reports are empty.'); return; }
+    await rpShareOrSave(blob, `Road_Power_Report_${rpStamp()}.pdf`, 'application/pdf', 'Road Power Report');
+  } catch(e) {
+    rpSetStatus('Could not build the PDF: ' + e.message, true);
+    alert('Could not build the PDF: ' + e.message);
+  } finally {
+    rpLockBtns(false);
+  }
+}
+
+// every report card the exports include, in export order
+function rpExportCards() {
   const cards = [];
-  rpExportReports().map(i => 'rpPane' + i).forEach(id => {
-    document.getElementById(id).querySelectorAll('.rp-card').forEach(c => {
+  rpExportReports().forEach(id => {
+    document.getElementById('rpPane' + id).querySelectorAll('.rp-card').forEach(c => {
       if (c.querySelector('.rp-t')) cards.push(c);
     });
   });
-  if (!cards.length) return [];
+  return cards;
+}
 
+// a light-palette copy of one card, laid out full width off-screen — what the
+// image PDF photographs and the high PDF traces
+function rpSnapHolder(card) {
+  const holder = document.createElement('div');
+  holder.className = 'rp-light';
+  holder.style.cssText = 'position:fixed;left:-10000px;top:0;background:#f5f7f9;padding:20px;display:inline-block;';
+  const c = card.cloneNode(true);
+  c.querySelectorAll('.rp-lead').forEach(el => { el.style.position = 'static'; });
+  c.querySelectorAll('.rp-nm').forEach(el => { el.style.maxWidth = 'none'; });
+  const sx = c.querySelector('.rp-scrollx');
+  if (sx) sx.style.overflow = 'visible';
+  holder.appendChild(c);
+  document.body.appendChild(holder);
+  return holder;
+}
+
+// a page of W×H CSS px at ¾ pt per px, scaled down to fit 1500 × 2000 pt
+function rpPageScale(w, h) {
+  let s = 0.75;
+  if (w * s > 1500) s = 1500 / w;
+  if (h * s > 2000) s = 2000 / h;
+  return s;
+}
+
+// ── Image PDF ──────────────────────────────────────────────────────────
+async function rpSnapCards(onProgress) {
+  const cards = rpExportCards();
   const shots = [];
   for (let i = 0; i < cards.length; i++) {
     if (onProgress) onProgress(i + 1, cards.length);
-    const holder = document.createElement('div');
-    holder.className = 'rp-light';
-    holder.style.cssText = 'position:fixed;left:-10000px;top:0;background:#f5f7f9;padding:20px;display:inline-block;';
-    const c = cards[i].cloneNode(true);
-    c.querySelectorAll('.rp-lead').forEach(el => { el.style.position = 'static'; });
-    c.querySelectorAll('.rp-nm').forEach(el => { el.style.maxWidth = 'none'; });
-    const sx = c.querySelector('.rp-scrollx');
-    if (sx) sx.style.overflow = 'visible';
-    holder.appendChild(c);
-    document.body.appendChild(holder);
+    const holder = rpSnapHolder(cards[i]);
     try {
-      const canvas = await html2canvas(holder, { backgroundColor: '#f5f7f9', scale: 2, useCORS: true, logging: false });
-      shots.push(canvas);
+      shots.push(await html2canvas(holder, { backgroundColor: '#f5f7f9', scale: 2, useCORS: true, logging: false }));
     } finally { holder.remove(); }
   }
   return shots;
 }
 
-// ── PDF ────────────────────────────────────────────────────────────────
 function rpJpegBytes(canvas, q) {
   const b64 = canvas.toDataURL('image/jpeg', q == null ? 0.92 : q).split(',')[1];
   const bin = atob(b64);
@@ -3902,7 +4353,19 @@ function rpJpegBytes(canvas, q) {
   return out;
 }
 
-function rpBuildPdf(pages, title) {
+async function rpBuildImagePdf(onProgress) {
+  if (typeof html2canvas === 'undefined') throw new Error('the picture library did not load — check the connection');
+  const shots = await rpSnapCards(onProgress);
+  if (!shots.length) return null;
+  const pages = shots.map(cv => {
+    const s = rpPageScale(cv.width / 2, cv.height / 2);
+    return { w: Math.round(cv.width / 2 * s), h: Math.round(cv.height / 2 * s), pw: cv.width, ph: cv.height, jpeg: rpJpegBytes(cv) };
+  });
+  if (onProgress) rpProgress('rpPdfBtn', 'Building…');
+  return rpWriteImagePdf(pages, 'Road Power Report');
+}
+
+function rpWriteImagePdf(pages, title) {
   const enc = new TextEncoder();
   const chunks = [];
   let len = 0;
@@ -3955,7 +4418,7 @@ function rpBuildPdf(pages, title) {
   for (let n = 1; n <= maxObj; n++) {
     pushStr(String(objs[n]).padStart(10, '0') + ' 00000 n \n');
   }
-  pushStr(`trailer\n<< /Size ${maxObj + 1} /Root 1 0 R /Info << /Title (${String(title||'').replace(/[()\\]/g,'')}) >> >>\n` +
+  pushStr(`trailer\n<< /Size ${maxObj + 1} /Root 1 0 R /Info << /Title ${rpPdfUtf16(title || '')} >> >>\n` +
           `startxref\n${xrefAt}\n%%EOF\n`);
 
   const out = new Uint8Array(len);
@@ -3964,307 +4427,553 @@ function rpBuildPdf(pages, title) {
   return new Blob([out], { type: 'application/pdf' });
 }
 
-async function rpExportPdf() {
-  if (_rpBusy) return;
-  if (!_rpTables.length) { alert('Nothing to export yet — the reports are empty.'); return; }
-  if ((appSettings.powerReport || {}).pdfMode === 'light') return rpExportLightPdf();
-  rpLockBtns(true, 'rpPdfBtn', 'Rendering…');
-  try {
-    const shots = await rpSnapCards((i,n) => rpProgress('rpPdfBtn', `Page ${i}/${n}…`));
-    if (!shots.length) { alert('Nothing to export yet — the reports are empty.'); return; }
-
-    const MAXW = 1500, MAXH = 2000;   // points
-    const pages = shots.map(cv => {
-      let w = cv.width * 0.375, h = cv.height * 0.375;   // 2x canvas → CSS px → pt
-      if (w > MAXW) { h *= MAXW / w; w = MAXW; }
-      if (h > MAXH) { w *= MAXH / h; h = MAXH; }
-      return { w: Math.round(w), h: Math.round(h), pw: cv.width, ph: cv.height, jpeg: rpJpegBytes(cv) };
-    });
-
-    rpProgress('rpPdfBtn', 'Building…');
-    const blob = rpBuildPdf(pages, 'Road Power Report');
-    await rpShareOrSave(blob, `Road_Power_Report_${rpStamp()}.pdf`, 'application/pdf', 'Road Power Report');
-  } catch(e) {
-    rpSetStatus('Could not build the PDF: ' + e.message, true);
-    alert('Could not build the PDF: ' + e.message);
-  } finally {
-    rpLockBtns(false);
-  }
+// what the image PDF would weigh: JPEG of these tables runs about this many
+// bytes per pixel of the 2× snapshot
+const RP_IMG_BPP = 0.16;
+function rpImageEstimate() {
+  let px = 0;
+  rpExportCards().forEach(c => {
+    const h = rpSnapHolder(c);
+    const r = h.getBoundingClientRect();
+    px += r.width * r.height * 4;
+    h.remove();
+  });
+  return px * RP_IMG_BPP;
 }
 
+// ── High PDF: the cards traced ─────────────────────────────────────────
+// The same off-screen card the image PDF photographs is read element by
+// element — every fill, rule and line of text at the position the browser
+// laid it out — and redrawn as vectors. The text is set in the app's own IBM
+// Plex fonts, cut down to the characters used and embedded in the file.
 
-// ── Light PDF ──────────────────────────────────────────────────────────
-// The reports drawn straight into the PDF as text and lines from the same
-// table model the app renders, instead of a photo of each card. It uses the
-// PDF's built-in Helvetica and Courier, so no fonts are embedded, and the
-// page streams are deflate-compressed when the browser can. The result is a
-// small file that stays sharp at any zoom, and its figures can be searched
-// and copied.
-
-// Helvetica and Helvetica-Bold advance widths for characters 32–126 (1/1000 em)
-const RP_PDF_W = {
-  H:  [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,
-       1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,
-       333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584],
-  HB: [278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,
-       975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,
-       333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584],
+const RP_PLEX = {
+  'IBM Plex Mono':           { pkg: 'ibm-plex-mono@5.2.7',           file: 'ibm-plex-mono',           ps: 'IBMPlexMono' },
+  'IBM Plex Sans':           { pkg: 'ibm-plex-sans@5.2.8',           file: 'ibm-plex-sans',           ps: 'IBMPlexSans' },
+  'IBM Plex Sans Condensed': { pkg: 'ibm-plex-sans-condensed@5.2.8', file: 'ibm-plex-sans-condensed', ps: 'IBMPlexSansCond' },
 };
-// characters outside ASCII that the PDF's WinAnsi encoding can show, with widths
-const RP_PDF_WIN = { '·': 0xB7, '—': 0x97, '–': 0x96, '…': 0x85, '×': 0xD7, '‘': 0x91, '’': 0x92,
-                     '“': 0x93, '”': 0x94, '•': 0x95, '°': 0xB0 };
-const RP_PDF_WX = {
-  H:  { 0xB7: 278, 0x97: 1000, 0x96: 556, 0x85: 1000, 0xD7: 584, 0x91: 222, 0x92: 222, 0x93: 333, 0x94: 333, 0x95: 350, 0xB0: 400 },
-  HB: { 0xB7: 278, 0x97: 1000, 0x96: 556, 0x85: 1000, 0xD7: 584, 0x91: 278, 0x92: 278, 0x93: 500, 0x94: 500, 0x95: 350, 0xB0: 400 },
-};
-const RP_PDF_FONT = { H: '/F1', HB: '/F2', C: '/F3', CB: '/F4' };
-const RP_PDF_C = (() => {
-  const hex = h => [1, 3, 5].map(i => (parseInt(h.slice(i, i + 2), 16) / 255).toFixed(3)).join(' ');
-  return {
-    paper: hex('#f5f7f9'), ink: hex('#151a21'), ash: hex('#ccd4dd'), soft: hex('#e6ebf0'),
-    mute: hex('#74808e'), live: hex('#b8620a'), avg: hex('#123a8a'), zero: hex('#a9b3be'),
-    band: hex('#212a35'), bandInk: hex('#f5f7f9'), liveBand: hex('#f5a742'), avgBand: hex('#9cc4ff'),
-    subBand: hex('#a7abb0'), zeroBand: hex('#6d737b'), cf: hex('#d3dde8'), cfRule: hex('#4a5a6d'),
-  };
-})();
+const RP_WEIGHT_NAME = { 100: 'Thin', 200: 'ExtraLight', 300: 'Light', 400: 'Regular', 500: 'Medium', 600: 'SemiBold', 700: 'Bold' };
+// WinAnsi codes 128–159 → Unicode
+const RP_WIN_HI = { 0x80: 0x20AC, 0x82: 0x201A, 0x83: 0x0192, 0x84: 0x201E, 0x85: 0x2026, 0x86: 0x2020, 0x87: 0x2021,
+  0x88: 0x02C6, 0x89: 0x2030, 0x8A: 0x0160, 0x8B: 0x2039, 0x8C: 0x0152, 0x8E: 0x017D, 0x91: 0x2018, 0x92: 0x2019,
+  0x93: 0x201C, 0x94: 0x201D, 0x95: 0x2022, 0x96: 0x2013, 0x97: 0x2014, 0x98: 0x02DC, 0x99: 0x2122, 0x9A: 0x0161,
+  0x9B: 0x203A, 0x9C: 0x0153, 0x9E: 0x017E, 0x9F: 0x0178 };
+const rpWinUni = c => (c < 0x80 || c >= 0xA0) ? c : (RP_WIN_HI[c] || 0);
 
-function rpPdfEnc(s) {
-  let str = '';
-  const codes = [];
-  for (const ch of String(s == null ? '' : s)) {
-    const c = ch.charCodeAt(0);
-    if (c >= 32 && c <= 126) {
-      codes.push(c);
-      str += (ch === '(' || ch === ')' || ch === '\\') ? '\\' + ch : ch;
-    } else {
-      const w = RP_PDF_WIN[ch] || 63;
-      codes.push(w);
-      str += w === 63 ? '?' : '\\' + w.toString(8).padStart(3, '0');
-    }
+function rpCssRgba(v) {
+  const m = /rgba?\(([^)]*)\)/.exec(v || '');
+  if (!m) return null;
+  const p = m[1].split(/[\s,\/]+/).filter(Boolean).map(parseFloat);
+  const a = p.length > 3 ? p[3] : 1;
+  return a > 0.004 ? [p[0] / 255, p[1] / 255, p[2] / 255, a] : null;
+}
+function rpParseGradient(bi) {
+  const m = /^linear-gradient\((.*)\)$/.exec(String(bi || '').trim());
+  if (!m) return null;
+  const parts = [];
+  let depth = 0, cur = '';
+  for (const ch of m[1]) {
+    if (ch === '(') depth++;
+    if (ch === ')') depth--;
+    if (ch === ',' && !depth) { parts.push(cur.trim()); cur = ''; } else cur += ch;
   }
-  return { str, codes };
-}
-function rpPdfWidth(s, font, size, tc) {
-  const { codes } = rpPdfEnc(s);
-  let w = 0;
-  for (const c of codes) {
-    if (font === 'C' || font === 'CB') w += 600;
-    else if (c >= 32 && c <= 126) w += RP_PDF_W[font][c - 32];
-    else w += RP_PDF_WX[font][c] || 556;
+  parts.push(cur.trim());
+  let dir = 'down';
+  if (!/^rgb/.test(parts[0])) {
+    const d = parts.shift();
+    dir = /to right|^90deg/.test(d) ? 'right' : /to left|^270deg/.test(d) ? 'left' : /to top|^0deg/.test(d) ? 'up' : 'down';
   }
-  return w / 1000 * size + (tc || 0) * codes.length;
-}
-function rpPdfTxt(c) {
-  if (typeof c.v === 'number' && isFinite(c.v)) return Math.round(c.v) === 0 ? '·' : rpNum(c.v);
-  return String(c.v == null ? '' : c.v);
+  const cols = parts.map(rpCssRgba).filter(Boolean);
+  return cols.length >= 2 ? { dir, c0: cols[0], c1: cols[cols.length - 1] } : null;
 }
 
-// how one body cell looks, mirroring the app's theme
-function rpPdfCellStyle(col, row, zero) {
-  const C = RP_PDF_C;
-  let st;
-  if (col === 'lead') {
-    st = row === 'data' ? { font: 'H', size: 8, color: C.ink }
-       : { font: 'HB', size: 7.2, tc: 0.35, upper: true,
-           color: row === 'sum' ? C.bandInk : row === 'avg' ? C.avg : C.ink };
-  } else {
-    const bold = row !== 'data' || col === 'on' || col === 'key' || col === 'avg';
-    st = { font: bold ? 'CB' : 'C', size: (col === 'day' && row === 'data') ? 7.4 : 8, color: C.ink };
-    if (row === 'sum') st.color = col === 'on' ? C.liveBand : col === 'avg' ? C.avgBand : col === 'sub' ? C.subBand : C.bandInk;
-    else if (row === 'avg') st.color = col === 'sub' ? C.mute : C.avg;
-    else if (col === 'on') st.color = C.live;
-    else if (col === 'avg') st.color = C.avg;
-    else if (col === 'sub' || (col === 'day' && row === 'data')) st.color = C.mute;
-    if (zero) st.color = row === 'sum' ? C.zeroBand : C.zero;
-  }
-  st.bg = row === 'sum' ? C.band : row === 'cf' ? C.cf : (row === 'avg' || row === 'ref') ? C.soft : null;
-  return st;
-}
-const RP_PDF_HEAD = { font: 'HB', size: 6.4, tc: 0.5 };
-
-// one report table → one page of drawing operators
-function rpPdfPage(t) {
-  const C = RP_PDF_C, M = 16, PAD = 5, CAP = 34, GH = 14, HH = 17, RH = 14, LEADMAX = 210;
-  const ncol = t.head.length;
-  const W = new Array(ncol).fill(0);
-  const isZero = c => typeof c.v === 'number' && isFinite(c.v) && Math.round(c.v) === 0;
-
-  // column widths from the widest thing each has to hold
-  t.head.forEach((h, i) => { W[i] = rpPdfWidth(String(h.t).toUpperCase(), 'HB', RP_PDF_HEAD.size, RP_PDF_HEAD.tc); });
-  t.rows.forEach(r => r.cells.forEach((c, i) => {
-    const st = rpPdfCellStyle((t.head[i] || {}).k || 'num', r.k, isZero(c));
-    const s = st.upper ? rpPdfTxt(c).toUpperCase() : rpPdfTxt(c);
-    W[i] = Math.max(W[i], rpPdfWidth(s, st.font, st.size, st.tc) + (r.ind && i === 0 ? 10 : 0));
+// ::before / ::after become real spans, so the tracer sees them
+function rpMaterializePseudo(root) {
+  const PROPS = ['display', 'position', 'left', 'top', 'right', 'bottom', 'width', 'height', 'background-color',
+    'color', 'font-family', 'font-size', 'font-weight', 'font-style', 'letter-spacing', 'text-transform',
+    'border-top', 'border-right', 'border-bottom', 'border-left', 'margin', 'padding', 'vertical-align'];
+  const todo = [];
+  root.querySelectorAll('*').forEach(el => ['::before', '::after'].forEach(pe => {
+    const ps = getComputedStyle(el, pe);
+    const c = ps.content;
+    if (!c || c === 'none' || c === 'normal') return;
+    const txt = /^"(.*)"$/.exec(c);
+    todo.push({ el, pe, css: PROPS.map(p => `${p}:${ps.getPropertyValue(p)}`).join(';'), text: txt ? txt[1] : '' });
   }));
-  W[0] = Math.min(W[0], LEADMAX);
-  for (let i = 0; i < ncol; i++) W[i] = Math.ceil(W[i] + PAD * 2);
-  // a grouping heading wider than the columns under it widens the last of them
-  if (t.groups) {
-    let at = 0;
-    t.groups.forEach(g => {
-      const need = rpPdfWidth(String(g.t).toUpperCase(), 'HB', 6.6, 0.6) + PAD * 2;
-      const have = W.slice(at, at + g.span).reduce((a, b) => a + b, 0);
-      if (need > have) W[at + g.span - 1] += Math.ceil(need - have);
-      at += g.span;
-    });
-  }
-  const X = [0];
-  W.forEach((w, i) => X.push(X[i] + w));
-  const TW = X[ncol];
+  todo.forEach(d => {
+    const sp = document.createElement('span');
+    sp.style.cssText = d.css;
+    sp.textContent = d.text;
+    if (d.pe === '::before') d.el.insertBefore(sp, d.el.firstChild); else d.el.appendChild(sp);
+    d.el.classList.add('rp-nopseudo');
+  });
+}
 
-  const title = String(t.title).toUpperCase();
-  const pageW = Math.ceil(M * 2 + Math.max(TW, rpPdfWidth(title, 'HB', 10.5, 1) , rpPdfWidth(t.meta || '', 'C', 6.6)));
-  const bodyH = (t.groups ? GH : 0) + HH + t.rows.length * RH;
-  const pageH = Math.ceil(M + CAP + bodyH + (t.foot ? 16 : 6) + M);
+// the card as a display list in CSS px from the holder's top-left
+function rpTraceCard(holder) {
+  const R0 = holder.getBoundingClientRect();
+  const items = [];
+  const range = document.createRange();
+  const px = v => parseFloat(v) || 0;
+  const probe = {};
 
-  const ops = [];
-  const Y = y => (pageH - y).toFixed(2);                       // top-down → PDF space
-  const fill = (x, y, w, h, col) => ops.push(`${col} rg ${(M + x).toFixed(2)} ${Y(y + h)} ${w.toFixed(2)} ${h.toFixed(2)} re f`);
-  const box  = (x, y, w, h) => ops.push(`${C.ash} RG 0.5 w ${(M + x).toFixed(2)} ${Y(y + h)} ${w.toFixed(2)} ${h.toFixed(2)} re S`);
-  const line = (x1, y1, x2, y2, col, wd, dash) =>
-    ops.push(`${col} RG ${wd} w ${dash ? '[2 1.6] 0 d ' : ''}${(M + x1).toFixed(2)} ${Y(y1)} m ${(M + x2).toFixed(2)} ${Y(y2)} l S${dash ? ' [] 0 d' : ''}`);
-  const text = (s, x, yBase, font, size, col, tc) => {
-    const e = rpPdfEnc(s);
-    ops.push(`BT ${RP_PDF_FONT[font]} ${size} Tf ${col} rg ${tc ? tc + ' Tc ' : ''}${(M + x).toFixed(2)} ${Y(yBase)} Td (${e.str}) Tj${tc ? ' 0 Tc' : ''} ET`);
-  };
-  // fit text into a cell: left, right or centred, trimmed with … if it overflows
-  const cellText = (s, x, w, yTop, h, st, align, inset) => {
-    const room = w - PAD * 2 - (inset || 0);
-    let str = s;
-    if (rpPdfWidth(str, st.font, st.size, st.tc) > room) {
-      while (str.length > 1 && rpPdfWidth(str + '…', st.font, st.size, st.tc) > room) str = str.slice(0, -1);
-      str += '…';
+  // distance from the top of a run of text to its baseline, measured once per font
+  const baseOff = cs => {
+    const key = [cs.fontFamily, cs.fontWeight, cs.fontStyle, cs.fontSize, cs.fontStretch].join('|');
+    if (probe[key] == null) {
+      const d = document.createElement('div');
+      d.style.cssText = 'position:absolute;left:0;top:0;white-space:nowrap;line-height:normal;';
+      d.style.fontFamily = cs.fontFamily; d.style.fontWeight = cs.fontWeight;
+      d.style.fontStyle = cs.fontStyle; d.style.fontSize = cs.fontSize; d.style.fontStretch = cs.fontStretch;
+      d.appendChild(document.createTextNode('H'));
+      const mk = document.createElement('span');
+      mk.style.cssText = 'display:inline-block;width:1px;height:0;vertical-align:baseline;';
+      d.appendChild(mk);
+      holder.appendChild(d);
+      range.selectNodeContents(d.firstChild);
+      probe[key] = mk.getBoundingClientRect().top - range.getBoundingClientRect().top;
+      d.remove();
     }
-    const tw = rpPdfWidth(str, st.font, st.size, st.tc);
-    const tx = align === 'right' ? x + w - PAD - tw : align === 'center' ? x + (w - tw) / 2 : x + PAD + (inset || 0);
-    text(str, tx, yTop + h / 2 + st.size * 0.35, st.font, st.size, st.color, st.tc);
+    return probe[key];
+  };
+  const shape = (s, cs) => {
+    s = s.replace(/\s+/g, ' ');
+    const tt = cs.textTransform;
+    return tt === 'uppercase' ? s.toUpperCase() : tt === 'lowercase' ? s.toLowerCase()
+         : tt === 'capitalize' ? s.replace(/(^|\s)(\S)/g, (m, a, b) => a + b.toUpperCase()) : s;
+  };
+  const charRect = (node, i) => { range.setStart(node, i); range.setEnd(node, i + 1); return range.getBoundingClientRect(); };
+
+  const addText = (node, el, cs) => {
+    const d = node.data;
+    const i0 = d.search(/\S/);
+    if (i0 < 0) return;
+    let i1 = d.length - 1;
+    while (i1 > i0 && /\s/.test(d[i1])) i1--;
+    const color = rpCssRgba(cs.color);
+    if (!color) return;
+    const a = charRect(node, i0);
+    if (!a.width && !a.height) return;
+    // every character's pen position, so kerning and the browser's spacing
+    // carry over exactly; collapsed white space keeps one space, and a new
+    // line top starts a new run
+    const runs = [];
+    let cur = null;
+    for (let i = i0; i <= i1; i++) {
+      const sp = /\s/.test(d[i]);
+      if (sp && i > i0 && /\s/.test(d[i - 1])) continue;
+      const r = charRect(node, i);
+      if (sp && !r.width) continue;
+      if (!cur || (!sp && Math.abs(r.top - cur.t) >= 1)) runs.push(cur = { s: '', xs: [], t: r.top });
+      cur.s += sp ? ' ' : d[i];
+      cur.xs.push(r.left - R0.left);
+      if (!sp) cur.r = r.right - R0.left;
+    }
+    const off = baseOff(cs);
+    const ls = cs.letterSpacing === 'normal' ? 0 : px(cs.letterSpacing);
+    runs.forEach(u => {
+      while (u.s.endsWith(' ')) { u.s = u.s.slice(0, -1); u.xs.pop(); }
+      if (!u.s) return;
+      items.push({
+        t: 'text', s: shape(u.s, cs), xs: u.xs, xr: u.r, yb: u.t - R0.top + off,
+        fam: cs.fontFamily, wt: parseInt(cs.fontWeight, 10) || 400, it: cs.fontStyle !== 'normal',
+        size: px(cs.fontSize), ls, c: color,
+      });
+    });
   };
 
-  // page and caption
-  ops.push(`${C.paper} rg 0 0 ${pageW} ${pageH} re f`);
-  text(title, 0, M + 12, 'HB', 10.5, C.ink, 1);
-  text(t.meta || '', 0, M + 24, 'C', 6.6, C.mute);
-  let y = M + CAP;
-  line(0, y - 1, TW, y - 1, C.ink, 1.4);
+  const SIDES = ['Top', 'Right', 'Bottom', 'Left'];
+  const walk = el => {
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none') return;
+    const vis = cs.visibility === 'visible';
+    const r = el.getBoundingClientRect();
+    const x = r.left - R0.left, y = r.top - R0.top, w = r.width, h = r.height;
+    const rad = Math.min(px(cs.borderTopLeftRadius), w / 2, h / 2);
+    let clip = false;
+    if (vis && w > 0 && h > 0) {
+      if (cs.boxShadow && cs.boxShadow !== 'none' && !/inset/.test(cs.boxShadow)) {
+        const m = /(rgba?\([^)]*\))\s+(-?[\d.]+)px\s+(-?[\d.]+)px/.exec(cs.boxShadow);
+        const sc = m && rpCssRgba(m[1]);
+        if (sc) items.push({ t: 'rect', x: x + px(m[2]), y: y + px(m[3]), w, h, r: rad, c: sc });
+      }
+      const bg = rpCssRgba(cs.backgroundColor);
+      if (bg) items.push({ t: 'rect', x, y, w, h, r: rad, c: bg });
+      const gr = rpParseGradient(cs.backgroundImage);
+      if (gr) items.push(Object.assign({ t: 'grad', x, y, w, h }, gr));
 
-  // grouping row
-  if (t.groups) {
-    let at = 0;
-    t.groups.forEach(g => {
-      const x = X[at], w = X[at + g.span] - x;
-      const labelled = !g.k && g.t;
-      fill(x, y, w, GH, labelled ? C.soft : C.paper);
-      box(x, y, w, GH);
-      if (g.k === 'note') cellText(String(g.t), x, w, y, GH, { font: 'C', size: 6, color: C.mute }, 'left');
-      else if (g.t) cellText(String(g.t).toUpperCase(), x, w, y, GH,
-        { font: 'HB', size: 6.6, tc: 0.6, color: g.k === 'on' ? C.live : C.ink }, 'center');
-      if (labelled) line(x, y + GH, x + w, y + GH, C.ink, 1.2);
-      at += g.span;
-    });
-    y += GH;
-  }
-  // column headings
-  t.head.forEach((h, i) => {
-    fill(X[i], y, W[i], HH, C.paper);
-    box(X[i], y, W[i], HH);
-    cellText(String(h.t).toUpperCase(), X[i], W[i], y, HH,
-      Object.assign({}, RP_PDF_HEAD, { color: h.k === 'on' ? C.live : h.k === 'avg' ? C.avg : C.mute }),
-      h.k === 'lead' ? 'left' : 'right');
-  });
-  const bodyTop = (t.groups ? M + CAP : y);
-  y += HH;
-
-  // body
-  t.rows.forEach(r => {
-    if (r.k === 'cf') line(0, y, TW, y, C.cfRule, 1.5);
-    r.cells.forEach((c, i) => {
-      const k = (t.head[i] || {}).k || 'num';
-      const st = rpPdfCellStyle(k, r.k, isZero(c));
-      if (st.bg) fill(X[i], y, W[i], RH, st.bg);
-      box(X[i], y, W[i], RH);
-      const s = st.upper ? rpPdfTxt(c).toUpperCase() : rpPdfTxt(c);
-      cellText(s, X[i], W[i], y, RH, st, k === 'lead' ? 'left' : 'right', (r.ind && k === 'lead') ? 10 : 0);
-      if (r.ind && k === 'lead') line(PAD + 3, y + RH / 2, PAD + 7, y + RH / 2, C.mute, 0.6);
-    });
-    if (r.k === 'cf') line(0, y, TW, y, C.cfRule, 1.5);
-    y += RH;
-  });
-
-  // column accents drawn over the grid: on-date rule, dashed roll-up columns
-  t.head.forEach((h, i) => {
-    if (h.k === 'on')  line(X[i], bodyTop, X[i], y, C.live, 1.6);
-    if (h.k === 'sub') line(X[i], bodyTop, X[i], y, C.mute, 0.7, true);
-  });
-  if (t.foot) text(t.foot, 0, y + 12, 'C', 6.4, C.mute);
-
-  return { w: pageW, h: pageH, content: ops.join('\n') + '\n' };
+      const B = SIDES.map(k => {
+        const st = cs['border' + k + 'Style'];
+        return { w: (st === 'none' || st === 'hidden') ? 0 : px(cs['border' + k + 'Width']), st, c: rpCssRgba(cs['border' + k + 'Color']) };
+      });
+      const same = B.every(b => b.w === B[0].w && b.st === B[0].st && b.c && B[0].c && b.c.join() === B[0].c.join());
+      if (rad > 0 && same && B[0].w > 0 && B[0].st === 'solid') {
+        const bw = B[0].w;
+        items.push({ t: 'rstroke', x: x + bw / 2, y: y + bw / 2, w: w - bw, h: h - bw, r: Math.max(0, rad - bw / 2), lw: bw, c: B[0].c });
+      } else B.forEach((b, i) => {
+        if (!b.w || !b.c) return;
+        const [bx, by, bw, bh] = [[x, y, w, b.w], [x + w - b.w, y, b.w, h], [x, y + h - b.w, w, b.w], [x, y, b.w, h]][i];
+        if (b.st === 'dashed' || b.st === 'dotted') {
+          const across = i % 2 === 0;
+          items.push({ t: 'line', lw: b.w, c: b.c, dash: b.st === 'dotted' ? [b.w, b.w] : [b.w * 3, b.w * 2],
+            x1: across ? bx : bx + bw / 2, y1: across ? by + bh / 2 : by,
+            x2: across ? bx + bw : bx + bw / 2, y2: across ? by + bh / 2 : by + bh });
+        } else items.push({ t: 'rect', x: bx, y: by, w: bw, h: bh, r: 0, c: b.c });
+      });
+      if (cs.overflowX !== 'visible' || cs.overflowY !== 'visible') {
+        items.push({ t: 'clip', x: x + B[3].w, y: y + B[0].w, w: w - B[1].w - B[3].w, h: h - B[0].w - B[2].w, r: Math.max(0, rad - B[3].w) });
+        clip = true;
+      }
+    }
+    for (const n of el.childNodes) {
+      if (n.nodeType === 3) { if (vis) addText(n, el, cs); }
+      else if (n.nodeType === 1) walk(n);
+    }
+    if (clip) items.push({ t: 'unclip' });
+  };
+  walk(holder);
+  return items;
 }
 
-async function rpDeflate(u8) {
+// ── fonts ──
+// the Plex weights the page declared, and whether each actually loaded
+function rpPageFaces() {
+  const out = {};
   try {
-    if (typeof CompressionStream === 'undefined') return null;
-    const stream = new Blob([u8]).stream().pipeThrough(new CompressionStream('deflate'));
-    return new Uint8Array(await new Response(stream).arrayBuffer());
-  } catch (_) { return null; }
+    document.fonts.forEach(f => {
+      const fam = String(f.family).replace(/^["']|["']$/g, '');
+      if (!RP_PLEX[fam] || f.style !== 'normal') return;
+      const w = parseInt(f.weight, 10) || 400;
+      const o = out[fam] = out[fam] || {};
+      if (f.status === 'loaded' || !o[w]) o[w] = f.status;
+    });
+  } catch (_) {}
+  return out;
+}
+// CSS font matching: which declared weight the browser used for a wanted weight
+function rpPickWeight(want, have) {
+  have = have.slice().sort((a, b) => a - b);
+  if (have.indexOf(want) >= 0) return want;
+  const above = have.filter(w => w > want), below = have.filter(w => w < want).reverse();
+  if (want >= 400 && want <= 500)
+    return above.filter(w => w <= 500).concat(below, above.filter(w => w > 500))[0];
+  return (want < 400 ? below.concat(above) : above.concat(below))[0];
+}
+// the face a run of text was drawn in — a Plex weight, or a built-in stand-in
+// when the app is showing a fallback font
+function rpRunFace(it, faces) {
+  const fams = it.fam.split(',').map(s => s.trim().replace(/^["']|["']$/g, ''));
+  const mono = fams.some(f => /mono|courier|consolas/i.test(f));
+  const b = mono ? (it.wt >= 600 ? 'CB' : 'C') : (it.wt >= 600 ? 'HB' : 'H');
+  for (const fam of fams) {
+    const have = faces[fam];
+    if (!have) continue;
+    const w = rpPickWeight(it.wt, Object.keys(have).map(Number));
+    if (have[w] !== 'loaded') break;
+    // a heavier weight than any the page loaded is emboldened, as the browser does
+    return { key: fam + '|' + w, fam, w, b, fakeBold: it.wt >= 600 && w < 600 };
+  }
+  return { key: null, b };
 }
 
-async function rpBuildLightPdf(tables, title) {
-  const enc = new TextEncoder();
-  const pages = [];
-  for (const t of tables) {
-    const p = rpPdfPage(t);
-    const raw = enc.encode(p.content);
-    const z = await rpDeflate(raw);
-    pages.push({ w: p.w, h: p.h, data: z || raw, flate: !!z });
+async function rpInflate(u8) {
+  const s = new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate'));
+  return new Uint8Array(await new Response(s).arrayBuffer());
+}
+// the tables of a WOFF (or plain TrueType) file
+async function rpFontTables(b) {
+  const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  const tag = o => String.fromCharCode(b[o], b[o + 1], b[o + 2], b[o + 3]);
+  const T = {};
+  const sig = dv.getUint32(0);
+  if (sig === 0x774F4646) {                                  // 'wOFF'
+    for (let i = 0, n = dv.getUint16(12); i < n; i++) {
+      const o = 44 + i * 20, at = dv.getUint32(o + 4), comp = dv.getUint32(o + 8), orig = dv.getUint32(o + 12);
+      const raw = b.subarray(at, at + comp);
+      T[tag(o)] = comp < orig ? await rpInflate(raw) : raw.slice();
+    }
+  } else if (sig === 0x00010000 || sig === 0x74727565) {
+    for (let i = 0, n = dv.getUint16(4); i < n; i++) {
+      const o = 12 + i * 16, at = dv.getUint32(o + 8), l = dv.getUint32(o + 12);
+      T[tag(o)] = b.slice(at, at + l);
+    }
+  } else throw new Error('not a TrueType font');
+  return T;
+}
+function rpParseFont(T) {
+  const v = t => new DataView(T[t].buffer, T[t].byteOffset, T[t].byteLength);
+  const head = v('head'), hhea = v('hhea'), maxp = v('maxp'), hm = v('hmtx'), loca = v('loca'), cm = v('cmap');
+  const upem = head.getUint16(18), locLong = head.getInt16(50) === 1;
+  const nGlyphs = maxp.getUint16(4), nH = hhea.getUint16(34);
+  let sub = -1;
+  for (let i = 0, n = cm.getUint16(2); i < n; i++) {
+    const pid = cm.getUint16(4 + i * 8), eid = cm.getUint16(6 + i * 8), o = cm.getUint32(8 + i * 8);
+    if (cm.getUint16(o) === 4 && ((pid === 3 && eid === 1) || pid === 0)) { sub = o; if (pid === 3) break; }
   }
-
-  const chunks = [];
-  let len = 0;
-  const push = u8 => { chunks.push(u8); len += u8.length; };
-  const pushStr = s => push(enc.encode(s));
-  const objs = [];
-  const obj = (n, body) => { objs[n] = len; pushStr(`${n} 0 obj\n${body}\nendobj\n`); };
-
-  pushStr('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
-  const pageId = i => 7 + i * 2, contId = i => 8 + i * 2;
-  obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
-  obj(2, `<< /Type /Pages /Count ${pages.length} /Kids [ ${pages.map((_, i) => pageId(i) + ' 0 R').join(' ')} ] >>`);
-  [['Helvetica', 3], ['Helvetica-Bold', 4], ['Courier', 5], ['Courier-Bold', 6]].forEach(([f, n]) =>
-    obj(n, `<< /Type /Font /Subtype /Type1 /BaseFont /${f} /Encoding /WinAnsiEncoding >>`));
-  pages.forEach((p, i) => {
-    obj(pageId(i), `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${p.w} ${p.h}] ` +
-      `/Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R >> >> /Contents ${contId(i)} 0 R >>`);
-    objs[contId(i)] = len;
-    pushStr(`${contId(i)} 0 obj\n<< /Length ${p.data.length}${p.flate ? ' /Filter /FlateDecode' : ''} >>\nstream\n`);
-    push(p.data);
-    pushStr('\nendstream\nendobj\n');
-  });
-
-  const maxObj = 6 + pages.length * 2;
-  const xrefAt = len;
-  pushStr(`xref\n0 ${maxObj + 1}\n0000000000 65535 f \n`);
-  for (let n = 1; n <= maxObj; n++) pushStr(String(objs[n]).padStart(10, '0') + ' 00000 n \n');
-  pushStr(`trailer\n<< /Size ${maxObj + 1} /Root 1 0 R /Info << /Title (${rpPdfEnc(title || '').str}) >> >>\n` +
-          `startxref\n${xrefAt}\n%%EOF\n`);
-  const out = new Uint8Array(len);
+  if (sub < 0) throw new Error('font has no Unicode map');
+  const segX2 = cm.getUint16(sub + 6);
+  const endO = sub + 14, startO = endO + segX2 + 2, deltaO = startO + segX2, rangeO = deltaO + segX2;
+  const gidOf = cp => {
+    for (let i = 0; i < segX2 / 2; i++) {
+      if (cp > cm.getUint16(endO + i * 2)) continue;
+      const start = cm.getUint16(startO + i * 2);
+      if (cp < start) return 0;
+      const delta = cm.getInt16(deltaO + i * 2), ro = cm.getUint16(rangeO + i * 2);
+      if (!ro) return (cp + delta) & 0xFFFF;
+      const g = cm.getUint16(rangeO + i * 2 + ro + (cp - start) * 2);
+      return g ? (g + delta) & 0xFFFF : 0;
+    }
+    return 0;
+  };
+  const os2 = T['OS/2'] ? v('OS/2') : null;
+  const asc = hhea.getInt16(4), desc = hhea.getInt16(6);
+  return {
+    T, upem, nGlyphs, gidOf, asc, desc,
+    adv: g => hm.getUint16(4 * Math.min(g, nH - 1)),
+    off: g => locLong ? loca.getUint32(g * 4) : loca.getUint16(g * 2) * 2,
+    cap: os2 && os2.getUint16(0) >= 2 ? os2.getInt16(88) : Math.round(asc * 0.7),
+    bbox: [36, 38, 40, 42].map(o => head.getInt16(o)),
+    fixed: T.post ? v('post').getUint32(12) !== 0 : false,
+  };
+}
+// a copy of the font holding only the glyphs for the given characters — glyph
+// ids stay put, the outlines of every other glyph are dropped
+function rpSubsetFont(F, cps) {
+  const keep = new Set([0]);
+  cps.forEach(cp => { const g = F.gidOf(cp); if (g) keep.add(g); });
+  const glyf = F.T.glyf, gd = new DataView(glyf.buffer, glyf.byteOffset, glyf.byteLength);
+  const stack = [...keep];
+  while (stack.length) {                                     // composite glyphs bring their parts
+    const g = stack.pop(), s = F.off(g), e = F.off(g + 1);
+    if (e - s < 10 || gd.getInt16(s) >= 0) continue;
+    let p = s + 10, flags;
+    do {
+      flags = gd.getUint16(p);
+      const c = gd.getUint16(p + 2);
+      if (!keep.has(c)) { keep.add(c); stack.push(c); }
+      p += 4 + (flags & 1 ? 4 : 2) + (flags & 8 ? 2 : flags & 0x40 ? 4 : flags & 0x80 ? 8 : 0);
+    } while (flags & 0x20);
+  }
+  let size = 0;
+  keep.forEach(g => { if (g < F.nGlyphs) size += (F.off(g + 1) - F.off(g) + 3) & ~3; });
+  const ng = new Uint8Array(size), nl = new Uint8Array((F.nGlyphs + 1) * 4), ld = new DataView(nl.buffer);
   let at = 0;
-  for (const c of chunks) { out.set(c, at); at += c.length; }
-  return new Blob([out], { type: 'application/pdf' });
+  for (let g = 0; g < F.nGlyphs; g++) {
+    ld.setUint32(g * 4, at);
+    if (keep.has(g)) { const s = F.off(g), e = F.off(g + 1); ng.set(glyf.subarray(s, e), at); at += (e - s + 3) & ~3; }
+  }
+  ld.setUint32(F.nGlyphs * 4, at);
+  const head = F.T.head.slice(), hd = new DataView(head.buffer);
+  hd.setUint32(8, 0); hd.setInt16(50, 1);                    // long loca
+  const T = { cmap: F.T.cmap, glyf: ng, head, hhea: F.T.hhea, hmtx: F.T.hmtx, loca: nl, maxp: F.T.maxp };
+  ['OS/2', 'name', 'cvt ', 'fpgm', 'prep'].forEach(t => { if (F.T[t]) T[t] = F.T[t]; });
+  if (F.T.post) { T.post = F.T.post.slice(0, 32); new DataView(T.post.buffer).setUint32(0, 0x00030000); }
+  return rpSfnt(T);
+}
+function rpSfnt(T) {
+  const tags = Object.keys(T).sort();
+  const n = tags.length;
+  let es = 1, lg = 0;
+  while (es * 2 <= n) { es *= 2; lg++; }
+  let size = 12 + 16 * n;
+  tags.forEach(t => { size += (T[t].length + 3) & ~3; });
+  const out = new Uint8Array(size), dv = new DataView(out.buffer);
+  dv.setUint32(0, 0x00010000); dv.setUint16(4, n); dv.setUint16(6, es * 16); dv.setUint16(8, lg); dv.setUint16(10, n * 16 - es * 16);
+  const sum = (o, l) => { let s = 0; for (let i = 0; i < l; i += 4) s = (s + dv.getUint32(o + i)) >>> 0; return s; };
+  let at = 12 + 16 * n, headAt = -1;
+  tags.forEach((t, i) => {
+    const d = T[t], o = 12 + i * 16, l = (d.length + 3) & ~3;
+    for (let k = 0; k < 4; k++) out[o + k] = t.charCodeAt(k);
+    out.set(d, at);
+    dv.setUint32(o + 4, sum(at, l)); dv.setUint32(o + 8, at); dv.setUint32(o + 12, d.length);
+    if (t === 'head') headAt = at;
+    at += l;
+  });
+  if (headAt >= 0) dv.setUint32(headAt + 8, (0xB1B0AFBA - sum(0, size)) >>> 0);
+  return out;
+}
+// the app's fonts come from the same Google Fonts build that fontsource
+// republishes as WOFF on jsDelivr; kept for the session once fetched
+const _rpFonts = {};
+function rpFetchPlex(fam, w) {
+  const d = RP_PLEX[fam];
+  const url = `https://cdn.jsdelivr.net/npm/@fontsource/${d.pkg}/files/${d.file}-latin-${w}-normal.woff`;
+  if (!_rpFonts[url]) _rpFonts[url] = (async () => {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('font ' + r.status);
+    return rpParseFont(await rpFontTables(new Uint8Array(await r.arrayBuffer())));
+  })().catch(e => { delete _rpFonts[url]; throw e; });
+  return _rpFonts[url];
 }
 
-async function rpExportLightPdf() {
-  const tables = rpExportTables();
-  if (!tables.length) { alert('Nothing to export yet — the reports are empty.'); return; }
-  rpLockBtns(true, 'rpPdfBtn', 'Building…');
-  try {
-    const blob = await rpBuildLightPdf(tables, 'Road Power Report');
-    await rpShareOrSave(blob, `Road_Power_Report_${rpStamp()}.pdf`, 'application/pdf', 'Road Power Report');
-  } catch(e) {
-    rpSetStatus('Could not build the PDF: ' + e.message, true);
-    alert('Could not build the PDF: ' + e.message);
-  } finally {
-    rpLockBtns(false);
+async function rpBuildHighPdf() {
+  const cards = rpExportCards();
+  if (!cards.length) return null;
+  const traced = [];
+  for (const card of cards) {
+    const holder = rpSnapHolder(card);
+    try {
+      rpMaterializePseudo(holder);
+      void holder.offsetWidth;
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      const r = holder.getBoundingClientRect();
+      traced.push({ w: r.width, h: r.height, items: rpTraceCard(holder), t: card._rpT,
+                    name: (card.querySelector('.rp-cap h3') || {}).textContent || '' });
+    } finally { holder.remove(); }
   }
+
+  // which fonts the text needs, and the characters set in each
+  const faces = rpPageFaces();
+  const need = {};
+  traced.forEach(p => p.items.forEach(it => {
+    if (it.t !== 'text') return;
+    it.face = rpRunFace(it, faces);
+    it.enc = rpPdfEnc(it.s);
+    if (!it.face.key) return;
+    const n = need[it.face.key] = need[it.face.key] || { fam: it.face.fam, w: it.face.w, codes: new Set() };
+    it.enc.codes.forEach(c => n.codes.add(c));
+  }));
+  const keys = Object.keys(need);
+  const got = await Promise.all(keys.map(k => rpFetchPlex(need[k].fam, need[k].w).catch(() => null)));
+
+  const extra = [], res = { Font: {}, ExtGState: {}, Shading: {} };
+  const fonts = {};
+  keys.forEach((k, i) => {
+    const F = got[i];
+    if (!F) return;
+    const tag = 'RPAA' + String.fromCharCode(65 + Math.floor(i / 26) % 26, 65 + i % 26);
+    const ps = `${tag}+${RP_PLEX[need[k].fam].ps}-${RP_WEIGHT_NAME[need[k].w] || need[k].w}`;
+    const ttf = rpSubsetFont(F, [...need[k].codes].map(rpWinUni).filter(Boolean));
+    const sc = v => Math.round(v * 1000 / F.upem);
+    const widths = [];
+    for (let c = 32; c <= 255; c++) { const u = rpWinUni(c), g = u ? F.gidOf(u) : 0; widths.push(g ? sc(F.adv(g)) : 0); }
+    extra.push({ key: 'ff' + i, stream: ttf, dict: `/Length1 ${ttf.length} ` });
+    extra.push({ key: 'fd' + i, body: `<< /Type /FontDescriptor /FontName /${ps} /Flags ${F.fixed ? 33 : 32} ` +
+      `/FontBBox [${F.bbox.map(sc).join(' ')}] /ItalicAngle 0 /Ascent ${sc(F.asc)} /Descent ${sc(F.desc)} ` +
+      `/CapHeight ${sc(F.cap)} /StemV ${need[k].w >= 600 ? 120 : 80} /FontFile2 @ff${i}@ >>` });
+    extra.push({ key: 'fo' + i, body: `<< /Type /Font /Subtype /TrueType /BaseFont /${ps} /FirstChar 32 /LastChar 255 ` +
+      `/Widths [${widths.join(' ')}] /Encoding /WinAnsiEncoding /FontDescriptor @fd${i}@ >>` });
+    res.Font['/P' + (i + 1)] = 'fo' + i;
+    fonts[k] = { res: '/P' + (i + 1), widths };
+  });
+  const gsOf = a => {
+    const k = String(+a.toFixed(3));
+    let name = Object.keys(res.ExtGState).find(nm => res.ExtGState[nm].a === k);
+    if (!name) {
+      name = '/G' + (Object.keys(res.ExtGState).length + 1);
+      res.ExtGState[name] = { key: 'gs' + name.slice(1), a: k };
+      extra.push({ key: 'gs' + name.slice(1), body: `<< /Type /ExtGState /ca ${k} /CA ${k} >>` });
+    }
+    return name;
+  };
+  const shOf = (coords, c0, c1) => {
+    const name = '/S' + (Object.keys(res.Shading).length + 1);
+    const key = 'sh' + name.slice(2);
+    const col = c => c.slice(0, 3).map(v => +v.toFixed(3)).join(' ');
+    res.Shading[name] = key;
+    extra.push({ key, body: `<< /ShadingType 2 /ColorSpace /DeviceRGB /Coords [${coords.join(' ')}] ` +
+      `/Function << /FunctionType 2 /Domain [0 1] /C0 [${col(c0)}] /C1 [${col(c1)}] /N 1 >> /Extend [true true] >>` });
+    return name;
+  };
+
+  const pages = traced.map(p => {
+    const s = rpPageScale(p.w, p.h);
+    const PW = Math.round(p.w * s), PH = Math.round(p.h * s);
+    const n = v => +v.toFixed(2);
+    const X = x => n(x * s), Y = y => n(PH - y * s);
+    const ops = [];
+    let st = {};
+    const stack = [];
+    const col = c => `${+c[0].toFixed(3)} ${+c[1].toFixed(3)} ${+c[2].toFixed(3)}`;
+    const fill = c => { const k = col(c); if (st.f !== k) { ops.push(k + ' rg'); st.f = k; } };
+    const stroke = c => { const k = col(c); if (st.s !== k) { ops.push(k + ' RG'); st.s = k; } };
+    const lw = w => { w = n(w); if (st.lw !== w) { ops.push(w + ' w'); st.lw = w; } };
+    const withAlpha = (a, draw) => {
+      if (a >= 0.999) return draw();
+      ops.push('q ' + gsOf(a) + ' gs');
+      const saved = st; st = Object.assign({}, st);
+      draw();
+      ops.push('Q'); st = saved;
+    };
+    const path = (x, y, w, h, r) => {
+      if (!(r > 0.05)) return `${X(x)} ${Y(y + h)} ${n(w * s)} ${n(h * s)} re`;
+      const L = x * s, T = PH - y * s, R = (x + w) * s, Bm = PH - (y + h) * s, q = r * s, k = q * 0.5523;
+      return [`${n(L + q)} ${n(T)} m`, `${n(R - q)} ${n(T)} l`, `${n(R - q + k)} ${n(T)} ${n(R)} ${n(T - q + k)} ${n(R)} ${n(T - q)} c`,
+        `${n(R)} ${n(Bm + q)} l`, `${n(R)} ${n(Bm + q - k)} ${n(R - q + k)} ${n(Bm)} ${n(R - q)} ${n(Bm)} c`,
+        `${n(L + q)} ${n(Bm)} l`, `${n(L + q - k)} ${n(Bm)} ${n(L)} ${n(Bm + q - k)} ${n(L)} ${n(Bm + q)} c`,
+        `${n(L)} ${n(T - q)} l`, `${n(L)} ${n(T - q + k)} ${n(L + q - k)} ${n(T)} ${n(L + q)} ${n(T)} c h`].join(' ');
+    };
+
+    p.items.forEach(it => {
+      if (it.t === 'rect') withAlpha(it.c[3], () => { fill(it.c); ops.push(path(it.x, it.y, it.w, it.h, it.r) + ' f'); });
+      else if (it.t === 'rstroke') withAlpha(it.c[3], () => { stroke(it.c); lw(it.lw * s); ops.push(path(it.x, it.y, it.w, it.h, it.r) + ' S'); });
+      else if (it.t === 'line') withAlpha(it.c[3], () => {
+        stroke(it.c); lw(it.lw * s);
+        ops.push(`[${n(it.dash[0] * s)} ${n(it.dash[1] * s)}] 0 d ${X(it.x1)} ${Y(it.y1)} m ${X(it.x2)} ${Y(it.y2)} l S [] 0 d`);
+      });
+      else if (it.t === 'grad') {
+        const c = { down: [it.x, it.y, it.x, it.y + it.h], up: [it.x, it.y + it.h, it.x, it.y],
+                    right: [it.x, it.y, it.x + it.w, it.y], left: [it.x + it.w, it.y, it.x, it.y] }[it.dir];
+        ops.push(`q ${path(it.x, it.y, it.w, it.h, 0)} W n ${shOf([X(c[0]), Y(c[1]), X(c[2]), Y(c[3])], it.c0, it.c1)} sh Q`);
+      }
+      else if (it.t === 'clip') { ops.push(`q ${path(it.x, it.y, it.w, it.h, it.r)} W n`); stack.push(st); st = Object.assign({}, st); }
+      else if (it.t === 'unclip') { ops.push('Q'); st = stack.pop(); }
+      else if (it.t === 'text') {
+        const f = it.face.key && fonts[it.face.key];
+        const size = n(it.size * s), tc = n(it.ls * s);
+        const res1 = f ? f.res : RP_PDF_FONT[it.face.b];
+        const adv = f ? (c => (f.widths[c - 32] || 0))
+                      : (c => (it.face.b === 'C' || it.face.b === 'CB') ? 600 : (c >= 32 && c <= 126 ? RP_PDF_W[it.face.b][c - 32] : (RP_PDF_WX[it.face.b][c] || 556)));
+        const chars = [...it.s];
+        const x = it.xs[0] * s;
+        let tj = '', tz = 100;
+        if (f) {
+          // the app's own font: nudge each glyph to the browser's position,
+          // which carries its kerning across
+          let pen = x, piece = '';
+          chars.forEach((ch, k) => {
+            const e = rpPdfEnc(ch), want = it.xs[k] == null ? pen : it.xs[k] * s;
+            if (k && Math.abs(want - pen) > 0.04) {
+              tj += `(${piece})${n(-(want - pen) / size * 1000)}`; piece = ''; pen = want;
+            }
+            piece += e.str;
+            pen += adv(e.codes[0]) / 1000 * size + tc;
+          });
+          tj += `(${piece})`;
+        } else {
+          // a stand-in font: stretch the run to the width the app gave it
+          const nat = it.enc.codes.reduce((a, c) => a + adv(c), 0) / 1000 * size + tc * it.enc.codes.length;
+          if (nat > 0 && it.xr != null) tz = Math.min(160, Math.max(60, Math.round((it.xr - it.xs[0]) * s / nat * 100)));
+          tj = `(${it.enc.str})`;
+        }
+        const bold = !!(f && it.face.fakeBold);
+        withAlpha(it.c[3], () => {
+          fill(it.c);
+          const head = [];
+          if (st.font !== res1 + size) { head.push(`${res1} ${size} Tf`); st.font = res1 + size; }
+          if ((st.tc || 0) !== tc) { head.push(`${tc} Tc`); st.tc = tc; }
+          const tr = bold ? 2 : 0;
+          if ((st.tr || 0) !== tr) { head.push(`${tr} Tr`); st.tr = tr; }
+          if ((st.tz || 100) !== tz) { head.push(`${tz} Tz`); st.tz = tz; }
+          if (bold) {                      // the browser's synthetic bold: outline stroked by ~1/24 em
+            const ratio = it.size <= 9 ? 1 / 24 : it.size >= 36 ? 1 / 32 : 1 / 24 + (it.size - 9) / 27 * (1 / 32 - 1 / 24);
+            stroke(it.c); lw(it.size * ratio * s);
+          }
+          ops.push(`BT ${head.join(' ')}${head.length ? ' ' : ''}1 0 ${it.it ? 0.25 : 0} 1 ${n(x)} ${Y(it.yb)} Tm ${tj.indexOf(')') === tj.length - 1 ? tj + ' Tj' : '[' + tj + '] TJ'} ET`);
+        });
+      }
+    });
+    const t = p.t;
+    const title = t ? (t.sheet === 'Customer' ? 'Customer — ' + t.title
+                      : (RP_REPORTS[[1, 2, 3, 4].find(id => RP_REPORTS[id].sheet === t.sheet)] || {}).name || t.title) : p.name;
+    return { w: PW, h: PH, content: ops.join('\n') + '\n', title };
+  });
+
+  const md = rpMonthData();
+  const resOut = { Font: res.Font, ExtGState: {}, Shading: res.Shading };
+  Object.keys(res.ExtGState).forEach(nm => { resOut.ExtGState[nm] = res.ExtGState[nm].key; });
+  return rpWritePdf(pages, { title: 'Road Power Report', subject: md ? `${md.monLabel} · as on ${rpOnLabel(md)}` : '',
+                             outline: true, extra, res: resOut });
 }
 
 // export order, skipping reports that came out empty
