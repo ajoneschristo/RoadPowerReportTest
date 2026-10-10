@@ -1302,7 +1302,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B27-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B28-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1468,6 +1468,20 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
         <div class="stt-hint" style="margin-top:6px;">
           Tick the reports to show and use the arrows to set their order — separately for the tabs
           in the app and for the exported files. Share sends a picture of the tab that's open, so it follows the app.
+        </div>
+      </div>
+
+      <div class="stt-section">
+        <div class="stt-section-hdr">
+          <label class="stt-label">PDF</label>
+        </div>
+        <div class="rp-modes">
+          <button class="rp-mode" id="rpPdfStd" onclick="rpSetPdfMode('image')">
+            <b>Standard</b><span>A picture of each report exactly as it looks on screen.</span>
+          </button>
+          <button class="rp-mode" id="rpPdfLight" onclick="rpSetPdfMode('light')">
+            <b>Light</b><span>Drawn as text instead of pictures — a much smaller file, sharp at any zoom, and the figures can be searched and copied.</span>
+          </button>
         </div>
       </div>
 
@@ -2075,7 +2089,8 @@ function openRpSettings() {
     RP_SHOW_KEYS.forEach(f => { if (cur[f] !== undefined) shDef[k][m][f] = cur[f] !== false; });
   }));
   _rpDraft = { historyPath: pr.historyPath || 'roadpower-history-test.json', sel: {},
-               show: shDef, reports: rpReportList(pr.reports), exportReports: rpExportList(pr) };
+               show: shDef, reports: rpReportList(pr.reports), exportReports: rpExportList(pr),
+               pdfMode: pr.pdfMode === 'light' ? 'light' : 'image' };
   (pr.parties || []).forEach(p => {
     const codes = rpCodesOf(p);
     _rpDraft.sel[codes[0]] = {
@@ -2095,6 +2110,7 @@ function openRpSettings() {
   document.getElementById('rpChipSel').classList.remove('on');
   rpBuildPartyIndex(true);
   renderRpReportLists();
+  rpSetPdfMode(_rpDraft.pdfMode);
   renderRpShowGrids();
   renderRpParties();
   renderRpR2();
@@ -2381,6 +2397,12 @@ function renderRpReportList(kind) {
   });
 }
 
+function rpSetPdfMode(mode) {
+  _rpDraft.pdfMode = mode === 'light' ? 'light' : 'image';
+  document.getElementById('rpPdfStd').classList.toggle('on', _rpDraft.pdfMode === 'image');
+  document.getElementById('rpPdfLight').classList.toggle('on', _rpDraft.pdfMode === 'light');
+}
+
 function rpExportsMatchApp() {
   _rpDraft.exportReports = _rpDraft.reports.map(r => ({ id: r.id, show: r.show }));
   renderRpReportList('exp'); renderRpShowGrids();
@@ -2539,6 +2561,7 @@ async function saveRpSettings() {
     show:      _rpDraft.show,
     reports:       _rpDraft.reports.map(r => ({ id: r.id, show: r.show })),
     exportReports: _rpDraft.exportReports.map(r => ({ id: r.id, show: r.show })),
+    pdfMode:       _rpDraft.pdfMode,
     parties,
   } });
 
@@ -3944,6 +3967,7 @@ function rpBuildPdf(pages, title) {
 async function rpExportPdf() {
   if (_rpBusy) return;
   if (!_rpTables.length) { alert('Nothing to export yet — the reports are empty.'); return; }
+  if ((appSettings.powerReport || {}).pdfMode === 'light') return rpExportLightPdf();
   rpLockBtns(true, 'rpPdfBtn', 'Rendering…');
   try {
     const shots = await rpSnapCards((i,n) => rpProgress('rpPdfBtn', `Page ${i}/${n}…`));
@@ -3969,10 +3993,287 @@ async function rpExportPdf() {
 }
 
 
-// The dashboard script that ships inside the exported file. Written as a
-// plain string (not a template literal) so nothing in it collides with the
-// app's own interpolation, and with no library dependency so the file works
-// offline and in whatever viewer it lands in.
+// ── Light PDF ──────────────────────────────────────────────────────────
+// The reports drawn straight into the PDF as text and lines from the same
+// table model the app renders, instead of a photo of each card. It uses the
+// PDF's built-in Helvetica and Courier, so no fonts are embedded, and the
+// page streams are deflate-compressed when the browser can. The result is a
+// small file that stays sharp at any zoom, and its figures can be searched
+// and copied.
+
+// Helvetica and Helvetica-Bold advance widths for characters 32–126 (1/1000 em)
+const RP_PDF_W = {
+  H:  [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,
+       1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,
+       333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584],
+  HB: [278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,
+       975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,
+       333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584],
+};
+// characters outside ASCII that the PDF's WinAnsi encoding can show, with widths
+const RP_PDF_WIN = { '·': 0xB7, '—': 0x97, '–': 0x96, '…': 0x85, '×': 0xD7, '‘': 0x91, '’': 0x92,
+                     '“': 0x93, '”': 0x94, '•': 0x95, '°': 0xB0 };
+const RP_PDF_WX = {
+  H:  { 0xB7: 278, 0x97: 1000, 0x96: 556, 0x85: 1000, 0xD7: 584, 0x91: 222, 0x92: 222, 0x93: 333, 0x94: 333, 0x95: 350, 0xB0: 400 },
+  HB: { 0xB7: 278, 0x97: 1000, 0x96: 556, 0x85: 1000, 0xD7: 584, 0x91: 278, 0x92: 278, 0x93: 500, 0x94: 500, 0x95: 350, 0xB0: 400 },
+};
+const RP_PDF_FONT = { H: '/F1', HB: '/F2', C: '/F3', CB: '/F4' };
+const RP_PDF_C = (() => {
+  const hex = h => [1, 3, 5].map(i => (parseInt(h.slice(i, i + 2), 16) / 255).toFixed(3)).join(' ');
+  return {
+    paper: hex('#f5f7f9'), ink: hex('#151a21'), ash: hex('#ccd4dd'), soft: hex('#e6ebf0'),
+    mute: hex('#74808e'), live: hex('#b8620a'), avg: hex('#123a8a'), zero: hex('#a9b3be'),
+    band: hex('#212a35'), bandInk: hex('#f5f7f9'), liveBand: hex('#f5a742'), avgBand: hex('#9cc4ff'),
+    subBand: hex('#a7abb0'), zeroBand: hex('#6d737b'), cf: hex('#d3dde8'), cfRule: hex('#4a5a6d'),
+  };
+})();
+
+function rpPdfEnc(s) {
+  let str = '';
+  const codes = [];
+  for (const ch of String(s == null ? '' : s)) {
+    const c = ch.charCodeAt(0);
+    if (c >= 32 && c <= 126) {
+      codes.push(c);
+      str += (ch === '(' || ch === ')' || ch === '\\') ? '\\' + ch : ch;
+    } else {
+      const w = RP_PDF_WIN[ch] || 63;
+      codes.push(w);
+      str += w === 63 ? '?' : '\\' + w.toString(8).padStart(3, '0');
+    }
+  }
+  return { str, codes };
+}
+function rpPdfWidth(s, font, size, tc) {
+  const { codes } = rpPdfEnc(s);
+  let w = 0;
+  for (const c of codes) {
+    if (font === 'C' || font === 'CB') w += 600;
+    else if (c >= 32 && c <= 126) w += RP_PDF_W[font][c - 32];
+    else w += RP_PDF_WX[font][c] || 556;
+  }
+  return w / 1000 * size + (tc || 0) * codes.length;
+}
+function rpPdfTxt(c) {
+  if (typeof c.v === 'number' && isFinite(c.v)) return Math.round(c.v) === 0 ? '·' : rpNum(c.v);
+  return String(c.v == null ? '' : c.v);
+}
+
+// how one body cell looks, mirroring the app's theme
+function rpPdfCellStyle(col, row, zero) {
+  const C = RP_PDF_C;
+  let st;
+  if (col === 'lead') {
+    st = row === 'data' ? { font: 'H', size: 8, color: C.ink }
+       : { font: 'HB', size: 7.2, tc: 0.35, upper: true,
+           color: row === 'sum' ? C.bandInk : row === 'avg' ? C.avg : C.ink };
+  } else {
+    const bold = row !== 'data' || col === 'on' || col === 'key' || col === 'avg';
+    st = { font: bold ? 'CB' : 'C', size: (col === 'day' && row === 'data') ? 7.4 : 8, color: C.ink };
+    if (row === 'sum') st.color = col === 'on' ? C.liveBand : col === 'avg' ? C.avgBand : col === 'sub' ? C.subBand : C.bandInk;
+    else if (row === 'avg') st.color = col === 'sub' ? C.mute : C.avg;
+    else if (col === 'on') st.color = C.live;
+    else if (col === 'avg') st.color = C.avg;
+    else if (col === 'sub' || (col === 'day' && row === 'data')) st.color = C.mute;
+    if (zero) st.color = row === 'sum' ? C.zeroBand : C.zero;
+  }
+  st.bg = row === 'sum' ? C.band : row === 'cf' ? C.cf : (row === 'avg' || row === 'ref') ? C.soft : null;
+  return st;
+}
+const RP_PDF_HEAD = { font: 'HB', size: 6.4, tc: 0.5 };
+
+// one report table → one page of drawing operators
+function rpPdfPage(t) {
+  const C = RP_PDF_C, M = 16, PAD = 5, CAP = 34, GH = 14, HH = 17, RH = 14, LEADMAX = 210;
+  const ncol = t.head.length;
+  const W = new Array(ncol).fill(0);
+  const isZero = c => typeof c.v === 'number' && isFinite(c.v) && Math.round(c.v) === 0;
+
+  // column widths from the widest thing each has to hold
+  t.head.forEach((h, i) => { W[i] = rpPdfWidth(String(h.t).toUpperCase(), 'HB', RP_PDF_HEAD.size, RP_PDF_HEAD.tc); });
+  t.rows.forEach(r => r.cells.forEach((c, i) => {
+    const st = rpPdfCellStyle((t.head[i] || {}).k || 'num', r.k, isZero(c));
+    const s = st.upper ? rpPdfTxt(c).toUpperCase() : rpPdfTxt(c);
+    W[i] = Math.max(W[i], rpPdfWidth(s, st.font, st.size, st.tc) + (r.ind && i === 0 ? 10 : 0));
+  }));
+  W[0] = Math.min(W[0], LEADMAX);
+  for (let i = 0; i < ncol; i++) W[i] = Math.ceil(W[i] + PAD * 2);
+  // a grouping heading wider than the columns under it widens the last of them
+  if (t.groups) {
+    let at = 0;
+    t.groups.forEach(g => {
+      const need = rpPdfWidth(String(g.t).toUpperCase(), 'HB', 6.6, 0.6) + PAD * 2;
+      const have = W.slice(at, at + g.span).reduce((a, b) => a + b, 0);
+      if (need > have) W[at + g.span - 1] += Math.ceil(need - have);
+      at += g.span;
+    });
+  }
+  const X = [0];
+  W.forEach((w, i) => X.push(X[i] + w));
+  const TW = X[ncol];
+
+  const title = String(t.title).toUpperCase();
+  const pageW = Math.ceil(M * 2 + Math.max(TW, rpPdfWidth(title, 'HB', 10.5, 1) , rpPdfWidth(t.meta || '', 'C', 6.6)));
+  const bodyH = (t.groups ? GH : 0) + HH + t.rows.length * RH;
+  const pageH = Math.ceil(M + CAP + bodyH + (t.foot ? 16 : 6) + M);
+
+  const ops = [];
+  const Y = y => (pageH - y).toFixed(2);                       // top-down → PDF space
+  const fill = (x, y, w, h, col) => ops.push(`${col} rg ${(M + x).toFixed(2)} ${Y(y + h)} ${w.toFixed(2)} ${h.toFixed(2)} re f`);
+  const box  = (x, y, w, h) => ops.push(`${C.ash} RG 0.5 w ${(M + x).toFixed(2)} ${Y(y + h)} ${w.toFixed(2)} ${h.toFixed(2)} re S`);
+  const line = (x1, y1, x2, y2, col, wd, dash) =>
+    ops.push(`${col} RG ${wd} w ${dash ? '[2 1.6] 0 d ' : ''}${(M + x1).toFixed(2)} ${Y(y1)} m ${(M + x2).toFixed(2)} ${Y(y2)} l S${dash ? ' [] 0 d' : ''}`);
+  const text = (s, x, yBase, font, size, col, tc) => {
+    const e = rpPdfEnc(s);
+    ops.push(`BT ${RP_PDF_FONT[font]} ${size} Tf ${col} rg ${tc ? tc + ' Tc ' : ''}${(M + x).toFixed(2)} ${Y(yBase)} Td (${e.str}) Tj${tc ? ' 0 Tc' : ''} ET`);
+  };
+  // fit text into a cell: left, right or centred, trimmed with … if it overflows
+  const cellText = (s, x, w, yTop, h, st, align, inset) => {
+    const room = w - PAD * 2 - (inset || 0);
+    let str = s;
+    if (rpPdfWidth(str, st.font, st.size, st.tc) > room) {
+      while (str.length > 1 && rpPdfWidth(str + '…', st.font, st.size, st.tc) > room) str = str.slice(0, -1);
+      str += '…';
+    }
+    const tw = rpPdfWidth(str, st.font, st.size, st.tc);
+    const tx = align === 'right' ? x + w - PAD - tw : align === 'center' ? x + (w - tw) / 2 : x + PAD + (inset || 0);
+    text(str, tx, yTop + h / 2 + st.size * 0.35, st.font, st.size, st.color, st.tc);
+  };
+
+  // page and caption
+  ops.push(`${C.paper} rg 0 0 ${pageW} ${pageH} re f`);
+  text(title, 0, M + 12, 'HB', 10.5, C.ink, 1);
+  text(t.meta || '', 0, M + 24, 'C', 6.6, C.mute);
+  let y = M + CAP;
+  line(0, y - 1, TW, y - 1, C.ink, 1.4);
+
+  // grouping row
+  if (t.groups) {
+    let at = 0;
+    t.groups.forEach(g => {
+      const x = X[at], w = X[at + g.span] - x;
+      const labelled = !g.k && g.t;
+      fill(x, y, w, GH, labelled ? C.soft : C.paper);
+      box(x, y, w, GH);
+      if (g.k === 'note') cellText(String(g.t), x, w, y, GH, { font: 'C', size: 6, color: C.mute }, 'left');
+      else if (g.t) cellText(String(g.t).toUpperCase(), x, w, y, GH,
+        { font: 'HB', size: 6.6, tc: 0.6, color: g.k === 'on' ? C.live : C.ink }, 'center');
+      if (labelled) line(x, y + GH, x + w, y + GH, C.ink, 1.2);
+      at += g.span;
+    });
+    y += GH;
+  }
+  // column headings
+  t.head.forEach((h, i) => {
+    fill(X[i], y, W[i], HH, C.paper);
+    box(X[i], y, W[i], HH);
+    cellText(String(h.t).toUpperCase(), X[i], W[i], y, HH,
+      Object.assign({}, RP_PDF_HEAD, { color: h.k === 'on' ? C.live : h.k === 'avg' ? C.avg : C.mute }),
+      h.k === 'lead' ? 'left' : 'right');
+  });
+  const bodyTop = (t.groups ? M + CAP : y);
+  y += HH;
+
+  // body
+  t.rows.forEach(r => {
+    if (r.k === 'cf') line(0, y, TW, y, C.cfRule, 1.5);
+    r.cells.forEach((c, i) => {
+      const k = (t.head[i] || {}).k || 'num';
+      const st = rpPdfCellStyle(k, r.k, isZero(c));
+      if (st.bg) fill(X[i], y, W[i], RH, st.bg);
+      box(X[i], y, W[i], RH);
+      const s = st.upper ? rpPdfTxt(c).toUpperCase() : rpPdfTxt(c);
+      cellText(s, X[i], W[i], y, RH, st, k === 'lead' ? 'left' : 'right', (r.ind && k === 'lead') ? 10 : 0);
+      if (r.ind && k === 'lead') line(PAD + 3, y + RH / 2, PAD + 7, y + RH / 2, C.mute, 0.6);
+    });
+    if (r.k === 'cf') line(0, y, TW, y, C.cfRule, 1.5);
+    y += RH;
+  });
+
+  // column accents drawn over the grid: on-date rule, dashed roll-up columns
+  t.head.forEach((h, i) => {
+    if (h.k === 'on')  line(X[i], bodyTop, X[i], y, C.live, 1.6);
+    if (h.k === 'sub') line(X[i], bodyTop, X[i], y, C.mute, 0.7, true);
+  });
+  if (t.foot) text(t.foot, 0, y + 12, 'C', 6.4, C.mute);
+
+  return { w: pageW, h: pageH, content: ops.join('\n') + '\n' };
+}
+
+async function rpDeflate(u8) {
+  try {
+    if (typeof CompressionStream === 'undefined') return null;
+    const stream = new Blob([u8]).stream().pipeThrough(new CompressionStream('deflate'));
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  } catch (_) { return null; }
+}
+
+async function rpBuildLightPdf(tables, title) {
+  const enc = new TextEncoder();
+  const pages = [];
+  for (const t of tables) {
+    const p = rpPdfPage(t);
+    const raw = enc.encode(p.content);
+    const z = await rpDeflate(raw);
+    pages.push({ w: p.w, h: p.h, data: z || raw, flate: !!z });
+  }
+
+  const chunks = [];
+  let len = 0;
+  const push = u8 => { chunks.push(u8); len += u8.length; };
+  const pushStr = s => push(enc.encode(s));
+  const objs = [];
+  const obj = (n, body) => { objs[n] = len; pushStr(`${n} 0 obj\n${body}\nendobj\n`); };
+
+  pushStr('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+  const pageId = i => 7 + i * 2, contId = i => 8 + i * 2;
+  obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
+  obj(2, `<< /Type /Pages /Count ${pages.length} /Kids [ ${pages.map((_, i) => pageId(i) + ' 0 R').join(' ')} ] >>`);
+  [['Helvetica', 3], ['Helvetica-Bold', 4], ['Courier', 5], ['Courier-Bold', 6]].forEach(([f, n]) =>
+    obj(n, `<< /Type /Font /Subtype /Type1 /BaseFont /${f} /Encoding /WinAnsiEncoding >>`));
+  pages.forEach((p, i) => {
+    obj(pageId(i), `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${p.w} ${p.h}] ` +
+      `/Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R >> >> /Contents ${contId(i)} 0 R >>`);
+    objs[contId(i)] = len;
+    pushStr(`${contId(i)} 0 obj\n<< /Length ${p.data.length}${p.flate ? ' /Filter /FlateDecode' : ''} >>\nstream\n`);
+    push(p.data);
+    pushStr('\nendstream\nendobj\n');
+  });
+
+  const maxObj = 6 + pages.length * 2;
+  const xrefAt = len;
+  pushStr(`xref\n0 ${maxObj + 1}\n0000000000 65535 f \n`);
+  for (let n = 1; n <= maxObj; n++) pushStr(String(objs[n]).padStart(10, '0') + ' 00000 n \n');
+  pushStr(`trailer\n<< /Size ${maxObj + 1} /Root 1 0 R /Info << /Title (${rpPdfEnc(title || '').str}) >> >>\n` +
+          `startxref\n${xrefAt}\n%%EOF\n`);
+  const out = new Uint8Array(len);
+  let at = 0;
+  for (const c of chunks) { out.set(c, at); at += c.length; }
+  return new Blob([out], { type: 'application/pdf' });
+}
+
+async function rpExportLightPdf() {
+  const tables = rpExportTables();
+  if (!tables.length) { alert('Nothing to export yet — the reports are empty.'); return; }
+  rpLockBtns(true, 'rpPdfBtn', 'Building…');
+  try {
+    const blob = await rpBuildLightPdf(tables, 'Road Power Report');
+    await rpShareOrSave(blob, `Road_Power_Report_${rpStamp()}.pdf`, 'application/pdf', 'Road Power Report');
+  } catch(e) {
+    rpSetStatus('Could not build the PDF: ' + e.message, true);
+    alert('Could not build the PDF: ' + e.message);
+  } finally {
+    rpLockBtns(false);
+  }
+}
+
+// export order, skipping reports that came out empty
+function rpExportTables() {
+  return rpExportReports()
+    .map(id => _rpTables.filter(t => t.sheet === RP_REPORTS[id].sheet && t.rows.some(r => r.k === 'data')))
+    .reduce((a, b) => a.concat(b), []);
+}
+
 // ── HTML ───────────────────────────────────────────────────────────────
 // A self-contained themed table. text/html is on Android's shareable list,
 // so this goes to WhatsApp like the PDF does, and Excel opens .html tables
