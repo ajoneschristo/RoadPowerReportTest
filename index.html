@@ -1151,6 +1151,32 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 .rp-dtot  { font-family:var(--mono); font-size:12px; text-align:right; color:var(--text); }
 .rp-dpairs{ font-family:var(--mono); font-size:10px; text-align:right; color:var(--dim); }
 
+/* reports: show / order */
+.rp-rlist { border:1.5px solid var(--border); border-radius:8px; overflow:hidden; }
+.rp-rrow {
+  display:grid; grid-template-columns:22px 1fr 30px 30px 48px; align-items:center; gap:6px;
+  padding:8px 10px; border-top:1px solid var(--border);
+}
+.rp-rrow.hd { padding-top:6px; padding-bottom:6px; background:var(--bg); border-top:none; }
+.rp-rrow.hd span {
+  font-size:8.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--dim);
+}
+.rp-rrow.hd span.c { text-align:center; }
+.rp-rnum { font-family:var(--mono); font-size:11px; color:var(--dim); text-align:center; }
+.rp-rname b { display:block; font-size:12px; color:var(--text); font-weight:600; }
+.rp-rname span { display:block; font-size:10px; color:var(--dim); margin-top:1px; }
+.rp-rrow.off .rp-rname, .rp-rrow.off .rp-rnum { opacity:.45; }
+.rp-rord {
+  width:30px; height:28px; border:1.5px solid var(--border); border-radius:6px;
+  background:transparent; color:var(--mid); cursor:pointer; font-size:11px; line-height:1; padding:0;
+}
+.rp-rord:disabled { opacity:.25; cursor:default; }
+.rp-rord:not(:disabled):active { border-color:#d97a06; color:#d97a06; }
+.rp-rrow .c { text-align:center; }
+.rp-rrow input[type="checkbox"] { width:17px; height:17px; accent-color:#d97a06; cursor:pointer; }
+.rp-sgrid.off { opacity:.45; }
+.stt-body > .stt-section { min-width:0; }
+
 /* monthwise total / avg grid */
 .rp-sgrid { border:1.5px solid var(--border); border-radius:8px; overflow-x:auto; margin-bottom:10px; }
 .rp-sgrid-h {
@@ -1168,6 +1194,11 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 .rp-srow.bd label { font-size:11px; color:var(--text); }
 .rp-srow.bd div { text-align:center; }
 .rp-srow.bd input { width:16px; height:16px; accent-color:#d97a06; cursor:pointer; }
+@media (max-width: 480px) {
+  .rp-srow { grid-template-columns:minmax(64px,1fr) 50px 50px 62px 62px; gap:2px; padding:0 6px; }
+  .rp-srow.hd span { font-size:8px; letter-spacing:.02em; }
+  .rp-srow.bd label { font-size:10.5px; }
+}
 
 /* html export settings */
 .rp-modes { display:flex; gap:8px; flex-wrap:wrap; }
@@ -1247,7 +1278,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B24-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B25-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1395,7 +1426,19 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
       <button class="stt-close" onclick="closeRpSettings()">✕</button>
     </div>
 
-    <div class="stt-body" style="grid-template-columns:1fr;">
+    <div class="stt-body" style="grid-template-columns:minmax(0,1fr);">
+
+      <div class="stt-section">
+        <div class="stt-section-hdr">
+          <label class="stt-label">Reports</label>
+        </div>
+        <div class="rp-rlist" id="rpReportList"></div>
+        <div class="stt-hint" style="margin-top:6px;">
+          Tick the reports to show and use the arrows to set their order.
+          The same order is used for the tabs here and for the PDF, Excel and HTML exports;
+          a report that's switched off is left out of all of them.
+        </div>
+      </div>
 
       <div class="stt-section">
         <label class="stt-label">History Database File</label>
@@ -2001,7 +2044,7 @@ function openRpSettings() {
     RP_SHOW_KEYS.forEach(f => { if (cur[f] !== undefined) shDef[k][m][f] = cur[f] !== false; });
   }));
   _rpDraft = { historyPath: pr.historyPath || 'roadpower-history-test.json', sel: {},
-               show: shDef };
+               show: shDef, reports: rpReportList(pr.reports) };
   (pr.parties || []).forEach(p => {
     const codes = rpCodesOf(p);
     _rpDraft.sel[codes[0]] = {
@@ -2020,6 +2063,7 @@ function openRpSettings() {
   document.getElementById('rpChipRecent').classList.add('on');
   document.getElementById('rpChipSel').classList.remove('on');
   rpBuildPartyIndex(true);
+  renderRpReportList();
   renderRpShowGrids();
   renderRpParties();
   renderRpR2();
@@ -2264,14 +2308,55 @@ function rpResetMerges() {
 }
 
 // ── Monthwise Total / Avg visibility ──────────────────────────────────
+// ── Reports: show / hide and order ────────────────────────────────────
+function renderRpReportList() {
+  const wrap = document.getElementById('rpReportList');
+  const list = _rpDraft.reports;
+  wrap.innerHTML = `<div class="rp-rrow hd"><span class="c">#</span><span>Report</span>
+    <span class="c" style="grid-column:span 2;">Order</span><span class="c">Show</span></div>`;
+  let pos = 0;
+  list.forEach((r, i) => {
+    const row = document.createElement('div');
+    row.className = 'rp-rrow' + (r.show ? '' : ' off');
+    row.innerHTML =
+      `<div class="rp-rnum">${r.show ? ++pos : '–'}</div>
+       <div class="rp-rname"><b>${RP_REPORTS[r.id].name}</b><span>${RP_REPORTS[r.id].hint}</span></div>
+       <button class="rp-rord" data-d="-1" title="Move up" ${i === 0 ? 'disabled' : ''}>▲</button>
+       <button class="rp-rord" data-d="1" title="Move down" ${i === list.length - 1 ? 'disabled' : ''}>▼</button>
+       <div class="c"><input type="checkbox" ${r.show ? 'checked' : ''}></div>`;
+    row.querySelectorAll('.rp-rord').forEach(b => {
+      b.onclick = () => {
+        const j = i + (+b.dataset.d);
+        if (j < 0 || j >= list.length) return;
+        [list[i], list[j]] = [list[j], list[i]];
+        renderRpReportList(); renderRpShowGrids();
+      };
+    });
+    const cb = row.querySelector('input');
+    cb.onchange = () => {
+      if (!cb.checked && list.filter(x => x.show).length === 1) {
+        cb.checked = true;
+        const st = document.getElementById('rpSettingsStatus');
+        st.textContent = 'At least one report has to stay on.'; st.style.color = '#e05';
+        return;
+      }
+      r.show = cb.checked;
+      renderRpReportList(); renderRpShowGrids();
+    };
+    wrap.appendChild(row);
+  });
+}
+
 function renderRpShowGrids() {
   const wrap = document.getElementById('rpShowGrids');
   wrap.innerHTML = '';
-  [['r1', 'Power Sector Report'], ['r3', 'Sourcewise Report'], ['r2', 'Customer Report']].forEach(([key, label]) => {
+  // grids follow the report order chosen above; a switched-off report keeps
+  // its settings but is dimmed
+  _rpDraft.reports.map(r => ['r' + r.id, RP_REPORTS[r.id].name + ' Report', r.show]).forEach(([key, label, on]) => {
     const box = document.createElement('div');
-    box.className = 'rp-sgrid';
+    box.className = 'rp-sgrid' + (on ? '' : ' off');
     box.innerHTML =
-      `<div class="rp-sgrid-h">${label}</div>
+      `<div class="rp-sgrid-h">${label}${on ? '' : ' · switched off'}</div>
        <div class="rp-srow hd"><span></span>
          <span>Show<br>Average</span><span>Show<br>Total</span>
          <span>Show Average<br>(current month)</span><span>Show Total<br>(current month)</span>
@@ -2407,6 +2492,7 @@ async function saveRpSettings() {
     r3Daywise: pr0.r3Daywise !== false,
     r2Months:  pr0.r2Months || [],        // owned by the Saved days view
     show:      _rpDraft.show,
+    reports:   _rpDraft.reports.map(r => ({ id: r.id, show: r.show })),
     parties,
   } });
 
@@ -2855,7 +2941,7 @@ async function rpPersistPrefs() {
 function rpSwitch(n) {
   _rpTab = n;
   rpSyncDaywiseToggle();
-  RP_TAB_ORDER.forEach(i => {
+  [1, 2, 3].forEach(i => {
     document.getElementById('rpTab' + i).classList.toggle('on', n === i);
     document.getElementById('rpPane' + i).style.display = n === i ? 'block' : 'none';
   });
@@ -2964,8 +3050,41 @@ function rpOnLabel(md) {
   return rpDayNum(md.onDay) + ' ' + RP_MON[md.M-1].toUpperCase();
 }
 // Report ids stay stable (1 Power Sector, 2 Customer, 3 Sourcewise) so saved
-// settings keep their meaning; RP_TAB_ORDER is only the order they appear in.
-const RP_TAB_ORDER = [1, 3, 2];
+// settings keep their meaning. Which ones show, and in what order, is
+// powerReport.reports = [{ id, show }] — one list drives the tabs, the PDF,
+// the Excel sheets and the HTML tabs alike.
+const RP_REPORTS = {
+  1: { name: 'Power Sector', sheet: 'Power sector', hint: 'One row per customer' },
+  3: { name: 'Sourcewise',   sheet: 'Sourcewise',   hint: 'One row per colliery, grouped by coalfield' },
+  2: { name: 'Customer',     sheet: 'Customer',     hint: 'Colliery split for each customer, day by day' },
+};
+const RP_DEFAULT_ORDER = [1, 3, 2];
+function rpReportList(saved) {
+  if (saved === undefined) saved = (appSettings.powerReport || {}).reports;
+  const out = [], seen = new Set();
+  (Array.isArray(saved) ? saved : []).forEach(r => {
+    const id = +(r && r.id);
+    if (RP_REPORTS[id] && !seen.has(id)) { seen.add(id); out.push({ id, show: r.show !== false }); }
+  });
+  RP_DEFAULT_ORDER.forEach(id => { if (!seen.has(id)) out.push({ id, show: true }); });
+  if (!out.some(r => r.show)) out[0].show = true;      // never leave the screen empty
+  return out;
+}
+function rpVisibleReports() { return rpReportList().filter(r => r.show).map(r => r.id); }
+
+// Put the tab buttons in the configured order and hide the switched-off ones.
+function rpApplyReportTabs() {
+  const list = rpReportList();
+  const first = document.getElementById('rpTab1');
+  if (!first) return;
+  const bar = first.parentNode;
+  const anchor = bar.querySelector('.rp-sw');
+  list.forEach(r => {
+    const tab = document.getElementById('rpTab' + r.id);
+    tab.style.display = r.show ? '' : 'none';
+    bar.insertBefore(tab, anchor);
+  });
+}
 function rpDwKey(which) { return 'r' + which + 'Daywise'; }
 function rpDaywise(which) {
   const pr = appSettings.powerReport || {};
@@ -3059,9 +3178,12 @@ function renderRpReports() {
     ? `${md.monLabel} · ${Object.keys(md.days).length} day(s) of data · ${n1} customer rows · ${n2} customer block(s)`
     : 'No data yet — load a despatch file or save a day.';
   _rpTables = [];
-  renderRp1(md);
-  renderRp3(md);
-  renderRp2(md);
+  const vis = rpVisibleReports();
+  const RENDER = { 1: renderRp1, 2: renderRp2, 3: renderRp3 };
+  [1, 2, 3].forEach(id => { if (vis.indexOf(id) < 0) document.getElementById('rpPane' + id).innerHTML = ''; });
+  vis.forEach(id => RENDER[id](md));        // _rpTables comes out in display order
+  rpApplyReportTabs();
+  if (vis.indexOf(_rpTab) < 0) _rpTab = vis[0];
   rpSwitch(_rpTab);
   rpSyncExportBtns();
 }
@@ -3606,7 +3728,7 @@ async function rpShareOrSave(blob, fname, type, title, onBlocked) {
 // ── every report card, rendered off-screen in the light palette ────────
 async function rpSnapCards(onProgress) {
   const cards = [];
-  RP_TAB_ORDER.map(i => 'rpPane' + i).forEach(id => {
+  rpVisibleReports().map(i => 'rpPane' + i).forEach(id => {
     document.getElementById(id).querySelectorAll('.rp-card').forEach(c => {
       if (c.querySelector('.rp-t')) cards.push(c);
     });
@@ -3876,11 +3998,10 @@ function rpBuildHtml() {
   const cond = "font-family:'IBM Plex Sans Condensed','IBM Plex Sans',Arial,sans-serif;";
   const mono = "font-family:'IBM Plex Mono',Consolas,monospace;";
   let n = 0;
-  const groups = [
-    { id: 'p1', label: 'Power Sector', tables: _rpTables.filter(t => t.sheet === 'Power sector') },
-    { id: 'p3', label: 'Sourcewise',   tables: _rpTables.filter(t => t.sheet === 'Sourcewise')   },
-    { id: 'p2', label: 'Customer',     tables: _rpTables.filter(t => t.sheet === 'Customer')     },
-  ].filter(g => g.tables.length);
+  const groups = rpVisibleReports().map(id => ({
+    id: 'p' + id, label: RP_REPORTS[id].name,
+    tables: _rpTables.filter(t => t.sheet === RP_REPORTS[id].sheet),
+  })).filter(g => g.tables.length);
 
   // Tabs stay pure CSS so they still work if scripts are blocked; the sorting,
   // filtering and column toggle are progressive enhancements on top.
@@ -4103,44 +4224,39 @@ async function rpExportXlsx() {
   if (!_rpTables.length) { alert('Nothing to export yet — the reports are empty.'); return; }
   rpLockBtns(true, 'rpXlsBtn', 'Building…');
   try {
-    const t1 = _rpTables.filter(t => t.sheet === 'Power sector');
-    const t3 = _rpTables.filter(t => t.sheet === 'Sourcewise');
-    const t2 = _rpTables.filter(t => t.sheet === 'Customer');
+    const sheets = rpVisibleReports()
+      .map(id => ({ name: RP_REPORTS[id].name, tables: _rpTables.filter(t => t.sheet === RP_REPORTS[id].sheet) }))
+      .filter(sh => sh.tables.length);
+    if (!sheets.length) throw new Error('nothing to export');
     const enc = new TextEncoder();
+    const WS = 'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml';
+    const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
     const files = {
       '[Content_Types].xml': enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
         '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
         '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
         '<Default Extension="xml" ContentType="application/xml"/>' +
         '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
-        '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
-        '<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
-        '<Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+        sheets.map((_, n) => `<Override PartName="/xl/worksheets/sheet${n + 1}.xml" ContentType="${WS}"/>`).join('') +
         '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
         '</Types>'),
       '_rels/.rels': enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
         '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
-        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+        `<Relationship Id="rId1" Type="${REL}/officeDocument" Target="xl/workbook.xml"/>` +
         '</Relationships>'),
       'xl/workbook.xml': enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
         '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ' +
-        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' +
-        '<sheet name="Power Sector" sheetId="1" r:id="rId1"/>' +
-        '<sheet name="Sourcewise" sheetId="3" r:id="rId4"/>' +
-        '<sheet name="Customer" sheetId="2" r:id="rId2"/>' +
+        `xmlns:r="${REL}"><sheets>` +
+        sheets.map((sh, n) => `<sheet name="${rpXmlEsc(sh.name)}" sheetId="${n + 1}" r:id="rId${n + 1}"/>`).join('') +
         '</sheets></workbook>'),
       'xl/_rels/workbook.xml.rels': enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
         '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
-        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' +
-        '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>' +
-        '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
-        '<Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet3.xml"/>' +
+        sheets.map((_, n) => `<Relationship Id="rId${n + 1}" Type="${REL}/worksheet" Target="worksheets/sheet${n + 1}.xml"/>`).join('') +
+        `<Relationship Id="rId${sheets.length + 1}" Type="${REL}/styles" Target="styles.xml"/>` +
         '</Relationships>'),
       'xl/styles.xml': enc.encode(rpStylesXml()),
-      'xl/worksheets/sheet1.xml': enc.encode(rpSheetXml(t1)),
-      'xl/worksheets/sheet2.xml': enc.encode(rpSheetXml(t2)),
-      'xl/worksheets/sheet3.xml': enc.encode(rpSheetXml(t3)),
     };
+    sheets.forEach((sh, n) => { files[`xl/worksheets/sheet${n + 1}.xml`] = enc.encode(rpSheetXml(sh.tables)); });
     const blob = _buildZip(files);
     const fname = `Road_Power_Report_${rpStamp()}.xlsx`;
     await rpShareOrSave(blob, fname,
@@ -4471,7 +4587,7 @@ loadDbFromGitHub();
       </div>
       <button class="stt-close" onclick="closeRpMerge()">✕</button>
     </div>
-    <div class="stt-body" style="grid-template-columns:1fr;">
+    <div class="stt-body" style="grid-template-columns:minmax(0,1fr);">
       <div class="stt-section">
         <label class="stt-label">Name shown on the report</label>
         <input id="rpMergeName" class="stt-input" type="text" placeholder="Customer name">
@@ -4506,7 +4622,7 @@ loadDbFromGitHub();
       </div>
       <button class="stt-close" onclick="closeRpAddR2()">✕</button>
     </div>
-    <div class="stt-body" style="grid-template-columns:1fr;">
+    <div class="stt-body" style="grid-template-columns:minmax(0,1fr);">
       <div class="stt-section">
         <input id="rpAddSearch" class="rp-search" type="search" placeholder="Search any customer name or code…" oninput="renderRpAddR2()" style="margin-bottom:6px;">
         <div class="rp-list-wrap"><div class="rp-scroll" id="rpAddList"></div></div>
@@ -4528,7 +4644,7 @@ loadDbFromGitHub();
       </div>
       <button class="stt-close" onclick="closeRpDays()">✕</button>
     </div>
-    <div class="stt-body" style="grid-template-columns:1fr;">
+    <div class="stt-body" style="grid-template-columns:minmax(0,1fr);">
       <div class="stt-section">
         <div class="rp-list-wrap"><div class="rp-scroll" id="rpDaysList" style="max-height:400px;"></div></div>
         <div class="stt-hint" style="margin-top:6px;">
