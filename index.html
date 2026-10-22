@@ -824,7 +824,7 @@ body.dark {
 .rp-list-wrap { border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; }
 .rp-list-head, .rp-party-row {
   display: grid;
-  grid-template-columns: 92px 1fr 30px 44px 34px 34px;
+  grid-template-columns: 84px minmax(0,1fr) 28px 42px 30px 30px 30px;
   align-items: center; gap: 3px; padding: 0 6px;
 }
 .rp-list-head {
@@ -835,6 +835,26 @@ body.dark {
   color: var(--dim); text-transform: uppercase; letter-spacing: .6px;
 }
 .rp-list-head span.c, .rp-party-row .c { text-align: center; }
+.rp-list-head span.rp-nilhd { display:flex; flex-direction:column; align-items:center; gap:2px; padding:4px 0; }
+.rp-nilhd input { width:13px; height:13px; margin:0; accent-color: var(--amber); cursor:pointer; }
+.rp-party-row input[data-f="nil"]:disabled { opacity:.25; cursor:default; }
+/* phones: the name takes the full width with its code underneath, so the
+   five tick columns still leave room to read it */
+@media (max-width: 560px) {
+  .rp-list-head, .rp-party-row { grid-template-columns: minmax(0,1fr) 26px 40px 28px 30px 28px; column-gap: 2px; }
+  .rp-list-head > span:first-child { display: none; }
+  .rp-list-head > span:nth-child(2) { grid-column: 1; }
+  .rp-party-row .rp-pname { grid-column: 1; grid-row: 1; white-space: normal; line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .rp-party-row .rp-pcode { grid-column: 1; grid-row: 2; font-size: 10px; }
+  .rp-party-row > .c { grid-row: 1 / span 2; }
+  .rp-party-row > .c:nth-child(3) { grid-column: 2; }
+  .rp-party-row > .c:nth-child(4) { grid-column: 3; }
+  .rp-party-row > .c:nth-child(5) { grid-column: 4; }
+  .rp-party-row > .c:nth-child(6) { grid-column: 5; }
+  .rp-party-row > .c:nth-child(7) { grid-column: 6; }
+  .rp-list-head span { letter-spacing: .3px; }
+}
 .rp-scroll { max-height: 340px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .rp-party-row { border-top: 1px solid var(--border); padding-top: 5px; padding-bottom: 5px; }
 .rp-party-row:first-child { border-top: none; }
@@ -1236,6 +1256,52 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 .rp-mode span { display:block; font-size:10px; color:var(--dim); margin-top:3px; line-height:1.45; }
 .rp-mode.on { border-color:#d97a06; background:rgba(217,122,6,.08); }
 .rp-mode.on b { color:#d97a06; }
+/* settings passcode */
+.rp-lkrow { display:grid; grid-template-columns:18px 1fr auto; align-items:center; gap:8px; padding:8px 10px; border-top:1px solid var(--border); cursor:pointer; }
+.rp-lkrow:first-child { border-top:none; }
+.rp-lkrow input { width:16px; height:16px; accent-color:#d97a06; margin:0; cursor:pointer; }
+.rp-lkrow.on { background:rgba(217,122,6,.08); }
+.rp-lkname { min-width:0; }
+.rp-lkname b { display:block; font-size:12px; color:var(--text); font-weight:600; }
+.rp-lkname span { display:block; font-size:10px; color:var(--dim); margin-top:1px; }
+.rp-lkex { font-family:var(--mono); font-size:11px; color:var(--dim); white-space:nowrap; }
+.rp-lkrow.on .rp-lkex { color:#d97a06; font-weight:600; }
+.rp-lkpins { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px; margin-top:10px; }
+.rp-lkpins input { font-family:var(--mono); letter-spacing:.2em; }
+.rp-lkpins input:placeholder-shown { letter-spacing:normal; font-family:var(--sans); }
+.rp-lkcheck { display:flex; align-items:center; gap:8px; margin-top:12px; font-size:12px; color:var(--text); cursor:pointer; }
+.rp-lkcheck input { width:16px; height:16px; accent-color:#d97a06; margin:0; }
+/* passcode pad */
+.rp-lock-ov {
+  position:fixed; inset:0; z-index:3000; display:none; align-items:center; justify-content:center;
+  background:rgba(8,12,18,.62); backdrop-filter:blur(4px); padding:16px;
+}
+.rp-lock-card {
+  width:100%; max-width:296px; background:var(--surface); border:1px solid var(--border);
+  border-radius:16px; padding:22px 18px 14px; text-align:center; box-shadow:0 18px 50px rgba(0,0,0,.35);
+}
+.rp-lock-ic { width:42px; height:42px; margin:0 auto 9px; border-radius:50%; display:grid; place-items:center; background:rgba(217,122,6,.13); color:#d97a06; }
+.rp-lock-what {
+  font-family:'IBM Plex Sans Condensed',sans-serif; font-size:13px; font-weight:600;
+  letter-spacing:.09em; text-transform:uppercase; color:var(--text);
+}
+.rp-lock-sub { font-size:11px; color:var(--dim); margin-top:3px; }
+.rp-lock-dots { display:flex; justify-content:center; gap:11px; margin:17px 0 7px; min-height:12px; }
+.rp-lock-dots i { width:11px; height:11px; border-radius:50%; border:1.5px solid var(--dim); transition:background .12s, border-color .12s; }
+.rp-lock-dots i.on { background:#d97a06; border-color:#d97a06; }
+.rp-lock-msg { font-size:11px; color:var(--red); min-height:16px; font-weight:600; }
+.rp-lock-keys { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:6px; }
+.rp-lock-keys button {
+  height:50px; border-radius:12px; border:1px solid var(--border); background:var(--bg);
+  color:var(--text); font-family:var(--mono); font-size:19px; font-weight:500; cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.rp-lock-keys button:active { background:rgba(217,122,6,.16); border-color:#d97a06; }
+.rp-lock-keys button.fn { font-family:'IBM Plex Sans',sans-serif; font-size:12px; font-weight:600; color:var(--dim); background:transparent; border-color:transparent; }
+.rp-lock-card.wait .rp-lock-keys button:not(.fn) { opacity:.35; pointer-events:none; }
+.rp-lock-card.shake { animation:rpShake .3s; }
+@keyframes rpShake { 20%,60% { transform:translateX(-8px); } 40%,80% { transform:translateX(8px); } }
+@media (prefers-reduced-motion: reduce) { .rp-lock-card.shake { animation:none; } .rp-lock-dots i { transition:none; } }
 .rp-pdfsz { font-style:normal; font-weight:500; font-family:var(--mono); font-size:10px; color:var(--dim); margin-left:4px; }
 .rp-monthpick { display:flex; flex-wrap:wrap; gap:6px; }
 .rp-mchip {
@@ -1304,7 +1370,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B31-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B32-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1547,6 +1613,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
             <span class="c">⛓</span>
             <span class="c">Power</span>
             <span class="c">R1</span>
+            <span class="c rp-nilhd" title="Keep every R1 customer in the report even with no despatch"><span>Nil</span><input type="checkbox" id="rpNilAll" onchange="rpSetNilAll(this.checked)"></span>
             <span class="c">R2</span>
           </div>
           <div class="rp-scroll" id="rpPartyBody"></div>
@@ -1554,6 +1621,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
         <div class="stt-hint" style="margin-top:6px;">
           <strong>Power</strong> — treated as power sector, its figures are written to the history file.
           <strong>R1</strong> — appears as a row in <em>Road Despatch to Power Sector</em>.
+          <strong>Nil</strong> — keeps that row even when the customer lifted nothing, with its figures shown as <b>·</b>; without it, a customer with no despatch in any period on show is left out. The box under Nil ticks it for every R1 customer.
           <strong>R2</strong> — gets a block in the Customer report.
           Ticking R1 or R2 ticks Power automatically. One row per party code, so a party with several codes needs each code ticked.
         </div>
@@ -1570,6 +1638,36 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
           Leave <strong>In total</strong> ticked for an ordinary colliery column.
           Untick it for a roll-up column such as “Talcher Total”, which already contains other columns and would otherwise be counted twice.
           At least one column must stay ticked, or the Total has nothing to add.
+        </div>
+      </div>
+
+      <div class="stt-section">
+        <div class="stt-section-hdr">
+          <label class="stt-label">Settings Passcode</label>
+          <label class="rp-sw" title="Ask for a passcode before settings open">
+            <input type="checkbox" id="rpLockOn" onchange="rpLockSet('on', this.checked)">
+            <span class="rp-sw-track"><span class="rp-sw-knob"></span></span>
+            <span class="rp-sw-lbl" id="rpLockOnLbl">Off</span>
+          </label>
+        </div>
+        <div class="stt-hint" style="margin:0 0 2px;">Ask for a passcode before these settings open, on every phone that uses the app.</div>
+        <div id="rpLockBody">
+          <div class="rp-rsub">Passcode</div>
+          <div class="rp-rlist" id="rpLockModes"></div>
+          <div id="rpLockPin">
+            <div class="rp-lkpins">
+              <input id="rpLockPin1" class="stt-input" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" placeholder="New PIN">
+              <input id="rpLockPin2" class="stt-input" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" placeholder="PIN again">
+            </div>
+            <div class="stt-hint" id="rpLockPinNote" style="margin-top:6px;"></div>
+          </div>
+          <div class="rp-rsub">Stay unlocked</div>
+          <div class="rp-monthpick" id="rpLockStay"></div>
+          <label class="rp-lkcheck"><input type="checkbox" id="rpLockDays" onchange="rpLockSet('days', this.checked)">Also ask before opening Saved days</label>
+          <div class="stt-hint" style="margin-top:8px;">
+            Date codes follow the phone's own date. Changes take effect when you save.
+            Forgot the PIN? In <code>settings-test.json</code> on GitHub, set <code>"on"</code> under <code>powerReport → lock</code> to <code>false</code>.
+          </div>
         </div>
       </div>
 
@@ -2099,7 +2197,20 @@ function rpPartyCollieries(code) {
 // ═══════════════════════════════════════════════════════
 function rpDefaults() { return { historyPath: 'roadpower-history-test.json', parties: [] }; }
 
-function openRpSettings() {
+// Settings open only once the passcode is in. If the settings file never
+// loaded, the lock can't be known (and saving would overwrite the real file
+// with defaults), so try again before opening.
+async function openRpSettings() {
+  if (_rpPad) return;
+  if (!_settingsSha) {
+    rpSetStatus('Loading settings…', false);
+    await loadSettingsFromGitHub();
+    if (!_settingsSha) { alert('Settings could not be loaded — check the connection and try again.'); return; }
+    rpSetStatus('', false);
+  }
+  rpUnlock(rpOpenSettingsNow);
+}
+function rpOpenSettingsNow() {
   const pr = appSettings.powerReport || rpDefaults();
   const shDef = rpShowDefaults();
   const shCur = pr.show || {};
@@ -2110,13 +2221,14 @@ function openRpSettings() {
   }));
   _rpDraft = { historyPath: pr.historyPath || 'roadpower-history-test.json', sel: {},
                show: shDef, reports: rpReportList(pr.reports), exportReports: rpExportList(pr),
-               pdfLevel: rpPdfLevel(pr), pdfMode: rpPdfMode(pr) };
+               pdfLevel: rpPdfLevel(pr), pdfMode: rpPdfMode(pr), lock: rpLockDraft(pr) };
   (pr.parties || []).forEach(p => {
     const codes = rpCodesOf(p);
     _rpDraft.sel[codes[0]] = {
       name:    p.name || '',
       power:   p.power !== false,
       r1:      !!p.r1,
+      nil:     !!(p.r1 && p.r1Nil),
       r2:      !!p.r2,
       members: codes.slice(1),
       cols:    (p.cols || []).map(c => ({ label: c.label || '', colCodes: c.colCodes || '', isSubtotal: !!c.isSubtotal })),
@@ -2133,6 +2245,9 @@ function openRpSettings() {
   rpSetPdfLevel(_rpDraft.pdfLevel);
   rpSetPdfMode(_rpDraft.pdfMode);
   rpPdfEstimate();
+  document.getElementById('rpLockPin1').value = '';
+  document.getElementById('rpLockPin2').value = '';
+  renderRpLock();
   renderRpShowGrids();
   renderRpParties();
   renderRpR2();
@@ -2206,6 +2321,7 @@ function renderRpParties() {
       `<div class="c"><button class="rp-merge-btn" title="Merge codes">⛓</button></div>` +
       `<div class="c"><input type="checkbox" data-f="power" ${sel.power?'checked':''}></div>` +
       `<div class="c"><input type="checkbox" data-f="r1" ${sel.r1?'checked':''}></div>` +
+      `<div class="c"><input type="checkbox" data-f="nil" ${sel.r1&&sel.nil?'checked':''} title="Keep in the Power Sector report even with no despatch"></div>` +
       `<div class="c"><input type="checkbox" data-f="r2" ${sel.r2?'checked':''}></div>`;
     row.querySelectorAll('input[type="checkbox"]').forEach(cb => {
       cb.onchange = () => rpSetFlag(p.code, p.name, cb.dataset.f, cb.checked);
@@ -2227,6 +2343,7 @@ function renderRpParties() {
   });
   body.innerHTML = '';
   body.appendChild(frag);
+  rpSyncNilAll();
   if (list.length > 400) {
     const more = document.createElement('div');
     more.className = 'rp-count';
@@ -2424,6 +2541,215 @@ function rpSetPdfLevel(level) {
   RP_PDF_LEVELS.forEach(l => document.getElementById('rpPdf_' + l).classList.toggle('on', _rpDraft.pdfLevel === l));
 }
 
+// ── Settings passcode ──────────────────────────────────────────────────
+// Stored with the report settings, so it applies on every phone that opens
+// the app:  powerReport.lock = { on, mode, stay, days, pin: { salt, hash, len } }
+// A custom PIN is kept only as a salted SHA-256 hash. Date codes follow the
+// phone's own date. This keeps casual hands out of settings; it is not a
+// vault — anyone who can edit the settings file on GitHub can switch it off.
+const rp2 = n => String(n).padStart(2, '0');
+const RP_LOCK_MODES = [
+  { id: 'ddmm',   name: 'Today’s date · DDMM',      code: d => rp2(d.getDate()) + rp2(d.getMonth() + 1) },
+  { id: 'mmdd',   name: 'Today’s date · MMDD',      code: d => rp2(d.getMonth() + 1) + rp2(d.getDate()) },
+  { id: 'ddmmyy', name: 'Today’s date · DDMMYY',    code: d => rp2(d.getDate()) + rp2(d.getMonth() + 1) + rp2(d.getFullYear() % 100) },
+  { id: 'rev',    name: 'Today’s date backwards',   desc: 'DDMM read right to left',
+    code: d => (rp2(d.getDate()) + rp2(d.getMonth() + 1)).split('').reverse().join('') },
+  { id: 'pin',    name: 'Custom PIN',               desc: '4 to 8 digits that you choose', pin: true },
+  { id: 'pindd',  name: 'Custom PIN + today’s day', desc: 'the PIN, then today’s date as DD', pin: true },
+];
+const RP_LOCK_STAY = [[0, 'Ask every time'], [5, '5 minutes'], [30, '30 minutes'], [-1, 'Until the app is closed']];
+
+// SHA-256 of a string, as hex
+function rpSha256(str) {
+  const ror = (x, n) => (x >>> n) | (x << (32 - n));
+  const K = rpSha256.K || (rpSha256.K = (() => {
+    const k = [];
+    for (let n = 2; k.length < 64; n++) {
+      let p = true;
+      for (let i = 2; i * i <= n; i++) if (n % i === 0) { p = false; break; }
+      if (p) k.push((Math.cbrt(n) % 1) * 4294967296 | 0);
+    }
+    return k;
+  })());
+  const b = new TextEncoder().encode(str);
+  const l = b.length, n = ((l + 9 + 63) >> 6) << 6;
+  const m = new Uint8Array(n);
+  m.set(b); m[l] = 0x80;
+  const dv = new DataView(m.buffer);
+  dv.setUint32(n - 8, Math.floor(l / 0x20000000)); dv.setUint32(n - 4, (l * 8) >>> 0);
+  const H = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+  const w = new Int32Array(64);
+  for (let o = 0; o < n; o += 64) {
+    for (let i = 0; i < 16; i++) w[i] = dv.getUint32(o + i * 4);
+    for (let i = 16; i < 64; i++) {
+      const x = w[i - 15], y = w[i - 2];
+      w[i] = (w[i - 16] + (ror(x, 7) ^ ror(x, 18) ^ (x >>> 3)) + w[i - 7] + (ror(y, 17) ^ ror(y, 19) ^ (y >>> 10))) | 0;
+    }
+    let [a, bb, c, d, e, f, g, h] = H;
+    for (let i = 0; i < 64; i++) {
+      const t1 = (h + (ror(e, 6) ^ ror(e, 11) ^ ror(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + w[i]) | 0;
+      const t2 = ((ror(a, 2) ^ ror(a, 13) ^ ror(a, 22)) + ((a & bb) ^ (a & c) ^ (bb & c))) | 0;
+      h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = bb; bb = a; a = (t1 + t2) | 0;
+    }
+    [a, bb, c, d, e, f, g, h].forEach((v, i) => { H[i] = (H[i] + v) | 0; });
+  }
+  return H.map(v => (v >>> 0).toString(16).padStart(8, '0')).join('');
+}
+
+// the lock as it stands in the loaded settings, tidied
+function rpLockCfg(lk) {
+  lk = lk || (appSettings.powerReport || {}).lock || {};
+  let mode = RP_LOCK_MODES.find(m => m.id === lk.mode) || RP_LOCK_MODES[0];
+  const pin = lk.pin && lk.pin.hash && lk.pin.salt ? lk.pin : null;
+  if (mode.pin && !pin) mode = RP_LOCK_MODES[0];     // never lock anyone out over a missing PIN
+  const stay = RP_LOCK_STAY.some(s => s[0] === lk.stay) ? lk.stay : 0;
+  return { on: !!lk.on, mode, pin, stay, days: !!lk.days };
+}
+function rpLockLen(cfg) {
+  if (!cfg.mode.pin) return cfg.mode.code(new Date()).length;
+  return (cfg.pin.len || 4) + (cfg.mode.id === 'pindd' ? 2 : 0);
+}
+function rpLockMatch(input, cfg) {
+  const now = new Date();
+  if (!cfg.mode.pin) return input === cfg.mode.code(now);
+  let body = input;
+  if (cfg.mode.id === 'pindd') {
+    const dd = rp2(now.getDate());
+    if (!input.endsWith(dd)) return false;
+    body = input.slice(0, -2);
+  }
+  return rpSha256(cfg.pin.salt + ':' + body) === cfg.pin.hash;
+}
+
+let _rpUnlockedAt = 0, _rpLockFails = 0, _rpLockUntil = 0, _rpPad = null;
+function rpLockFresh(cfg) {
+  if (!_rpUnlockedAt) return false;
+  if (cfg.stay === -1) return true;
+  return cfg.stay > 0 && Date.now() - _rpUnlockedAt < cfg.stay * 60000;
+}
+// run `then` once the passcode is in — straight away when there is no lock,
+// or while an earlier unlock is still fresh
+function rpUnlock(then, what) {
+  const cfg = rpLockCfg();
+  if (!cfg.on || rpLockFresh(cfg)) return then();
+  _rpPad = { buf: '', then, len: rpLockLen(cfg) };
+  document.getElementById('rpLockWhat').textContent = what || 'Settings are locked';
+  document.getElementById('rpLockMsg').textContent = '';
+  document.getElementById('rpLockOverlay').style.display = 'flex';
+  rpPadDraw();
+  rpPadTick();
+}
+function rpPadClose() {
+  _rpPad = null;
+  document.getElementById('rpLockOverlay').style.display = 'none';
+}
+function rpPadDraw() {
+  if (!_rpPad) return;
+  const dots = document.getElementById('rpLockDots');
+  let h = '';
+  for (let i = 0; i < _rpPad.len; i++) h += `<i class="${i < _rpPad.buf.length ? 'on' : ''}"></i>`;
+  dots.innerHTML = h;
+}
+function rpPadTick() {
+  if (!_rpPad) return;
+  const wait = Math.ceil((_rpLockUntil - Date.now()) / 1000);
+  const card = document.getElementById('rpLockCard');
+  card.classList.toggle('wait', wait > 0);
+  if (wait > 0) {
+    document.getElementById('rpLockMsg').textContent = `Too many wrong tries — wait ${wait} s`;
+    setTimeout(rpPadTick, 500);
+  } else if (card.dataset.waited) {
+    document.getElementById('rpLockMsg').textContent = '';
+  }
+  card.dataset.waited = wait > 0 ? '1' : '';
+}
+function rpPadKey(k) {
+  if (!_rpPad || Date.now() < _rpLockUntil) return;
+  if (k === 'back') _rpPad.buf = _rpPad.buf.slice(0, -1);
+  else if (/^\d$/.test(k) && _rpPad.buf.length < _rpPad.len) _rpPad.buf += k;
+  document.getElementById('rpLockMsg').textContent = '';
+  rpPadDraw();
+  if (_rpPad.buf.length < _rpPad.len) return;
+  const cfg = rpLockCfg();
+  if (rpLockMatch(_rpPad.buf, cfg)) {
+    const then = _rpPad.then;
+    _rpUnlockedAt = Date.now(); _rpLockFails = 0;
+    rpPadClose();
+    then();
+    return;
+  }
+  _rpLockFails++;
+  const card = document.getElementById('rpLockCard');
+  card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+  setTimeout(() => {
+    if (!_rpPad) return;
+    _rpPad.buf = '';
+    rpPadDraw();
+    if (_rpLockFails >= 5) { _rpLockFails = 0; _rpLockUntil = Date.now() + 30000; rpPadTick(); }
+    else document.getElementById('rpLockMsg').textContent = 'Wrong passcode';
+  }, 260);
+}
+document.addEventListener('keydown', e => {
+  if (!_rpPad) return;
+  if (/^\d$/.test(e.key)) { rpPadKey(e.key); e.preventDefault(); }
+  else if (e.key === 'Backspace') { rpPadKey('back'); e.preventDefault(); }
+  else if (e.key === 'Escape') rpPadClose();
+});
+
+// ── the passcode section in settings ──
+function rpLockDraft(pr) {
+  const lk = (pr || {}).lock || {};
+  const cfg = rpLockCfg(lk);
+  return { on: cfg.on, mode: (RP_LOCK_MODES.find(m => m.id === lk.mode) || cfg.mode).id,
+           stay: cfg.stay, days: cfg.days, pin: cfg.pin };
+}
+function renderRpLock() {
+  const d = _rpDraft.lock;
+  const now = new Date();
+  document.getElementById('rpLockOn').checked = d.on;
+  document.getElementById('rpLockOnLbl').textContent = d.on ? 'On' : 'Off';
+  document.getElementById('rpLockBody').style.display = d.on ? '' : 'none';
+  document.getElementById('rpLockModes').innerHTML = RP_LOCK_MODES.map(m => {
+    const ex = m.pin ? (m.id === 'pindd' ? `PIN + ${rp2(now.getDate())}` : (d.pin ? `${d.pin.len} digits, set` : 'not set yet'))
+                     : `today ${m.code(now)}`;
+    return `<label class="rp-lkrow${d.mode === m.id ? ' on' : ''}">` +
+      `<input type="radio" name="rpLockMode" value="${m.id}"${d.mode === m.id ? ' checked' : ''} onchange="rpLockSet('mode', this.value)">` +
+      `<span class="rp-lkname"><b>${m.name}</b>${m.desc ? `<span>${m.desc}</span>` : ''}</span>` +
+      `<span class="rp-lkex">${ex}</span></label>`;
+  }).join('');
+  const needPin = RP_LOCK_MODES.find(m => m.id === d.mode).pin;
+  document.getElementById('rpLockPin').style.display = needPin ? '' : 'none';
+  document.getElementById('rpLockPinNote').textContent = d.pin
+    ? 'A PIN is set. Type a new one in both boxes to change it, or leave them empty to keep it.'
+    : 'Type the PIN in both boxes. It is stored only as a scrambled hash, so it can’t be read back — note it down.';
+  document.getElementById('rpLockStay').innerHTML = RP_LOCK_STAY.map(([v, t]) =>
+    `<button class="rp-mchip${d.stay === v ? ' on' : ''}" onclick="rpLockSet('stay', ${v})">${t}</button>`).join('');
+  document.getElementById('rpLockDays').checked = d.days;
+}
+function rpLockSet(f, v) {
+  _rpDraft.lock[f] = v;
+  renderRpLock();
+}
+// what goes into the saved settings, or null with the reason shown
+function rpLockForSave(status) {
+  const d = _rpDraft.lock;
+  const p1 = document.getElementById('rpLockPin1').value.trim();
+  const p2 = document.getElementById('rpLockPin2').value.trim();
+  const mode = RP_LOCK_MODES.find(m => m.id === d.mode);
+  let pin = d.pin || null;
+  const fail = msg => { status.textContent = msg; status.style.color = '#e05'; return null; };
+  if (d.on && mode.pin && (p1 || p2)) {
+    if (!/^\d{4,8}$/.test(p1)) return fail('The passcode PIN must be 4 to 8 digits.');
+    if (p1 !== p2) return fail('The two passcode PINs don’t match.');
+    const salt = Array.from(crypto.getRandomValues(new Uint8Array(8)), x => x.toString(16).padStart(2, '0')).join('');
+    pin = { salt, hash: rpSha256(salt + ':' + p1), len: p1.length };
+  }
+  if (d.on && mode.pin && !pin) return fail('Set a PIN for the settings passcode — type it in both boxes.');
+  const out = { on: !!d.on, mode: d.mode, stay: d.stay, days: !!d.days };
+  if (pin) out.pin = pin;
+  return out;
+}
+
 function rpSetPdfMode(mode) {
   _rpDraft.pdfMode = mode === 'image' ? 'image' : 'render';
   ['image', 'render'].forEach(m => document.getElementById('rpPdfM_' + m).classList.toggle('on', _rpDraft.pdfMode === m));
@@ -2493,11 +2819,29 @@ function rpSetFlag(code, name, field, val) {
   const s = _rpDraft.sel[code];
   if (name) s.name = name;
   s[field] = val;
-  if (val && (field === 'r1' || field === 'r2')) s.power = true;   // R1/R2 imply POWER
+  if (val && field === 'nil') s.r1 = true;                          // Nil implies R1
+  if (val && (field === 'r1' || field === 'r2' || field === 'nil')) s.power = true;   // R1/R2 imply POWER
   if (!val && field === 'power') { s.r1 = false; s.r2 = false; }   // un-power drops both
+  if (!s.r1) s.nil = false;
   if (field === 'r2' && val && (!s.cols || !s.cols.length)) rpAutoCols(code, true);
   renderRpParties();
   renderRpR2();
+}
+
+// the Nil box in the list heading: ticked when every R1 customer keeps its
+// row at nil, half-ticked when only some do
+function rpSyncNilAll() {
+  const box = document.getElementById('rpNilAll');
+  if (!box) return;
+  const r1 = Object.values(_rpDraft.sel).filter(s => s.r1);
+  const n = r1.filter(s => s.nil).length;
+  box.checked = r1.length > 0 && n === r1.length;
+  box.indeterminate = n > 0 && n < r1.length;
+  box.disabled = !r1.length;
+}
+function rpSetNilAll(on) {
+  Object.values(_rpDraft.sel).forEach(s => { if (s.r1) s.nil = on; });
+  renderRpParties();
 }
 
 function renderRpR2() {
@@ -2579,6 +2923,7 @@ async function saveRpSettings() {
     const s = _rpDraft.sel[code];
     if (!s.power && !s.r1 && !s.r2) return;
     const e = { code, codes: [code, ...(s.members || [])], name: s.name || '', power: !!s.power, r1: !!s.r1, r2: !!s.r2 };
+    if (s.r1 && s.nil) e.r1Nil = true;
     if (s.r2) e.cols = (s.cols || []).filter(c => c.label || c.colCodes)
                                      .map(c => ({ label: c.label.trim(), colCodes: c.colCodes.replace(/\s/g,''), isSubtotal: !!c.isSubtotal }));
     parties.push(e);
@@ -2594,6 +2939,9 @@ async function saveRpSettings() {
     }
   }
 
+  const lock = rpLockForSave(status);
+  if (!lock) return;
+
   const pr0 = appSettings.powerReport || {};
   const newSettings = Object.assign({}, appSettings, { powerReport: {
     historyPath: histPath,
@@ -2607,6 +2955,7 @@ async function saveRpSettings() {
     exportReports: _rpDraft.exportReports.map(r => ({ id: r.id, show: r.show })),
     pdfMode:       _rpDraft.pdfMode,
     pdfLevel:      _rpDraft.pdfLevel,
+    lock,
     parties,
   } });
 
@@ -2636,6 +2985,10 @@ async function saveRpSettings() {
     const resp = await res.json();
     _settingsSha = resp.content.sha;
     appSettings = Object.assign({}, appSettings, { powerReport: newSettings.powerReport });
+    _rpUnlockedAt = Date.now();               // whoever just saved is already in
+    _rpDraft.lock = rpLockDraft(newSettings.powerReport);
+    document.getElementById('rpLockPin1').value = '';
+    document.getElementById('rpLockPin2').value = '';
     rpResetFileMaps();
     status.textContent = '✓ Saved'; status.style.color = 'var(--green)';
     renderRpReports();
@@ -2841,7 +3194,11 @@ async function saveRpAllDays() {
 // Months whose Total and Avg / day appear in all three reports.
 let _rpPins = new Set();
 
-async function openRpDays() {
+function openRpDays() {
+  if (rpLockCfg().days) rpUnlock(rpOpenDaysNow, 'Saved days are locked');
+  else rpOpenDaysNow();
+}
+async function rpOpenDaysNow() {
   const pr = appSettings.powerReport || {};
   _rpPins = new Set(pr.r2Months || []);
   document.getElementById('rpDaysOverlay').style.display = 'block';
@@ -3447,12 +3804,14 @@ function renderRp1(md) {
     const refVals = refs.map(ref => rpSumParty(ref.pc, codes));
     const refSum  = refVals.reduce((a,b) => a+b, 0);
     return { name: p.name || codes[0], codes, vals, prog, cnt, refVals, refSum,
-             today: vals[actD] || 0 };
+             today: vals[actD] || 0, keep: !!p.r1Nil };
   });
 
-  // hide a customer only when it has lifted nothing in any period on show
-  rows = rows.filter(r => r.prog > 0 || r.refSum > 0)
-             .sort((a,b) => (b.prog - a.prog) || (b.refSum - a.refSum));
+  // hide a customer only when it has lifted nothing in any period on show —
+  // unless it is marked Nil, which keeps its row; those sit at the foot, A–Z
+  rows = rows.filter(r => r.keep || r.prog > 0 || r.refSum > 0)
+             .sort((a,b) => (b.prog - a.prog) || (b.refSum - a.refSum) ||
+                            (!a.prog && !a.refSum ? a.name.localeCompare(b.name) : 0));
 
   const cut  = (md.days[actD] && md.days[actD].cut) || '';
 
@@ -5720,6 +6079,24 @@ loadDbFromGitHub();
 
 </script>
 <!-- ═══════════ MERGE CODES ═══════════ -->
+<div id="rpLockOverlay" class="rp-lock-ov" onclick="if(event.target===this)rpPadClose()">
+  <div class="rp-lock-card" id="rpLockCard" role="dialog" aria-modal="true" aria-labelledby="rpLockWhat">
+    <div class="rp-lock-ic">
+      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2" stroke-width="2"/><path d="M8 11V8a4 4 0 018 0v3" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+    <div class="rp-lock-what" id="rpLockWhat">Settings are locked</div>
+    <div class="rp-lock-sub">Enter the passcode</div>
+    <div class="rp-lock-dots" id="rpLockDots"></div>
+    <div class="rp-lock-msg" id="rpLockMsg" aria-live="polite"></div>
+    <div class="rp-lock-keys">
+      <button onclick="rpPadKey('1')">1</button><button onclick="rpPadKey('2')">2</button><button onclick="rpPadKey('3')">3</button>
+      <button onclick="rpPadKey('4')">4</button><button onclick="rpPadKey('5')">5</button><button onclick="rpPadKey('6')">6</button>
+      <button onclick="rpPadKey('7')">7</button><button onclick="rpPadKey('8')">8</button><button onclick="rpPadKey('9')">9</button>
+      <button class="fn" onclick="rpPadClose()">Cancel</button><button onclick="rpPadKey('0')">0</button><button class="fn" onclick="rpPadKey('back')" aria-label="Delete">⌫</button>
+    </div>
+  </div>
+</div>
+
 <div id="rpMergeOverlay" class="stt-overlay" onclick="if(event.target===this)closeRpMerge()">
   <div class="stt-panel" style="max-width:560px;">
     <div class="stt-header">
