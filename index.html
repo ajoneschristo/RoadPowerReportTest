@@ -1256,6 +1256,98 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 .rp-mode span { display:block; font-size:10px; color:var(--dim); margin-top:3px; line-height:1.45; }
 .rp-mode.on { border-color:#d97a06; background:rgba(217,122,6,.08); }
 .rp-mode.on b { color:#d97a06; }
+/* settings tabs */
+#rpSettingsOverlay .stt-panel { overflow: clip; }
+.rp-stabs {
+  position:sticky; top:-24px; z-index:6; display:flex; gap:2px; padding:4px 10px 0;
+  background:var(--surface); border-bottom:1px solid var(--border);
+  overflow-x:auto; scrollbar-width:none;
+}
+.rp-stabs::-webkit-scrollbar { display:none; }
+.rp-stabs button {
+  flex:1 0 auto; min-width:62px; position:relative; display:flex; flex-direction:column; align-items:center; gap:3px;
+  padding:8px 6px 9px; margin-bottom:-1px; border:none; border-bottom:2.5px solid transparent; background:none; cursor:pointer;
+  color:var(--dim); font-family:'IBM Plex Sans Condensed',sans-serif; font-size:10.5px; font-weight:600;
+  letter-spacing:.07em; text-transform:uppercase; white-space:nowrap; -webkit-tap-highlight-color:transparent;
+}
+.rp-stabs button svg { width:19px; height:19px; }
+.rp-stabs button:hover { color:var(--text); }
+.rp-stabs button.on { color:#d97a06; border-bottom-color:#d97a06; }
+.rp-stabs button.lit::after {
+  content:''; position:absolute; top:6px; left:calc(50% + 8px); width:7px; height:7px; border-radius:50%;
+  background:var(--green); box-shadow:0 0 0 2px var(--surface);
+}
+@media (min-width: 700px) {
+  .rp-stabs { padding:0 16px; }
+  .rp-stabs button { flex:0 0 auto; flex-direction:row; gap:7px; padding:13px 14px 12px; font-size:12px; }
+  .rp-stabs button svg { width:17px; height:17px; }
+  .rp-stabs button.lit::after { top:9px; left:22px; }
+}
+.rp-stab[hidden] { display:none !important; }
+.rp-stabs .rp-lg { display:none; }
+@media (min-width: 700px) { .rp-stabs .rp-lg { display:inline; } .rp-stabs .rp-sm { display:none; } }
+.rp-sttfoot { position:sticky; bottom:-24px; z-index:6; background:var(--surface); border-top:1px solid var(--border); padding-top:8px; }
+.rp-sttfoot .stt-footer { border-top:none; padding-top:6px; }
+.stt-input.bad, .rp-gsrow input.bad { border-color:var(--red) !important; box-shadow:0 0 0 3px rgba(192,57,43,.12); }
+/* google sheet */
+.rp-gsform { display:grid; gap:10px; }
+.rp-gsfld { display:block; }
+.rp-gsfld > span { display:block; font-size:11px; font-weight:600; color:var(--mid); margin:0 0 4px 2px; }
+.rp-gstest { display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap; }
+.rp-gsmsg { font-size:11.5px; color:var(--dim); line-height:1.4; flex:1 1 200px; }
+.rp-gsmsg.ok { color:var(--green); font-weight:600; }
+.rp-gsmsg.bad { color:var(--red); }
+.rp-gsdef { display:grid; grid-template-columns:120px 90px; gap:10px; }
+.rp-gsin { font-family:var(--mono); text-transform:uppercase; letter-spacing:.06em; }
+.rp-gsprev { font-family:var(--mono); font-size:11px; color:var(--mid); margin-top:8px; line-height:1.6; }
+.rp-gsrow { display:grid; grid-template-columns:minmax(0,1fr) 56px 50px 44px; gap:5px; align-items:center; padding:7px 8px; border-top:1px solid var(--border); }
+.rp-gsrow.hd { border-top:none; background:var(--bg); padding-top:6px; padding-bottom:6px; }
+.rp-gsrow.hd span { font-size:10px; font-weight:700; color:var(--dim); text-transform:uppercase; letter-spacing:.6px; }
+.rp-gsrow.hd span.c { text-align:center; }
+.rp-gsrow.grp { background:var(--bg); }
+.rp-gsrow.sub { padding-left:20px; background:var(--bg); border-top-style:dashed; }
+.rp-gsrow input {
+  width:100%; box-sizing:border-box; padding:6px 3px; border:1.5px solid var(--border); border-radius:6px;
+  background:var(--surface); color:var(--text); font-family:var(--mono); font-size:12px; text-align:center; outline:none;
+}
+.rp-gsrow input[data-f="col"] { text-transform:uppercase; }
+.rp-gsrow input:focus { border-color:var(--amber); }
+.rp-gsrow input::placeholder { color:var(--dim); opacity:.6; }
+.rp-gsname { min-width:0; }
+.rp-gsname b {
+  font-size:12px; font-weight:600; color:var(--text); line-height:1.3; overflow:hidden; word-break:break-word;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+}
+.rp-gsrow.sub .rp-gsname b { font-family:var(--mono); font-weight:500; font-size:11.5px; }
+.rp-gsname span { display:block; font-family:var(--mono); font-size:10px; color:var(--dim); margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rp-gsname span em { font-style:normal; color:#d97a06; }
+.rp-gssplit { display:inline-flex; align-items:center; gap:5px; margin-top:4px; font-size:10.5px; color:var(--mid); cursor:pointer; }
+.rp-gssplit input { width:14px; height:14px; accent-color:#d97a06; margin:0; }
+.rp-gsshared { font-size:11px; color:var(--mid); margin-top:8px; line-height:1.55; }
+.rp-gsshared:empty { display:none; }
+.rp-gssteps { margin:0 0 4px; padding-left:18px; font-size:12px; color:var(--text); line-height:1.55; }
+.rp-gssteps li { margin-bottom:4px; }
+.rp-gscode summary { cursor:pointer; font-size:12px; color:var(--mid); font-weight:600; margin-top:6px; }
+.rp-gscode pre {
+  max-height:280px; overflow:auto; background:var(--bg); border:1px solid var(--border); border-radius:8px;
+  padding:10px; margin:8px 0 0; font-size:10.5px; line-height:1.45; font-family:var(--mono); color:var(--text); white-space:pre;
+}
+.rp-gsconn { font-size:12px; padding:10px 12px; border-radius:8px; background:var(--bg); border:1.5px solid var(--border); color:var(--mid); line-height:1.5; }
+.rp-gsconn.ok { border-color:var(--green); color:var(--text); }
+.rp-gsconn.warn { border-color:#d97a06; color:var(--text); }
+.rp-gsconn.bad { border-color:var(--red); color:var(--red); }
+#rpGsOff summary { cursor:pointer; }
+.rp-gssum { font-size:12px; color:var(--text); margin:12px 2px 8px; }
+.rp-gstblwrap { max-height:46vh; overflow:auto; border:1px solid var(--border); border-radius:8px; }
+.rp-gstbl { width:100%; border-collapse:collapse; font-size:11.5px; }
+.rp-gstbl th {
+  position:sticky; top:0; text-align:left; font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
+  color:var(--dim); padding:6px; border-bottom:1px solid var(--border); background:var(--bg);
+}
+.rp-gstbl td { padding:5px 6px; border-bottom:1px solid var(--border); color:var(--text); vertical-align:top; }
+.rp-gstbl tr:last-child td { border-bottom:none; }
+.rp-gstbl td.n { font-family:var(--mono); text-align:right; white-space:nowrap; }
+.rp-gstbl td.a { font-family:var(--mono); white-space:nowrap; color:var(--mid); }
 /* settings passcode */
 .rp-lkrow { display:grid; grid-template-columns:18px 1fr auto; align-items:center; gap:8px; padding:8px 10px; border-top:1px solid var(--border); cursor:pointer; }
 .rp-lkrow:first-child { border-top:none; }
@@ -1370,7 +1462,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B32-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B33-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1497,6 +1589,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <button class="rp-mini-btn" id="rpPdfBtn" onclick="rpExportPdf()">PDF</button>
     <button class="rp-mini-btn" id="rpXlsBtn" onclick="rpExportXlsx()">Excel</button>
     <button class="rp-mini-btn" id="rpHtmlBtn" onclick="rpExportHtml()">HTML</button>
+    <button class="rp-mini-btn" id="rpGsBtn" onclick="openRpGs()" style="display:none" title="Send the figures to Google Sheets">Sheet</button>
   </div>
 
   <div class="rp-note" id="rpViewSub">—</div>
@@ -1515,13 +1608,22 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <div class="stt-header">
       <div>
         <div class="stt-title">⚡ Road Power Report Settings</div>
-        <div class="stt-title-sub">Shared with ePass Viewer — only the party list is written back</div>
+        <div class="stt-title-sub">Shared with ePass Viewer — only this app's settings are written back</div>
       </div>
       <button class="stt-close" onclick="closeRpSettings()">✕</button>
     </div>
 
+    <div class="rp-stabs" id="rpSttTabs" role="tablist">
+      <button role="tab" data-tab="reports" onclick="rpSettingsTab('reports')"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg><span>Reports</span></button>
+      <button role="tab" data-tab="customers" onclick="rpSettingsTab('customers')"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 4.8a3 3 0 010 6M21 20c0-2.5-1.5-4.6-3.8-5.5"/></svg><span>Customers</span></button>
+      <button role="tab" data-tab="exports" onclick="rpSettingsTab('exports')"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span>Exports</span></button>
+      <button role="tab" data-tab="sheet" onclick="rpSettingsTab('sheet')"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/></svg><span class="rp-lg">Google Sheet</span><span class="rp-sm">Sheet</span></button>
+      <button role="tab" data-tab="general" onclick="rpSettingsTab('general')"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg><span>General</span></button>
+    </div>
+
     <div class="stt-body" style="grid-template-columns:minmax(0,1fr);">
 
+      <div class="rp-stab" data-tab="reports" role="tabpanel">
       <div class="stt-section">
         <div class="stt-section-hdr">
           <label class="stt-label">Reports</label>
@@ -1541,49 +1643,6 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 
       <div class="stt-section">
         <div class="stt-section-hdr">
-          <label class="stt-label">PDF</label>
-        </div>
-        <div class="rp-modes">
-          <button class="rp-mode" id="rpPdfM_image" onclick="rpSetPdfMode('image')">
-            <b>Image <em class="rp-pdfsz" id="rpPdfSz_image"></em></b><span>A picture of each report, exactly as the app shows it. The largest file, and the figures can't be searched or copied.</span>
-          </button>
-          <button class="rp-mode" id="rpPdfM_render" onclick="rpSetPdfMode('render')">
-            <b>Rendered</b><span>Drawn as text and lines — far smaller, sharp at any zoom, and the figures can be searched and copied.</span>
-          </button>
-        </div>
-        <div id="rpPdfLevels" style="margin-top:10px;">
-          <div class="stt-hint" style="margin:0 0 6px;">Rendered detail</div>
-          <div class="rp-modes">
-            <button class="rp-mode" id="rpPdf_light" onclick="rpSetPdfLevel('light')">
-              <b>Light <em class="rp-pdfsz" id="rpPdfSz_light"></em></b><span>The figures only, in black and white with hairline rules. Smallest, and prints cleanly on any printer.</span>
-            </button>
-            <button class="rp-mode" id="rpPdf_standard" onclick="rpSetPdfLevel('standard')">
-              <b>Standard <em class="rp-pdfsz" id="rpPdfSz_standard"></em></b><span>The app's colours, bands and coalfield totals, in the PDF's standard fonts.</span>
-            </button>
-            <button class="rp-mode" id="rpPdf_high" onclick="rpSetPdfLevel('high')">
-              <b>High <em class="rp-pdfsz" id="rpPdfSz_high"></em></b><span>Looks like the Image PDF — the same layout, colours and IBM Plex fonts as the app — at a fraction of the size.</span>
-            </button>
-          </div>
-          <div class="stt-hint" style="margin-top:6px;">
-            High fetches the app's fonts the first time it's used; without a connection it falls back to the PDF's standard fonts.
-          </div>
-        </div>
-        <div class="stt-hint" style="margin-top:6px;">Sizes are for the reports you'd export right now.</div>
-      </div>
-
-      <div class="stt-section">
-        <label class="stt-label">History Database File</label>
-        <input id="rp_histPath" class="stt-input" type="text"
-               placeholder="roadpower-history-test.json"
-               style="font-family:var(--mono);letter-spacing:.03em;">
-        <div class="stt-hint" style="margin-top:4px;">
-          JSON file inside the <strong>epass-db</strong> repo holding the day-wise history.
-          Keep the test app on a <em>different</em> filename from production.
-        </div>
-      </div>
-
-      <div class="stt-section">
-        <div class="stt-section-hdr">
           <label class="stt-label">Show / Hide Monthwise Total &amp; Avg</label>
         </div>
         <div id="rpShowGrids"></div>
@@ -1594,7 +1653,9 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
           columns while the compact view keeps them.
         </div>
       </div>
+      </div>
 
+      <div class="rp-stab" data-tab="customers" role="tabpanel">
       <div class="stt-section">
         <div class="stt-section-hdr">
           <label class="stt-label">Customers</label>
@@ -1640,7 +1701,128 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
           At least one column must stay ticked, or the Total has nothing to add.
         </div>
       </div>
+      </div>
 
+      <div class="rp-stab" data-tab="exports" role="tabpanel">
+      <div class="stt-section">
+        <div class="stt-section-hdr">
+          <label class="stt-label">PDF</label>
+        </div>
+        <div class="rp-modes">
+          <button class="rp-mode" id="rpPdfM_image" onclick="rpSetPdfMode('image')">
+            <b>Image <em class="rp-pdfsz" id="rpPdfSz_image"></em></b><span>A picture of each report, exactly as the app shows it. The largest file, and the figures can't be searched or copied.</span>
+          </button>
+          <button class="rp-mode" id="rpPdfM_render" onclick="rpSetPdfMode('render')">
+            <b>Rendered</b><span>Drawn as text and lines — far smaller, sharp at any zoom, and the figures can be searched and copied.</span>
+          </button>
+        </div>
+        <div id="rpPdfLevels" style="margin-top:10px;">
+          <div class="stt-hint" style="margin:0 0 6px;">Rendered detail</div>
+          <div class="rp-modes">
+            <button class="rp-mode" id="rpPdf_light" onclick="rpSetPdfLevel('light')">
+              <b>Light <em class="rp-pdfsz" id="rpPdfSz_light"></em></b><span>The figures only, in black and white with hairline rules. Smallest, and prints cleanly on any printer.</span>
+            </button>
+            <button class="rp-mode" id="rpPdf_standard" onclick="rpSetPdfLevel('standard')">
+              <b>Standard <em class="rp-pdfsz" id="rpPdfSz_standard"></em></b><span>The app's colours, bands and coalfield totals, in the PDF's standard fonts.</span>
+            </button>
+            <button class="rp-mode" id="rpPdf_high" onclick="rpSetPdfLevel('high')">
+              <b>High <em class="rp-pdfsz" id="rpPdfSz_high"></em></b><span>Looks like the Image PDF — the same layout, colours and IBM Plex fonts as the app — at a fraction of the size.</span>
+            </button>
+          </div>
+          <div class="stt-hint" style="margin-top:6px;">
+            High fetches the app's fonts the first time it's used; without a connection it falls back to the PDF's standard fonts.
+          </div>
+        </div>
+        <div class="stt-hint" style="margin-top:6px;">Sizes are for the reports you'd export right now.</div>
+      </div>
+      </div>
+
+      <div class="rp-stab" data-tab="sheet" role="tabpanel">
+      <div class="stt-section">
+        <div class="stt-section-hdr">
+          <label class="stt-label">Google Sheet</label>
+          <label class="rp-sw" title="Show the Sheet button and send figures to Google Sheets">
+            <input type="checkbox" id="rpGsOn" onchange="rpGsSet('on', this.checked)">
+            <span class="rp-sw-track"><span class="rp-sw-knob"></span></span>
+            <span class="rp-sw-lbl" id="rpGsOnLbl">Off</span>
+          </label>
+        </div>
+        <div class="stt-hint" style="margin:0 0 10px;">
+          Sends each Power customer's daily road despatch into fixed cells of a Google Sheet, through a small Apps Script you deploy once.
+          When it's on, a <strong>Sheet</strong> button sits next to PDF, Excel and HTML.
+        </div>
+        <div class="rp-gsform">
+          <label class="rp-gsfld"><span>Spreadsheet URL</span>
+            <input id="rpGsUrl" class="stt-input" type="url" inputmode="url" placeholder="https://docs.google.com/spreadsheets/d/…" oninput="rpGsSet('url', this.value.trim(), true)"></label>
+          <label class="rp-gsfld"><span>Tab name</span>
+            <input id="rpGsTab" class="stt-input" type="text" placeholder="e.g. Oct-2026  or  {MMM}-{YYYY}" oninput="rpGsSet('tab', this.value, true)"></label>
+          <div class="stt-hint" id="rpGsTabNote" style="margin:-2px 0 2px;"></div>
+          <label class="rp-gsfld"><span>Apps Script URL</span>
+            <input id="rpGsScript" class="stt-input" type="url" inputmode="url" placeholder="https://script.google.com/macros/s/…/exec" oninput="rpGsSet('script', this.value.trim(), true)"></label>
+        </div>
+        <div class="rp-gstest">
+          <button class="rp-mini-btn" id="rpGsTestBtn" onclick="rpGsTest()">Test connection</button>
+          <span id="rpGsTestMsg" class="rp-gsmsg"></span>
+        </div>
+        <div class="rp-rsub">Values</div>
+        <div class="rp-monthpick" id="rpGsDec"></div>
+      </div>
+
+      <div class="stt-section">
+        <div class="stt-section-hdr">
+          <label class="stt-label">Day Columns</label>
+        </div>
+        <div class="rp-gsdef">
+          <label class="rp-gsfld"><span>Day 1 column</span>
+            <input id="rpGsCol" class="stt-input rp-gsin" type="text" maxlength="3" autocapitalize="characters" placeholder="E" oninput="rpGsSet('col', this.value.toUpperCase().trim(), true)"></label>
+          <label class="rp-gsfld"><span>Step</span>
+            <input id="rpGsInc" class="stt-input rp-gsin" type="text" inputmode="numeric" maxlength="2" placeholder="4" oninput="rpGsSet('inc', this.value.trim(), true)"></label>
+        </div>
+        <div class="rp-gsprev" id="rpGsPrev"></div>
+        <div class="stt-hint" style="margin-top:6px;">
+          Day <em>n</em> goes in column <em>Day 1 column + (n − 1) × Step</em> — with E and 4, day 2 lands in I, day 3 in M.
+          These are the defaults; a customer only needs its own column or step when its layout differs.
+          The month is the report's — when the latest date is 1 October, the figures go into the October days.
+        </div>
+      </div>
+
+      <div class="stt-section">
+        <div class="stt-section-hdr">
+          <label class="stt-label">Power Customers</label>
+          <span class="rp-count" id="rpGsCount"></span>
+        </div>
+        <div class="rp-list-wrap">
+          <div class="rp-gsrow hd"><span>Customer</span><span class="c">Row</span><span class="c">Day 1</span><span class="c">Step</span></div>
+          <div id="rpGsList"></div>
+        </div>
+        <div class="rp-gsshared" id="rpGsShared"></div>
+        <div class="stt-hint" style="margin-top:6px;">
+          Leave <strong>Row</strong> empty to keep a customer out of the sheet. Customers or codes given the same cells are added together before sending.
+          A merged customer sends its combined figure to one row; tick <strong>Separate rows</strong> to give each of its codes a row of its own.
+          The list follows the <strong>Power</strong> ticks on the Customers tab.
+        </div>
+      </div>
+
+      <div class="stt-section">
+        <div class="stt-section-hdr">
+          <label class="stt-label">Apps Script</label>
+          <button class="rp-mini-btn" onclick="rpGsCopyScript()" id="rpGsCopyBtn">Copy script</button>
+        </div>
+        <ol class="rp-gssteps">
+          <li>Open <strong>script.google.com</strong> → <strong>New project</strong>, clear the editor and paste the script.</li>
+          <li><strong>Deploy → New deployment</strong>, type <strong>Web app</strong>. Execute as <strong>Me</strong>; who has access <strong>Anyone</strong>.</li>
+          <li>Deploy, allow the permissions it asks for, and copy the <strong>Web app URL</strong> (it ends in <code>/exec</code>) into <em>Apps Script URL</em> above.</li>
+          <li>Tap <strong>Test connection</strong>. One script serves every month's spreadsheet — just change the URL or tab here.</li>
+        </ol>
+        <details class="rp-gscode"><summary>Show the script</summary><pre id="rpGsCodeView"></pre></details>
+        <div class="stt-hint" style="margin-top:6px;">
+          The script never overwrites a cell that holds a formula — it reports those cells back instead.
+          Anyone holding the script URL can write numbers into your spreadsheets, so keep it to this settings file.
+        </div>
+      </div>
+      </div>
+
+      <div class="rp-stab" data-tab="general" role="tabpanel">
       <div class="stt-section">
         <div class="stt-section-hdr">
           <label class="stt-label">Settings Passcode</label>
@@ -1671,13 +1853,26 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
         </div>
       </div>
 
+      <div class="stt-section">
+        <label class="stt-label">History Database File</label>
+        <input id="rp_histPath" class="stt-input" type="text"
+               placeholder="roadpower-history-test.json"
+               style="font-family:var(--mono);letter-spacing:.03em;">
+        <div class="stt-hint" style="margin-top:4px;">
+          JSON file inside the <strong>epass-db</strong> repo holding the day-wise history.
+          Keep the test app on a <em>different</em> filename from production.
+        </div>
+      </div>
+      </div>
+
     </div>
 
-    <div id="rpSettingsStatus" class="stt-status"></div>
-
-    <div class="stt-footer">
-      <button class="stt-btn-cancel" onclick="closeRpSettings()">Cancel</button>
-      <button class="stt-btn-save" onclick="saveRpSettings()">Save</button>
+    <div class="rp-sttfoot">
+      <div id="rpSettingsStatus" class="stt-status"></div>
+      <div class="stt-footer">
+        <button class="stt-btn-cancel" onclick="closeRpSettings()">Cancel</button>
+        <button class="stt-btn-save" onclick="saveRpSettings()">Save</button>
+      </div>
     </div>
 
   </div>
@@ -2221,7 +2416,7 @@ function rpOpenSettingsNow() {
   }));
   _rpDraft = { historyPath: pr.historyPath || 'roadpower-history-test.json', sel: {},
                show: shDef, reports: rpReportList(pr.reports), exportReports: rpExportList(pr),
-               pdfLevel: rpPdfLevel(pr), pdfMode: rpPdfMode(pr), lock: rpLockDraft(pr) };
+               pdfLevel: rpPdfLevel(pr), pdfMode: rpPdfMode(pr), lock: rpLockDraft(pr), gs: rpGsCfg(pr.gsheet) };
   (pr.parties || []).forEach(p => {
     const codes = rpCodesOf(p);
     _rpDraft.sel[codes[0]] = {
@@ -2244,14 +2439,18 @@ function rpOpenSettingsNow() {
   renderRpReportLists();
   rpSetPdfLevel(_rpDraft.pdfLevel);
   rpSetPdfMode(_rpDraft.pdfMode);
-  rpPdfEstimate();
+  _rpEstDone = false;
   document.getElementById('rpLockPin1').value = '';
   document.getElementById('rpLockPin2').value = '';
   renderRpLock();
   renderRpShowGrids();
   renderRpParties();
   renderRpR2();
+  document.querySelectorAll('#rpSettingsOverlay .bad').forEach(el => el.classList.remove('bad'));
   document.getElementById('rpSettingsOverlay').style.display = 'block';
+  document.getElementById('rpSettingsOverlay').scrollTop = 0;
+  rpSettingsTab(_rpSttTab);
+  rpSttDots();
 }
 function closeRpSettings() {
   document.getElementById('rpSettingsOverlay').style.display = 'none';
@@ -2729,6 +2928,7 @@ function renderRpLock() {
 function rpLockSet(f, v) {
   _rpDraft.lock[f] = v;
   renderRpLock();
+  rpSttDots();
 }
 // what goes into the saved settings, or null with the reason shown
 function rpLockForSave(status) {
@@ -2737,7 +2937,7 @@ function rpLockForSave(status) {
   const p2 = document.getElementById('rpLockPin2').value.trim();
   const mode = RP_LOCK_MODES.find(m => m.id === d.mode);
   let pin = d.pin || null;
-  const fail = msg => { status.textContent = msg; status.style.color = '#e05'; return null; };
+  const fail = msg => rpSaveFail(status, 'general', msg, /PIN/.test(msg) ? 'rpLockPin1' : null);
   if (d.on && mode.pin && (p1 || p2)) {
     if (!/^\d{4,8}$/.test(p1)) return fail('The passcode PIN must be 4 to 8 digits.');
     if (p1 !== p2) return fail('The two passcode PINs don’t match.');
@@ -2748,6 +2948,441 @@ function rpLockForSave(status) {
   const out = { on: !!d.on, mode: d.mode, stay: d.stay, days: !!d.days };
   if (pin) out.pin = pin;
   return out;
+}
+
+// ── Settings tabs ──────────────────────────────────────────────────────
+const RP_STABS = ['reports', 'customers', 'exports', 'sheet', 'general'];
+let _rpSttTab = (() => { try { return localStorage.getItem('rpSttTab') || 'reports'; } catch (_) { return 'reports'; } })();
+let _rpEstDone = false;
+function rpSettingsTab(t) {
+  if (RP_STABS.indexOf(t) < 0) t = 'reports';
+  _rpSttTab = t;
+  try { localStorage.setItem('rpSttTab', t); } catch (_) {}
+  document.querySelectorAll('#rpSttTabs [data-tab]').forEach(b => {
+    const on = b.dataset.tab === t;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  document.querySelectorAll('#rpSettingsOverlay .rp-stab').forEach(p => { p.hidden = p.dataset.tab !== t; });
+  if (t === 'sheet') renderRpGs();
+  if (t === 'exports' && !_rpEstDone) { _rpEstDone = true; rpPdfEstimate(); }
+  // with the tab bar pinned, bring the new tab's first line up under it
+  const ov = document.getElementById('rpSettingsOverlay'), bar = document.getElementById('rpSttTabs');
+  const body = ov.querySelector('.stt-body');
+  const gap = body.getBoundingClientRect().top - bar.getBoundingClientRect().bottom;
+  if (gap < 0) ov.scrollTop += gap;
+}
+// a dot on a tab whose feature is switched on
+function rpSttDots() {
+  const set = (t, on) => { const b = document.querySelector(`#rpSttTabs [data-tab="${t}"]`); if (b) b.classList.toggle('lit', !!on); };
+  set('sheet', _rpDraft.gs && _rpDraft.gs.on);
+  set('general', _rpDraft.lock && _rpDraft.lock.on);
+}
+// a save problem on another tab: show it there, with the field marked
+function rpSaveFail(status, tab, msg, elId) {
+  status.textContent = msg; status.style.color = '#e05';
+  rpSettingsTab(tab);
+  if (elId) {
+    const el = document.getElementById(elId) || document.querySelector(elId);
+    if (el) { el.classList.add('bad'); el.focus({ preventScroll: false }); }
+  }
+  return null;
+}
+
+// ── Google Sheet ───────────────────────────────────────────────────────
+// powerReport.gsheet = { on, url, tab, script, dec, col, inc,
+//                        map: { code: { row, col, inc, split } } }
+// A customer's row, Day 1 column and step say where its daily figures go:
+// day n → column (Day 1 column + (n − 1) × step). A merged customer sends its
+// combined figure, unless split, when each code uses its own entry. Cells
+// that several customers point at are added together.
+const RP_MON_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+function rpColNum(s) {
+  s = String(s || '').trim().toUpperCase();
+  if (!/^[A-Z]{1,3}$/.test(s)) return 0;
+  let n = 0;
+  for (const ch of s) n = n * 26 + ch.charCodeAt(0) - 64;
+  return n;
+}
+function rpColName(n) {
+  let s = '';
+  while (n > 0) { const r = (n - 1) % 26; s = String.fromCharCode(65 + r) + s; n = Math.floor((n - 1) / 26); }
+  return s;
+}
+function rpGsTabName(tab, Y, M) {
+  return String(tab || '').trim()
+    .replace(/\{MMMM\}/g, RP_MON_FULL[M - 1]).replace(/\{MMM\}/g, RP_MON[M - 1])
+    .replace(/\{MM\}/g, rp2(M)).replace(/\{YYYY\}/g, String(Y)).replace(/\{YY\}/g, rp2(Y % 100));
+}
+function rpGsCfg(g) {
+  g = g || {};
+  const map = {};
+  Object.keys(g.map || {}).forEach(c => {
+    const m = g.map[c] || {};
+    map[c] = { row: m.row ? String(m.row) : '', col: m.col || '', inc: m.inc ? String(m.inc) : '', split: !!m.split };
+  });
+  return { on: !!g.on, url: g.url || '', tab: g.tab || '', script: g.script || '', dec: g.dec === 0 ? 0 : 2,
+           col: g.col || '', inc: g.inc ? String(g.inc) : '', map };
+}
+// the month the sheet is for: the report's, else this month
+function rpGsMonth() {
+  const md = rpMonthData();
+  if (md) return { Y: md.Y, M: md.M };
+  const d = new Date();
+  return { Y: d.getFullYear(), M: d.getMonth() + 1 };
+}
+// Power customers, A–Z — from the settings being edited, or the saved ones
+function rpGsParties(fromDraft) {
+  let list;
+  if (fromDraft) {
+    const idx = rpBuildPartyIndex();
+    list = Object.keys(_rpDraft.sel).filter(c => _rpDraft.sel[c].power).map(c => {
+      const s = _rpDraft.sel[c];
+      return { code: c, codes: [c, ...(s.members || [])], name: s.name || (idx[c] || {}).name || c };
+    });
+  } else {
+    list = ((appSettings.powerReport || {}).parties || []).filter(p => p.power)
+      .map(p => { const codes = rpCodesOf(p); return { code: codes[0], codes, name: p.name || codes[0] }; });
+  }
+  return list.sort((a, b) => a.name.localeCompare(b.name));
+}
+// each place figures go: { name, codes, row, col, inc }; customers without a row are left out
+function rpGsUnits(parties, gs) {
+  const units = [], off = [];
+  const dCol = rpColNum(gs.col), dInc = parseInt(gs.inc, 10) || 0;
+  parties.forEach(p => {
+    const m0 = gs.map[p.code] || {};
+    const split = !!m0.split && p.codes.length > 1;
+    const parts = split
+      ? p.codes.map(c => ({ name: `${p.name} · ${c}`, codes: [c], m: c === p.code ? m0 : (gs.map[c] || {}) }))
+      : [{ name: p.name, codes: p.codes, m: m0 }];
+    parts.forEach(u => {
+      const row = parseInt(u.m.row, 10);
+      if (!row) { off.push(u.name); return; }
+      units.push({ name: u.name, codes: u.codes, row, col: rpColNum(u.m.col) || dCol, inc: parseInt(u.m.inc, 10) || dInc });
+    });
+  });
+  return { units, off };
+}
+// cells to write for the given days, summed where they coincide
+function rpGsPlan(units, md, days, dec) {
+  const acc = new Map();
+  units.forEach(u => days.forEach(d => {
+    const rec = md.days[d];
+    if (!rec) return;
+    const col = u.col + (d - 1) * u.inc;
+    const a1 = rpColName(col) + u.row;
+    let c = acc.get(a1);
+    if (!c) acc.set(a1, c = { a1, row: u.row, col, d, v: 0, who: [] });
+    c.v += rpSumParty(rec.pc, u.codes);
+    if (c.who.indexOf(u.name) < 0) c.who.push(u.name);
+  }));
+  const f = Math.pow(10, dec);
+  return [...acc.values()].map(c => Object.assign(c, { v: Math.round(c.v * f) / f }))
+    .sort((a, b) => a.row - b.row || a.col - b.col);
+}
+// what stops a send, as [{ msg, el }]
+function rpGsProblems(gs, parties) {
+  const out = [];
+  const okInc = v => !v || (/^\d+$/.test(v) && +v >= 1 && +v <= 50);
+  if (!/^https:\/\/docs\.google\.com\/spreadsheets\/d\/[\w-]{20,}/.test(gs.url))
+    out.push({ msg: 'Paste the spreadsheet’s full address — https://docs.google.com/spreadsheets/d/…', el: 'rpGsUrl' });
+  if (!gs.tab.trim()) out.push({ msg: 'Type the name of the tab to write to.', el: 'rpGsTab' });
+  if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]{20,}\/(exec|dev)\b/.test(gs.script))
+    out.push({ msg: 'The Apps Script URL should look like https://script.google.com/macros/s/…/exec', el: 'rpGsScript' });
+  if (gs.col && !rpColNum(gs.col)) out.push({ msg: 'Day 1 column must be letters, like E or AB.', el: 'rpGsCol' });
+  if (!okInc(gs.inc)) out.push({ msg: 'Step must be a whole number from 1 to 50.', el: 'rpGsInc' });
+  parties.forEach(p => {
+    const m0 = gs.map[p.code] || {};
+    const codes = m0.split && p.codes.length > 1 ? p.codes : [p.code];
+    codes.forEach(c => {
+      const m = gs.map[c] || {};
+      const sel = f => `#rpGsList input[data-code="${c}"][data-f="${f}"]`;
+      const who = codes.length > 1 ? `${p.name} (${c})` : p.name;
+      if (m.row && !/^\d{1,6}$/.test(m.row)) out.push({ msg: `${who}: the row must be a number.`, el: sel('row') });
+      if (m.col && !rpColNum(m.col)) out.push({ msg: `${who}: Day 1 column must be letters, like E.`, el: sel('col') });
+      if (!okInc(m.inc)) out.push({ msg: `${who}: step must be a whole number from 1 to 50.`, el: sel('inc') });
+      if (+m.row && !rpColNum(m.col) && !rpColNum(gs.col)) out.push({ msg: `${who} has a row but no Day 1 column — fill it in, or set the default under Day Columns.`, el: sel('col') });
+      if (+m.row && !(parseInt(m.inc, 10) || parseInt(gs.inc, 10))) out.push({ msg: `${who} has a row but no step — fill it in, or set the default under Day Columns.`, el: sel('inc') });
+    });
+  });
+  return out;
+}
+// tidy for saving: numbers as numbers, empty entries dropped
+function rpGsForSave(status) {
+  const gs = _rpDraft.gs;
+  document.querySelectorAll('#rpSettingsOverlay .bad').forEach(el => el.classList.remove('bad'));
+  if (gs.on) {
+    const probs = rpGsProblems(gs, rpGsParties(true));
+    if (probs.length) return rpSaveFail(status, 'sheet', 'Google Sheet: ' + probs[0].msg, probs[0].el);
+  }
+  const map = {};
+  Object.keys(gs.map).forEach(c => {
+    const m = gs.map[c], e = {};
+    if (+m.row) e.row = +m.row;
+    if (m.col) e.col = m.col.toUpperCase();
+    if (+m.inc) e.inc = +m.inc;
+    if (m.split) e.split = true;
+    if (Object.keys(e).length) map[c] = e;
+  });
+  const out = { on: !!gs.on, url: gs.url.trim(), tab: gs.tab.trim(), script: gs.script.trim(), dec: gs.dec, map };
+  if (gs.col) out.col = gs.col.toUpperCase();
+  if (+gs.inc) out.inc = +gs.inc;
+  return out;
+}
+
+// ── the Google Sheet tab ──
+function renderRpGs() {
+  const gs = _rpDraft.gs;
+  document.getElementById('rpGsOn').checked = gs.on;
+  document.getElementById('rpGsOnLbl').textContent = gs.on ? 'On' : 'Off';
+  [['rpGsUrl', 'url'], ['rpGsTab', 'tab'], ['rpGsScript', 'script'], ['rpGsCol', 'col'], ['rpGsInc', 'inc']].forEach(([id, f]) => {
+    const el = document.getElementById(id);
+    if (document.activeElement !== el) el.value = gs[f];
+  });
+  document.getElementById('rpGsDec').innerHTML = [[2, 'Two decimals'], [0, 'Whole tonnes']].map(([v, t]) =>
+    `<button class="rp-mchip${gs.dec === v ? ' on' : ''}" onclick="rpGsSet('dec', ${v})">${t}</button>`).join('');
+  const code = document.getElementById('rpGsCode');
+  document.getElementById('rpGsCodeView').textContent = code ? code.textContent.trim() : '';
+  renderRpGsList();
+  rpGsDerived();
+}
+function renderRpGsList() {
+  const gs = _rpDraft.gs;
+  const parties = rpGsParties(true);
+  const dCol = (gs.col || '').toUpperCase(), dInc = gs.inc || '';
+  const inputs = c => {
+    const m = gs.map[c] || {};
+    return `<input data-code="${c}" data-f="row" inputmode="numeric" maxlength="6" value="${rpEsc(m.row || '')}" aria-label="Row">` +
+      `<input data-code="${c}" data-f="col" maxlength="3" autocapitalize="characters" placeholder="${rpEsc(dCol)}" value="${rpEsc(m.col || '')}" aria-label="Day 1 column">` +
+      `<input data-code="${c}" data-f="inc" inputmode="numeric" maxlength="2" placeholder="${rpEsc(dInc)}" value="${rpEsc(m.inc || '')}" aria-label="Step">`;
+  };
+  let h = '';
+  parties.forEach(p => {
+    const m0 = gs.map[p.code] || {};
+    const group = p.codes.length > 1, split = group && !!m0.split;
+    const toggle = group ? `<label class="rp-gssplit"><input type="checkbox" data-code="${p.code}" data-f="split"${split ? ' checked' : ''}>Separate rows</label>` : '';
+    h += `<div class="rp-gsrow${split ? ' grp' : ''}"><div class="rp-gsname"><b title="${rpEsc(p.name)}">${rpEsc(p.name)}</b>` +
+         `<span data-info="${p.code}" data-kind="g">${group ? `${p.codes.length} codes` : p.code}</span>${toggle}</div>` +
+         (split ? '<i></i><i></i><i></i>' : inputs(p.code)) + '</div>';
+    if (split) p.codes.forEach(c => {
+      h += `<div class="rp-gsrow sub"><div class="rp-gsname"><b>${c}</b>` +
+           `<span data-info="${c}" data-kind="c"></span></div>${inputs(c)}</div>`;
+    });
+  });
+  const list = document.getElementById('rpGsList');
+  list.innerHTML = h || '<div class="rp-count" style="padding:10px;">No Power customers yet — tick <strong>Power</strong> against them on the Customers tab.</div>';
+  list.oninput = list.onchange = e => {
+    const t = e.target;
+    if (!t.dataset || !t.dataset.code) return;
+    const m = gs.map[t.dataset.code] = gs.map[t.dataset.code] || { row: '', col: '', inc: '', split: false };
+    t.classList.remove('bad');
+    if (t.dataset.f === 'split') { m.split = t.checked; renderRpGsList(); rpGsDerived(); return; }
+    m[t.dataset.f] = t.dataset.f === 'col' ? t.value.toUpperCase().trim() : t.value.trim();
+    rpGsDerived();
+  };
+}
+// the bits that follow from what's typed: previews, counts, shared rows
+function rpGsDerived() {
+  const gs = _rpDraft.gs;
+  const { Y, M } = rpGsMonth();
+  const dim = new Date(Y, M, 0).getDate();
+  const tabNote = document.getElementById('rpGsTabNote');
+  const resolved = rpGsTabName(gs.tab, Y, M);
+  tabNote.innerHTML = /\{[MY]+\}/.test(gs.tab) && resolved
+    ? `For ${RP_MON_FULL[M - 1]} ${Y} that's <b>${rpEsc(resolved)}</b>. {MMM} Oct · {MMMM} October · {MM} 10 · {YYYY} 2026 · {YY} 26`
+    : 'May include {MMM}, {MMMM}, {MM}, {YYYY} or {YY}, filled in from the report’s month.';
+  const c = rpColNum(gs.col), inc = parseInt(gs.inc, 10);
+  const prev = document.getElementById('rpGsPrev');
+  if (c && inc >= 1) {
+    const at = d => rpColName(c + (d - 1) * inc);
+    prev.innerHTML = [1, 2, 3, 4].map(d => `${d}→${at(d)}`).join(' · ') + ` · … · ${dim}→${at(dim)}`;
+  } else prev.textContent = 'Set both to see where each day lands.';
+  // per-row hint: first and last cell
+  const parties = rpGsParties(true);
+  const idx = rpBuildPartyIndex();
+  const { units, off } = rpGsUnits(parties, gs);
+  document.querySelectorAll('#rpGsList [data-info]').forEach(sp => {
+    const code = sp.dataset.info, sub = sp.dataset.kind === 'c';
+    const p = parties.find(x => x.code === code);
+    const n = sub || !p ? 1 : p.codes.length;
+    const split = !sub && n > 1 && (gs.map[code] || {}).split;
+    const u = split ? null : units.find(x => x.codes[0] === code && x.codes.length === n);
+    const base = sub ? ((idx[code] || {}).name || '') : n > 1 ? `${n} codes` : code;
+    const cells = u && u.col && u.inc ? `<em>${rpColName(u.col)}${u.row}…${rpColName(u.col + (dim - 1) * u.inc)}${u.row}</em>` : '';
+    sp.innerHTML = (sub ? [cells, base ? rpEsc(base) : ''] : [base ? rpEsc(base) : '', cells]).filter(Boolean).join(' · ') || '&nbsp;';
+    if (sub) sp.title = base;
+  });
+  document.getElementById('rpGsCount').textContent = parties.length ? `${units.length} of ${units.length + off.length} with a row` : '';
+  // customers landing on the same cells
+  const byCell = {};
+  units.forEach(u => { if (u.col && u.inc) (byCell[`${u.row}|${u.col}|${u.inc}`] = byCell[`${u.row}|${u.col}|${u.inc}`] || []).push(u); });
+  const shared = Object.values(byCell).filter(g => g.length > 1);
+  document.getElementById('rpGsShared').innerHTML = shared.map(g =>
+    `Row ${g[0].row} adds up <b>${g.map(u => rpEsc(u.name)).join('</b> + <b>')}</b>`).join('<br>');
+  rpSttDots();
+}
+function rpGsSet(f, v, soft) {
+  const gs = _rpDraft.gs;
+  gs[f] = v;
+  const el = { url: 'rpGsUrl', tab: 'rpGsTab', script: 'rpGsScript', col: 'rpGsCol', inc: 'rpGsInc' }[f];
+  if (el) document.getElementById(el).classList.remove('bad');
+  if (f === 'col' || f === 'inc') renderRpGsList();     // placeholders follow the defaults
+  if (soft) rpGsDerived(); else renderRpGs();
+}
+async function rpGsCall(gs, body) {
+  let r;
+  try {
+    r = await fetch(gs.script, { method: 'POST', redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
+  } catch (_) {
+    throw new Error('couldn’t reach the Apps Script. Check its URL, and that it’s deployed as a web app with access for “Anyone”.');
+  }
+  const txt = await r.text();
+  let j;
+  try { j = JSON.parse(txt); } catch (_) {
+    throw new Error(r.ok ? 'the Apps Script answered with a web page instead of data — redeploy it as a web app with access for “Anyone”.'
+                         : 'the Apps Script answered ' + r.status + '.');
+  }
+  if (!j.ok) throw new Error(j.error || 'the Apps Script reported a problem.');
+  return j;
+}
+async function rpGsTest() {
+  const gs = _rpDraft.gs, msg = document.getElementById('rpGsTestMsg'), btn = document.getElementById('rpGsTestBtn');
+  const probs = rpGsProblems(Object.assign({}, gs, { map: {} }), []).filter(p => /rpGs(Url|Tab|Script)/.test(p.el));
+  if (probs.length) { msg.className = 'rp-gsmsg bad'; msg.textContent = probs[0].msg; document.getElementById(probs[0].el).classList.add('bad'); return; }
+  const { Y, M } = rpGsMonth();
+  msg.className = 'rp-gsmsg'; msg.textContent = 'Checking…'; btn.disabled = true;
+  try {
+    const j = await rpGsCall(gs, { action: 'ping', sheetUrl: gs.url, tab: rpGsTabName(gs.tab, Y, M) });
+    msg.className = 'rp-gsmsg ok';
+    msg.textContent = `✓ Connected — “${j.title}” › ${j.tab}`;
+  } catch (e) {
+    msg.className = 'rp-gsmsg bad'; msg.textContent = 'Not connected: ' + e.message;
+  } finally { btn.disabled = false; }
+}
+function rpGsCopyScript() {
+  const code = (document.getElementById('rpGsCode') || {}).textContent || '';
+  const btn = document.getElementById('rpGsCopyBtn');
+  const done = ok => { btn.textContent = ok ? '✓ Copied' : 'Select and copy below'; setTimeout(() => { btn.textContent = 'Copy script'; }, 1800);
+                       if (!ok) document.querySelector('.rp-gscode').open = true; };
+  try { navigator.clipboard.writeText(code.trim()).then(() => done(true), () => done(false)); } catch (_) { done(false); }
+}
+
+// ── the send dialog ──
+let _rpGs = null;
+function rpGsReady() {
+  const gs = rpGsCfg((appSettings.powerReport || {}).gsheet);
+  return gs.on ? gs : null;
+}
+function openRpGs() {
+  const gs = rpGsReady();
+  if (!gs) return;
+  const md = rpMonthData();
+  if (!md || !md.onDay) { alert('Nothing to send yet — load a despatch file or reload the saved history.'); return; }
+  const probs = rpGsProblems(gs, rpGsParties(false));
+  if (probs.length) { alert('The Google Sheet settings need a look:\n\n' + probs[0].msg + '\n\nOpen ⚙ → Google Sheet.'); return; }
+  let mode = 'on';
+  try { mode = localStorage.getItem('rpGsDays') === 'mtd' ? 'mtd' : 'on'; } catch (_) {}
+  _rpGs = { gs, md, mode, tab: rpGsTabName(gs.tab, md.Y, md.M), sent: false };
+  document.getElementById('rpGsSub').textContent = `${RP_MON_FULL[md.M - 1]} ${md.Y} · tab ${_rpGs.tab}`;
+  document.getElementById('rpGsStatus').textContent = '';
+  document.getElementById('rpGsSend').disabled = false;
+  document.getElementById('rpGsOverlay').style.display = 'block';
+  rpGsDraw();
+  rpGsPing();
+}
+function closeRpGs() {
+  document.getElementById('rpGsOverlay').style.display = 'none';
+  _rpGs = null;
+}
+function rpGsSetMode(m) {
+  _rpGs.mode = m;
+  try { localStorage.setItem('rpGsDays', m); } catch (_) {}
+  document.getElementById('rpGsStatus').textContent = '';
+  rpGsDraw();
+}
+function rpGsDraw() {
+  const { gs, md, mode } = _rpGs;
+  const days = mode === 'mtd' ? Object.keys(md.days).map(Number).sort((a, b) => a - b) : [md.onDay];
+  const { units, off } = rpGsUnits(rpGsParties(false), gs);
+  const plan = _rpGs.plan = rpGsPlan(units, md, days, gs.dec);
+  const mon = RP_MON[md.M - 1];
+  const all = Object.keys(md.days).map(Number).sort((a, b) => a - b);
+  const span = all.length > 1 ? `${rpDayNum(all[0])}–${rpDayNum(all[all.length - 1])}` : rpDayNum(all[0]);
+  document.getElementById('rpGsDays').innerHTML =
+    `<button class="rp-mchip${mode === 'on' ? ' on' : ''}" onclick="rpGsSetMode('on')">On date · ${rpDayNum(md.onDay)} ${mon}</button>` +
+    `<button class="rp-mchip${mode === 'mtd' ? ' on' : ''}" onclick="rpGsSetMode('mtd')">Month to date · ${span} ${mon}</button>`;
+  const rows = {};
+  plan.forEach(c => { (rows[c.row] = rows[c.row] || []).push(c); });
+  const rk = Object.keys(rows).map(Number).sort((a, b) => a - b);
+  const fmt = v => v.toLocaleString('en-IN', { minimumFractionDigits: gs.dec, maximumFractionDigits: gs.dec });
+  document.getElementById('rpGsSum').innerHTML = plan.length
+    ? `<b>${plan.length}</b> cell${plan.length > 1 ? 's' : ''} in <b>${rk.length}</b> row${rk.length > 1 ? 's' : ''}` +
+      (mode === 'mtd' ? ` · ${days.length} day${days.length > 1 ? 's' : ''}` : '') +
+      ` · ${gs.dec ? 'two decimals' : 'whole tonnes'}`
+    : 'No customer has a row yet — set rows under ⚙ → Google Sheet.';
+  let t = `<div class="rp-gstblwrap"><table class="rp-gstbl"><thead><tr><th>Row</th><th>${mode === 'mtd' ? 'Cells' : 'Cell'}</th><th>Customers</th><th style="text-align:right">${mode === 'mtd' ? 'Month total' : 'Tonnes'}</th></tr></thead><tbody>`;
+  rk.forEach(r => {
+    const cs = rows[r];
+    const who = [...new Set(cs.reduce((a, c) => a.concat(c.who), []))];
+    const cells = cs.length === 1 ? cs[0].a1 : `${cs[0].a1}…${cs[cs.length - 1].a1}`;
+    t += `<tr><td class="a">${r}</td><td class="a">${cells}</td><td>${who.map(rpEsc).join('<br>')}</td>` +
+         `<td class="n">${fmt(cs.reduce((a, c) => a + c.v, 0))}</td></tr>`;
+  });
+  t += '</tbody></table></div>';
+  document.getElementById('rpGsTable').innerHTML = plan.length ? t : '';
+  document.getElementById('rpGsOff').innerHTML = !off.length ? ''
+    : off.length <= 4 ? `Not sent — no row set: ${off.map(rpEsc).join(', ')}.`
+    : `<details><summary>Not sent — ${off.length} customers have no row</summary>${off.map(rpEsc).join(', ')}.</details>`;
+  document.getElementById('rpGsSend').textContent = plan.length ? `Send ${plan.length} cell${plan.length > 1 ? 's' : ''}` : 'Send';
+  document.getElementById('rpGsSend').disabled = !plan.length;
+}
+// months named in a sheet's title or tab, as numbers
+function rpGsMonthsIn(s) {
+  const out = new Set();
+  const re = /\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sept?(?:ember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\b/gi;
+  let m;
+  while ((m = re.exec(s))) out.add(['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'].indexOf(m[1].slice(0, 3).toLowerCase()) + 1);
+  return out;
+}
+async function rpGsPing() {
+  const box = document.getElementById('rpGsConn');
+  const me = _rpGs;
+  box.className = 'rp-gsconn'; box.textContent = 'Checking the sheet…';
+  try {
+    const j = await rpGsCall(me.gs, { action: 'ping', sheetUrl: me.gs.url, tab: me.tab });
+    if (_rpGs !== me) return;
+    // the spreadsheet's name and the tab's are judged apart: a right tab
+    // doesn't excuse a September spreadsheet
+    const named = new Set();
+    [j.title, j.tab].forEach(s => { const ms = rpGsMonthsIn(s); if (ms.size && !ms.has(me.md.M)) ms.forEach(m => named.add(m)); });
+    const clash = named.size > 0;
+    box.className = 'rp-gsconn ' + (clash ? 'warn' : 'ok');
+    box.innerHTML = `${clash ? '⚠' : '✓'} <b>${rpEsc(j.title)}</b> › ${rpEsc(j.tab)}` +
+      (clash ? `<br>Its name mentions ${[...named].map(n => RP_MON_FULL[n - 1]).join(' / ')}, but the report is for ${RP_MON_FULL[me.md.M - 1]} — check it's the right sheet before sending.` : '');
+  } catch (e) {
+    if (_rpGs !== me) return;
+    box.className = 'rp-gsconn bad'; box.textContent = '✗ ' + e.message.charAt(0).toUpperCase() + e.message.slice(1);
+  }
+}
+async function rpGsSend() {
+  const me = _rpGs;
+  if (!me || !me.plan.length) return;
+  const btn = document.getElementById('rpGsSend'), st = document.getElementById('rpGsStatus');
+  btn.disabled = true;
+  st.style.color = 'var(--mid)'; st.textContent = `Sending ${me.plan.length} cells…`;
+  try {
+    const j = await rpGsCall(me.gs, { action: 'write', sheetUrl: me.gs.url, tab: me.tab,
+      month: `${me.md.Y}-${rp2(me.md.M)}`, cells: me.plan.map(c => ({ a1: c.a1, v: c.v })) });
+    st.style.color = 'var(--green)';
+    st.textContent = `✓ Wrote ${j.written} cell${j.written === 1 ? '' : 's'} to “${j.title}” › ${j.tab}.` +
+      (j.skipped && j.skipped.length ? ` Left ${j.skipped.length} alone because they hold formulas: ${j.skipped.slice(0, 8).join(', ')}${j.skipped.length > 8 ? '…' : ''}.` : '');
+    if (j.skipped && j.skipped.length) st.style.color = '#d97a06';
+    btn.textContent = 'Send again';
+  } catch (e) {
+    st.style.color = '#e05'; st.textContent = 'Not sent: ' + e.message;
+  } finally { btn.disabled = false; }
 }
 
 function rpSetPdfMode(mode) {
@@ -2914,10 +3549,8 @@ async function saveRpSettings() {
   status.textContent = 'Saving…'; status.style.color = 'var(--mid)';
 
   const histPath = document.getElementById('rp_histPath').value.trim() || 'roadpower-history-test.json';
-  if (!/^[\w.\-/]+\.json$/.test(histPath)) {
-    status.textContent = 'History file must be a .json path (letters, digits, - _ . /).';
-    status.style.color = '#e05'; return;
-  }
+  if (!/^[\w.\-/]+\.json$/.test(histPath))
+    return rpSaveFail(status, 'general', 'History file must be a .json path (letters, digits, - _ . /).', 'rp_histPath');
   const parties = [];
   Object.keys(_rpDraft.sel).forEach(code => {
     const s = _rpDraft.sel[code];
@@ -2929,18 +3562,16 @@ async function saveRpSettings() {
     parties.push(e);
   });
   for (const p of parties) {
-    if (p.r2 && (!p.cols || !p.cols.length)) {
-      status.textContent = `"${p.name || p.code}" is in the Customer report but has no colliery columns.`;
-      status.style.color = '#e05'; return;
-    }
-    if (p.r2 && !p.cols.some(c => !c.isSubtotal)) {
-      status.textContent = `"${p.name || p.code}": every column is unticked under "In total", so the Total column would be blank. Tick at least one.`;
-      status.style.color = '#e05'; return;
-    }
+    if (p.r2 && (!p.cols || !p.cols.length))
+      return rpSaveFail(status, 'customers', `"${p.name || p.code}" is in the Customer report but has no colliery columns.`);
+    if (p.r2 && !p.cols.some(c => !c.isSubtotal))
+      return rpSaveFail(status, 'customers', `"${p.name || p.code}": every column is unticked under "In total", so the Total column would be blank. Tick at least one.`);
   }
 
   const lock = rpLockForSave(status);
   if (!lock) return;
+  const gsheet = rpGsForSave(status);
+  if (!gsheet) return;
 
   const pr0 = appSettings.powerReport || {};
   const newSettings = Object.assign({}, appSettings, { powerReport: {
@@ -2956,6 +3587,7 @@ async function saveRpSettings() {
     pdfMode:       _rpDraft.pdfMode,
     pdfLevel:      _rpDraft.pdfLevel,
     lock,
+    gsheet,
     parties,
   } });
 
@@ -3692,6 +4324,12 @@ function rpSyncExportBtns() {
     const b = document.getElementById(id);
     if (b) { b.disabled = !on; b.style.opacity = on ? '1' : '.4'; }
   });
+  const gsb = document.getElementById('rpGsBtn');
+  if (gsb) {
+    gsb.style.display = rpGsReady() ? '' : 'none';
+    const md = rpMonthData(), ok = !!(md && md.onDay);
+    gsb.disabled = !ok; gsb.style.opacity = ok ? '1' : '.4';
+  }
 }
 
 // Column headings shared by the Power Sector and Sourcewise reports: on-date,
@@ -6079,6 +6717,135 @@ loadDbFromGitHub();
 
 </script>
 <!-- ═══════════ MERGE CODES ═══════════ -->
+<div id="rpGsOverlay" class="stt-overlay" onclick="if(event.target===this)closeRpGs()">
+  <div class="stt-panel" style="max-width:620px;">
+    <div class="stt-header">
+      <div>
+        <div class="stt-title">Send to Google Sheet</div>
+        <div class="stt-title-sub" id="rpGsSub"></div>
+      </div>
+      <button class="stt-close" onclick="closeRpGs()">✕</button>
+    </div>
+    <div class="stt-body" style="grid-template-columns:minmax(0,1fr);">
+      <div>
+        <div class="rp-gsconn" id="rpGsConn"></div>
+        <div class="rp-rsub" style="margin-top:14px;">Days to send</div>
+        <div class="rp-monthpick" id="rpGsDays"></div>
+        <div class="rp-gssum" id="rpGsSum"></div>
+        <div id="rpGsTable"></div>
+        <div class="stt-hint" id="rpGsOff" style="margin-top:8px;"></div>
+      </div>
+    </div>
+    <div id="rpGsStatus" class="stt-status" aria-live="polite"></div>
+    <div class="stt-footer">
+      <button class="stt-btn-cancel" onclick="closeRpGs()">Close</button>
+      <button class="stt-btn-save" id="rpGsSend" onclick="rpGsSend()">Send</button>
+    </div>
+  </div>
+</div>
+
+<script type="text/plain" id="rpGsCode">
+/**
+ * Road Power Report → Google Sheet
+ *
+ * Writes the Road Power Report's daily figures into fixed cells of a Google
+ * Sheet. The app sends { sheetUrl, tab, cells: [{ a1: 'E12', v: 1234.5 }] }.
+ *
+ * Set-up, once:
+ *  1. script.google.com → New project. Clear the editor and paste this file.
+ *  2. Deploy → New deployment → type: Web app.
+ *       Execute as: Me      Who has access: Anyone
+ *  3. Deploy, allow the permissions it asks for, and copy the Web app URL
+ *     (it ends in /exec) into the app: Settings → Google Sheet → Apps Script URL.
+ *  After changing this script: Deploy → Manage deployments → Edit (pencil) →
+ *  Version: New version → Deploy, so the same URL keeps working.
+ *
+ * Safety:
+ *  • A cell holding a formula is never overwritten; it is reported back.
+ *  • Only numbers are written, and only to the tab named in the request.
+ *  • ONLY_IF_NAME_HAS: when set, the script writes only to spreadsheets whose
+ *    name contains this text (for example 'Road Power'), so the URL can't be
+ *    used to touch your other spreadsheets.
+ *  • Optional speed-up for month-to-date pushes: Services (+) → Google Sheets API.
+ */
+const ONLY_IF_NAME_HAS = '';
+
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(20000);
+    const req = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    const ss = SpreadsheetApp.openByUrl(String(req.sheetUrl || ''));
+    if (ONLY_IF_NAME_HAS && ss.getName().indexOf(ONLY_IF_NAME_HAS) < 0) {
+      throw new Error('This script only writes to spreadsheets whose name contains "' + ONLY_IF_NAME_HAS + '".');
+    }
+    const sh = ss.getSheetByName(String(req.tab || ''));
+    if (!sh) {
+      throw new Error('There is no tab named "' + req.tab + '" in "' + ss.getName() + '". Its tabs are: ' +
+        ss.getSheets().map(function (s) { return s.getName(); }).join(', ') + '.');
+    }
+    const info = { title: ss.getName(), tab: sh.getName(), rows: sh.getMaxRows(), cols: sh.getMaxColumns() };
+    if (req.action === 'ping') return reply_(Object.assign({ ok: true }, info));
+    if (req.action !== 'write') throw new Error('Unknown request.');
+
+    const cells = (req.cells || []).map(function (c) {
+      const m = /^([A-Z]{1,3})([1-9][0-9]{0,6})$/.exec(String(c && c.a1));
+      if (!m || typeof c.v !== 'number' || !isFinite(c.v)) throw new Error('Not a valid cell: ' + JSON.stringify(c));
+      return { a1: m[0], row: +m[2], col: colNum_(m[1]), v: c.v };
+    });
+    if (!cells.length) return reply_(Object.assign({ ok: true, written: 0, skipped: [] }, info));
+
+    let r0 = Infinity, r1 = 0, c0 = Infinity, c1 = 0;
+    cells.forEach(function (c) {
+      r0 = Math.min(r0, c.row); r1 = Math.max(r1, c.row);
+      c0 = Math.min(c0, c.col); c1 = Math.max(c1, c.col);
+    });
+    const outside = cells.filter(function (c) { return c.row > info.rows || c.col > info.cols; });
+    if (outside.length) {
+      throw new Error('Cell ' + outside[0].a1 + ' is outside tab "' + info.tab + '", which has ' +
+        info.rows + ' rows and ' + info.cols + ' columns.');
+    }
+
+    // leave formulas alone
+    const formulas = sh.getRange(r0, c0, r1 - r0 + 1, c1 - c0 + 1).getFormulas();
+    const todo = [], skipped = [];
+    cells.forEach(function (c) { (formulas[c.row - r0][c.col - c0] ? skipped : todo).push(c); });
+
+    if (todo.length) {
+      if (typeof Sheets !== 'undefined') {
+        const prefix = "'" + info.tab.replace(/'/g, "''") + "'!";
+        Sheets.Spreadsheets.Values.batchUpdate({
+          valueInputOption: 'RAW',
+          data: todo.map(function (c) { return { range: prefix + c.a1, values: [[c.v]] }; }),
+        }, ss.getId());
+      } else {
+        todo.forEach(function (c) { sh.getRange(c.row, c.col).setValue(c.v); });
+      }
+      SpreadsheetApp.flush();
+    }
+    return reply_(Object.assign({ ok: true, written: todo.length, skipped: skipped.map(function (c) { return c.a1; }) }, info));
+  } catch (err) {
+    return reply_({ ok: false, error: String((err && err.message) || err) });
+  } finally {
+    try { lock.releaseLock(); } catch (_) {}
+  }
+}
+
+function doGet() {
+  return reply_({ ok: true, about: 'Road Power Report sheet script — the app sends its figures here with POST.' });
+}
+
+function colNum_(s) {
+  let n = 0;
+  for (let i = 0; i < s.length; i++) n = n * 26 + s.charCodeAt(i) - 64;
+  return n;
+}
+
+function reply_(o) {
+  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
+}
+</script>
+
 <div id="rpLockOverlay" class="rp-lock-ov" onclick="if(event.target===this)rpPadClose()">
   <div class="rp-lock-card" id="rpLockCard" role="dialog" aria-modal="true" aria-labelledby="rpLockWhat">
     <div class="rp-lock-ic">
