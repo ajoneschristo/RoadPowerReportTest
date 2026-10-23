@@ -1302,7 +1302,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 .rp-gsstep .rp-gsprev { margin:0 0 9px; flex:1 1 180px; }
 .rp-gsin { font-family:var(--mono); text-transform:uppercase; letter-spacing:.06em; }
 .rp-gsprev { font-family:var(--mono); font-size:11px; color:var(--mid); margin-top:8px; line-height:1.6; }
-.rp-gsrow { display:grid; grid-template-columns:minmax(0,1fr) 56px 50px 44px; gap:5px; align-items:center; padding:7px 8px; border-top:1px solid var(--border); }
+.rp-gsrow { display:grid; grid-template-columns:minmax(0,1fr) 64px 72px; gap:5px; align-items:center; padding:7px 8px; border-top:1px solid var(--border); }
 .rp-gsrow.hd { border-top:none; background:var(--bg); padding-top:6px; padding-bottom:6px; }
 .rp-gsrow.hd span { font-size:10px; font-weight:700; color:var(--dim); text-transform:uppercase; letter-spacing:.6px; }
 .rp-gsrow.hd span.c { text-align:center; }
@@ -1465,7 +1465,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B34-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B35-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1777,17 +1777,17 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
         </div>
         <div class="rp-gsstep">
           <label class="rp-gsfld"><span>Common step</span>
-            <input id="rpGsInc" class="stt-input rp-gsin" type="text" inputmode="numeric" maxlength="2" placeholder="4" oninput="rpGsSet('inc', this.value.trim(), true)"></label>
+            <input id="rpGsInc" class="stt-input rp-gsin" type="text" inputmode="numeric" maxlength="2" placeholder="e.g. 4" oninput="rpGsSet('inc', this.value.trim(), true)"></label>
           <div class="rp-gsprev" id="rpGsPrev"></div>
         </div>
         <div class="rp-list-wrap">
-          <div class="rp-gsrow hd"><span>Customer</span><span class="c">Row</span><span class="c">Day 1</span><span class="c">Step</span></div>
+          <div class="rp-gsrow hd"><span>Customer</span><span class="c">Row</span><span class="c" title="The column of the 1st of the month">Start col</span></div>
           <div id="rpGsList"></div>
         </div>
         <div class="rp-gsshared" id="rpGsShared"></div>
         <div class="stt-hint" style="margin-top:6px;">
-          For each customer, type its <strong>Row</strong> and the column its 1st day sits in (<strong>Day 1</strong>); day <em>n</em> then goes <em>(n − 1) × Step</em> columns on — Day 1 in E with a step of 4 puts day 2 in I and day 3 in M.
-          An empty Step box uses the common step. Leave Row empty to keep a customer out of the sheet. Customers or codes given the same cells are added together before sending.
+          For each customer, type its <strong>Row</strong> and its <strong>Start col</strong> — the column of the 1st of the month. Day <em>n</em> then goes <em>(n − 1) × common step</em> columns on: start col E with a step of 4 puts day 2 in I and day 3 in M.
+          Leave Row empty to keep a customer out of the sheet. Customers or codes given the same cells are added together before sending.
           The month is always the latest one with data, in the history or the loaded file — when that's 1 October, the figures go into the October days.
           A merged customer sends its combined figure to one row; tick <strong>Separate rows</strong> to give each of its codes a row of its own.
           The list follows the <strong>Power</strong> ticks on the Customers tab.
@@ -3018,7 +3018,7 @@ function rpGsCfg(g) {
   const map = {};
   Object.keys(g.map || {}).forEach(c => {
     const m = g.map[c] || {};
-    map[c] = { row: m.row ? String(m.row) : '', col: m.col || '', inc: m.inc ? String(m.inc) : '', split: !!m.split };
+    map[c] = { row: m.row ? String(m.row) : '', col: m.col || '', split: !!m.split };
   });
   // an earlier build had a shared Day 1 column; hand it to each customer that relied on it
   if (g.col) Object.keys(map).forEach(c => { if (map[c].row && !map[c].col) map[c].col = String(g.col).toUpperCase(); });
@@ -3073,7 +3073,7 @@ function rpGsUnits(parties, gs) {
     parts.forEach(u => {
       const row = parseInt(u.m.row, 10);
       if (!row) { off.push(u.name); return; }
-      units.push({ name: u.name, codes: u.codes, row, col: rpColNum(u.m.col), inc: parseInt(u.m.inc, 10) || dInc });
+      units.push({ name: u.name, codes: u.codes, row, col: rpColNum(u.m.col), inc: dInc });
     });
   });
   return { units, off };
@@ -3105,6 +3105,7 @@ function rpGsProblems(gs, parties) {
   if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]{20,}\/(exec|dev)\b/.test(gs.script))
     out.push({ msg: 'The Apps Script URL should look like https://script.google.com/macros/s/…/exec', el: 'rpGsScript' });
   if (!okInc(gs.inc)) out.push({ msg: 'Step must be a whole number from 1 to 50.', el: 'rpGsInc' });
+  let rows = 0;
   parties.forEach(p => {
     const m0 = gs.map[p.code] || {};
     const codes = m0.split && p.codes.length > 1 ? p.codes : [p.code];
@@ -3113,12 +3114,12 @@ function rpGsProblems(gs, parties) {
       const sel = f => `#rpGsList input[data-code="${c}"][data-f="${f}"]`;
       const who = codes.length > 1 ? `${p.name} (${c})` : p.name;
       if (m.row && !/^\d{1,6}$/.test(m.row)) out.push({ msg: `${who}: the row must be a number.`, el: sel('row') });
-      if (m.col && !rpColNum(m.col)) out.push({ msg: `${who}: Day 1 column must be letters, like E.`, el: sel('col') });
-      if (!okInc(m.inc)) out.push({ msg: `${who}: step must be a whole number from 1 to 50.`, el: sel('inc') });
-      if (+m.row && !rpColNum(m.col)) out.push({ msg: `${who} has a row but no Day 1 column — type the column its 1st day sits in, like E.`, el: sel('col') });
-      if (+m.row && !(parseInt(m.inc, 10) || parseInt(gs.inc, 10))) out.push({ msg: `${who} has a row but no step — fill it in, or set the common step.`, el: sel('inc') });
+      if (m.col && !rpColNum(m.col)) out.push({ msg: `${who}: the start column must be letters, like E.`, el: sel('col') });
+      if (+m.row && !rpColNum(m.col)) out.push({ msg: `${who} has a row but no start column — type the column of the 1st of the month, like E.`, el: sel('col') });
+      if (+m.row) rows++;
     });
   });
+  if (rows && !(parseInt(gs.inc, 10) >= 1)) out.push({ msg: 'Set the common step — how many columns apart one day is from the next.', el: 'rpGsInc' });
   return out;
 }
 // tidy for saving: numbers as numbers, empty entries dropped
@@ -3134,7 +3135,6 @@ function rpGsForSave(status) {
     const m = gs.map[c], e = {};
     if (+m.row) e.row = +m.row;
     if (m.col) e.col = m.col.toUpperCase();
-    if (+m.inc) e.inc = +m.inc;
     if (m.split) e.split = true;
     if (Object.keys(e).length) map[c] = e;
   });
@@ -3160,12 +3160,10 @@ function renderRpGs() {
 function renderRpGsList() {
   const gs = _rpDraft.gs;
   const parties = rpGsParties(true);
-  const dInc = gs.inc || '';
   const inputs = c => {
     const m = gs.map[c] || {};
     return `<input data-code="${c}" data-f="row" inputmode="numeric" maxlength="6" value="${rpEsc(m.row || '')}" aria-label="Row">` +
-      `<input data-code="${c}" data-f="col" maxlength="3" autocapitalize="characters" value="${rpEsc(m.col || '')}" aria-label="Day 1 column">` +
-      `<input data-code="${c}" data-f="inc" inputmode="numeric" maxlength="2" placeholder="${rpEsc(dInc)}" value="${rpEsc(m.inc || '')}" aria-label="Step">`;
+      `<input data-code="${c}" data-f="col" maxlength="3" autocapitalize="characters" value="${rpEsc(m.col || '')}" aria-label="Start column">`;
   };
   let h = '';
   parties.forEach(p => {
@@ -3174,7 +3172,7 @@ function renderRpGsList() {
     const toggle = group ? `<label class="rp-gssplit"><input type="checkbox" data-code="${p.code}" data-f="split"${split ? ' checked' : ''}>Separate rows</label>` : '';
     h += `<div class="rp-gsrow${split ? ' grp' : ''}"><div class="rp-gsname"><b title="${rpEsc(p.name)}">${rpEsc(p.name)}</b>` +
          `<span data-info="${p.code}" data-kind="g">${group ? `${p.codes.length} codes` : p.code}</span>${toggle}</div>` +
-         (split ? '<i></i><i></i><i></i>' : inputs(p.code)) + '</div>';
+         (split ? '<i></i><i></i>' : inputs(p.code)) + '</div>';
     if (split) p.codes.forEach(c => {
       h += `<div class="rp-gsrow sub"><div class="rp-gsname"><b>${c}</b>` +
            `<span data-info="${c}" data-kind="c"></span></div>${inputs(c)}</div>`;
@@ -3185,7 +3183,7 @@ function renderRpGsList() {
   list.oninput = list.onchange = e => {
     const t = e.target;
     if (!t.dataset || !t.dataset.code) return;
-    const m = gs.map[t.dataset.code] = gs.map[t.dataset.code] || { row: '', col: '', inc: '', split: false };
+    const m = gs.map[t.dataset.code] = gs.map[t.dataset.code] || { row: '', col: '', split: false };
     t.classList.remove('bad');
     if (t.dataset.f === 'split') { m.split = t.checked; renderRpGsList(); rpGsDerived(); return; }
     m[t.dataset.f] = t.dataset.f === 'col' ? t.value.toUpperCase().trim() : t.value.trim();
@@ -3237,7 +3235,6 @@ function rpGsSet(f, v, soft) {
   gs[f] = v;
   const el = { url: 'rpGsUrl', tab: 'rpGsTab', script: 'rpGsScript', inc: 'rpGsInc' }[f];
   if (el) document.getElementById(el).classList.remove('bad');
-  if (f === 'inc') renderRpGsList();     // the step placeholders follow the common step
   if (soft) rpGsDerived(); else renderRpGs();
 }
 async function rpGsCall(gs, body) {
