@@ -1297,7 +1297,9 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 .rp-gsmsg { font-size:11.5px; color:var(--dim); line-height:1.4; flex:1 1 200px; }
 .rp-gsmsg.ok { color:var(--green); font-weight:600; }
 .rp-gsmsg.bad { color:var(--red); }
-.rp-gsdef { display:grid; grid-template-columns:120px 90px; gap:10px; }
+.rp-gsstep { display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+.rp-gsstep .rp-gsfld { width:110px; }
+.rp-gsstep .rp-gsprev { margin:0 0 9px; flex:1 1 180px; }
 .rp-gsin { font-family:var(--mono); text-transform:uppercase; letter-spacing:.06em; }
 .rp-gsprev { font-family:var(--mono); font-size:11px; color:var(--mid); margin-top:8px; line-height:1.6; }
 .rp-gsrow { display:grid; grid-template-columns:minmax(0,1fr) 56px 50px 44px; gap:5px; align-items:center; padding:7px 8px; border-top:1px solid var(--border); }
@@ -1455,6 +1457,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 </style>
 </head>
 <body>
+<script>try { if (localStorage.getItem('roadPowerTest.theme') === 'dark') document.body.classList.add('dark'); } catch (_) {}</script>
 <header class="app-header" id="appHeader">
   <div class="mcl-badge">⚡</div>
   <div class="app-name">
@@ -1462,7 +1465,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B33-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B34-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1749,7 +1752,8 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
         </div>
         <div class="stt-hint" style="margin:0 0 10px;">
           Sends each Power customer's daily road despatch into fixed cells of a Google Sheet, through a small Apps Script you deploy once.
-          When it's on, a <strong>Sheet</strong> button sits next to PDF, Excel and HTML.
+          When it's on, every <strong>Save</strong> also sends the saved dates of the latest month, and a <strong>Sheet</strong> button next to PDF, Excel and HTML sends by hand.
+          Figures go as stored, to two decimals — format the cells in the sheet however you like.
         </div>
         <div class="rp-gsform">
           <label class="rp-gsfld"><span>Spreadsheet URL</span>
@@ -1764,26 +1768,6 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
           <button class="rp-mini-btn" id="rpGsTestBtn" onclick="rpGsTest()">Test connection</button>
           <span id="rpGsTestMsg" class="rp-gsmsg"></span>
         </div>
-        <div class="rp-rsub">Values</div>
-        <div class="rp-monthpick" id="rpGsDec"></div>
-      </div>
-
-      <div class="stt-section">
-        <div class="stt-section-hdr">
-          <label class="stt-label">Day Columns</label>
-        </div>
-        <div class="rp-gsdef">
-          <label class="rp-gsfld"><span>Day 1 column</span>
-            <input id="rpGsCol" class="stt-input rp-gsin" type="text" maxlength="3" autocapitalize="characters" placeholder="E" oninput="rpGsSet('col', this.value.toUpperCase().trim(), true)"></label>
-          <label class="rp-gsfld"><span>Step</span>
-            <input id="rpGsInc" class="stt-input rp-gsin" type="text" inputmode="numeric" maxlength="2" placeholder="4" oninput="rpGsSet('inc', this.value.trim(), true)"></label>
-        </div>
-        <div class="rp-gsprev" id="rpGsPrev"></div>
-        <div class="stt-hint" style="margin-top:6px;">
-          Day <em>n</em> goes in column <em>Day 1 column + (n − 1) × Step</em> — with E and 4, day 2 lands in I, day 3 in M.
-          These are the defaults; a customer only needs its own column or step when its layout differs.
-          The month is the report's — when the latest date is 1 October, the figures go into the October days.
-        </div>
       </div>
 
       <div class="stt-section">
@@ -1791,13 +1775,20 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
           <label class="stt-label">Power Customers</label>
           <span class="rp-count" id="rpGsCount"></span>
         </div>
+        <div class="rp-gsstep">
+          <label class="rp-gsfld"><span>Common step</span>
+            <input id="rpGsInc" class="stt-input rp-gsin" type="text" inputmode="numeric" maxlength="2" placeholder="4" oninput="rpGsSet('inc', this.value.trim(), true)"></label>
+          <div class="rp-gsprev" id="rpGsPrev"></div>
+        </div>
         <div class="rp-list-wrap">
           <div class="rp-gsrow hd"><span>Customer</span><span class="c">Row</span><span class="c">Day 1</span><span class="c">Step</span></div>
           <div id="rpGsList"></div>
         </div>
         <div class="rp-gsshared" id="rpGsShared"></div>
         <div class="stt-hint" style="margin-top:6px;">
-          Leave <strong>Row</strong> empty to keep a customer out of the sheet. Customers or codes given the same cells are added together before sending.
+          For each customer, type its <strong>Row</strong> and the column its 1st day sits in (<strong>Day 1</strong>); day <em>n</em> then goes <em>(n − 1) × Step</em> columns on — Day 1 in E with a step of 4 puts day 2 in I and day 3 in M.
+          An empty Step box uses the common step. Leave Row empty to keep a customer out of the sheet. Customers or codes given the same cells are added together before sending.
+          The month is always the latest one with data, in the history or the loaded file — when that's 1 October, the figures go into the October days.
           A merged customer sends its combined figure to one row; tick <strong>Separate rows</strong> to give each of its codes a row of its own.
           The list follows the <strong>Power</strong> ticks on the Customers tab.
         </div>
@@ -2278,8 +2269,16 @@ function downloadBlob(blob) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+// The theme is remembered on this phone. The key is this test app's own:
+// GitHub Pages gives every app under ajoneschristo.github.io the same storage.
+const RP_THEME_KEY = 'roadPowerTest.theme';
 function toggleTheme() {
   const isDark = document.body.classList.toggle('dark');
+  try { localStorage.setItem(RP_THEME_KEY, isDark ? 'dark' : 'light'); } catch (_) {}
+  rpThemeUI();
+}
+function rpThemeUI() {
+  const isDark = document.body.classList.contains('dark');
   document.getElementById('themeTrack').classList.toggle('on', isDark);
   document.getElementById('iconSunHeader').style.display  = isDark ? 'none'  : 'block';
   document.getElementById('iconMoonHeader').style.display = isDark ? 'block' : 'none';
@@ -3021,15 +3020,30 @@ function rpGsCfg(g) {
     const m = g.map[c] || {};
     map[c] = { row: m.row ? String(m.row) : '', col: m.col || '', inc: m.inc ? String(m.inc) : '', split: !!m.split };
   });
-  return { on: !!g.on, url: g.url || '', tab: g.tab || '', script: g.script || '', dec: g.dec === 0 ? 0 : 2,
-           col: g.col || '', inc: g.inc ? String(g.inc) : '', map };
+  // an earlier build had a shared Day 1 column; hand it to each customer that relied on it
+  if (g.col) Object.keys(map).forEach(c => { if (map[c].row && !map[c].col) map[c].col = String(g.col).toUpperCase(); });
+  return { on: !!g.on, url: g.url || '', tab: g.tab || '', script: g.script || '', inc: g.inc ? String(g.inc) : '', map };
 }
-// the month the sheet is for: the report's, else this month
+// The sheet always holds the latest month: the month of the latest date in
+// the history or in the loaded file, whichever is later.
+function rpLatestKey() {
+  let best = '';
+  Object.keys((rpHist && rpHist.days) || {}).forEach(k => { if (k > best) best = k; });
+  if (allRows.length) Object.keys(rpFileDayMaps()).forEach(k => { if (k > best) best = k; });
+  return best || null;
+}
 function rpGsMonth() {
-  const md = rpMonthData();
-  if (md) return { Y: md.Y, M: md.M };
+  const k = rpLatestKey();
+  if (k) return { Y: +k.slice(0, 4), M: +k.slice(5, 7) };
   const d = new Date();
   return { Y: d.getFullYear(), M: d.getMonth() + 1 };
+}
+// months a sheet's name points at that aren't M — the spreadsheet's name and
+// the tab's are judged apart, so a right tab doesn't excuse a wrong spreadsheet
+function rpGsMonthClash(j, M) {
+  const named = new Set();
+  [j.title, j.tab].forEach(s => { const ms = rpGsMonthsIn(s); if (ms.size && !ms.has(M)) ms.forEach(m => named.add(m)); });
+  return [...named];
 }
 // Power customers, A–Z — from the settings being edited, or the saved ones
 function rpGsParties(fromDraft) {
@@ -3049,7 +3063,7 @@ function rpGsParties(fromDraft) {
 // each place figures go: { name, codes, row, col, inc }; customers without a row are left out
 function rpGsUnits(parties, gs) {
   const units = [], off = [];
-  const dCol = rpColNum(gs.col), dInc = parseInt(gs.inc, 10) || 0;
+  const dInc = parseInt(gs.inc, 10) || 0;
   parties.forEach(p => {
     const m0 = gs.map[p.code] || {};
     const split = !!m0.split && p.codes.length > 1;
@@ -3059,13 +3073,14 @@ function rpGsUnits(parties, gs) {
     parts.forEach(u => {
       const row = parseInt(u.m.row, 10);
       if (!row) { off.push(u.name); return; }
-      units.push({ name: u.name, codes: u.codes, row, col: rpColNum(u.m.col) || dCol, inc: parseInt(u.m.inc, 10) || dInc });
+      units.push({ name: u.name, codes: u.codes, row, col: rpColNum(u.m.col), inc: parseInt(u.m.inc, 10) || dInc });
     });
   });
   return { units, off };
 }
-// cells to write for the given days, summed where they coincide
-function rpGsPlan(units, md, days, dec) {
+// cells to write for the given days, summed where they coincide; figures go
+// as stored (two decimals) and the sheet does the formatting
+function rpGsPlan(units, md, days) {
   const acc = new Map();
   units.forEach(u => days.forEach(d => {
     const rec = md.days[d];
@@ -3077,8 +3092,7 @@ function rpGsPlan(units, md, days, dec) {
     c.v += rpSumParty(rec.pc, u.codes);
     if (c.who.indexOf(u.name) < 0) c.who.push(u.name);
   }));
-  const f = Math.pow(10, dec);
-  return [...acc.values()].map(c => Object.assign(c, { v: Math.round(c.v * f) / f }))
+  return [...acc.values()].map(c => Object.assign(c, { v: Math.round(c.v * 100) / 100 }))
     .sort((a, b) => a.row - b.row || a.col - b.col);
 }
 // what stops a send, as [{ msg, el }]
@@ -3090,7 +3104,6 @@ function rpGsProblems(gs, parties) {
   if (!gs.tab.trim()) out.push({ msg: 'Type the name of the tab to write to.', el: 'rpGsTab' });
   if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]{20,}\/(exec|dev)\b/.test(gs.script))
     out.push({ msg: 'The Apps Script URL should look like https://script.google.com/macros/s/…/exec', el: 'rpGsScript' });
-  if (gs.col && !rpColNum(gs.col)) out.push({ msg: 'Day 1 column must be letters, like E or AB.', el: 'rpGsCol' });
   if (!okInc(gs.inc)) out.push({ msg: 'Step must be a whole number from 1 to 50.', el: 'rpGsInc' });
   parties.forEach(p => {
     const m0 = gs.map[p.code] || {};
@@ -3102,8 +3115,8 @@ function rpGsProblems(gs, parties) {
       if (m.row && !/^\d{1,6}$/.test(m.row)) out.push({ msg: `${who}: the row must be a number.`, el: sel('row') });
       if (m.col && !rpColNum(m.col)) out.push({ msg: `${who}: Day 1 column must be letters, like E.`, el: sel('col') });
       if (!okInc(m.inc)) out.push({ msg: `${who}: step must be a whole number from 1 to 50.`, el: sel('inc') });
-      if (+m.row && !rpColNum(m.col) && !rpColNum(gs.col)) out.push({ msg: `${who} has a row but no Day 1 column — fill it in, or set the default under Day Columns.`, el: sel('col') });
-      if (+m.row && !(parseInt(m.inc, 10) || parseInt(gs.inc, 10))) out.push({ msg: `${who} has a row but no step — fill it in, or set the default under Day Columns.`, el: sel('inc') });
+      if (+m.row && !rpColNum(m.col)) out.push({ msg: `${who} has a row but no Day 1 column — type the column its 1st day sits in, like E.`, el: sel('col') });
+      if (+m.row && !(parseInt(m.inc, 10) || parseInt(gs.inc, 10))) out.push({ msg: `${who} has a row but no step — fill it in, or set the common step.`, el: sel('inc') });
     });
   });
   return out;
@@ -3125,8 +3138,7 @@ function rpGsForSave(status) {
     if (m.split) e.split = true;
     if (Object.keys(e).length) map[c] = e;
   });
-  const out = { on: !!gs.on, url: gs.url.trim(), tab: gs.tab.trim(), script: gs.script.trim(), dec: gs.dec, map };
-  if (gs.col) out.col = gs.col.toUpperCase();
+  const out = { on: !!gs.on, url: gs.url.trim(), tab: gs.tab.trim(), script: gs.script.trim(), map };
   if (+gs.inc) out.inc = +gs.inc;
   return out;
 }
@@ -3136,12 +3148,10 @@ function renderRpGs() {
   const gs = _rpDraft.gs;
   document.getElementById('rpGsOn').checked = gs.on;
   document.getElementById('rpGsOnLbl').textContent = gs.on ? 'On' : 'Off';
-  [['rpGsUrl', 'url'], ['rpGsTab', 'tab'], ['rpGsScript', 'script'], ['rpGsCol', 'col'], ['rpGsInc', 'inc']].forEach(([id, f]) => {
+  [['rpGsUrl', 'url'], ['rpGsTab', 'tab'], ['rpGsScript', 'script'], ['rpGsInc', 'inc']].forEach(([id, f]) => {
     const el = document.getElementById(id);
     if (document.activeElement !== el) el.value = gs[f];
   });
-  document.getElementById('rpGsDec').innerHTML = [[2, 'Two decimals'], [0, 'Whole tonnes']].map(([v, t]) =>
-    `<button class="rp-mchip${gs.dec === v ? ' on' : ''}" onclick="rpGsSet('dec', ${v})">${t}</button>`).join('');
   const code = document.getElementById('rpGsCode');
   document.getElementById('rpGsCodeView').textContent = code ? code.textContent.trim() : '';
   renderRpGsList();
@@ -3150,11 +3160,11 @@ function renderRpGs() {
 function renderRpGsList() {
   const gs = _rpDraft.gs;
   const parties = rpGsParties(true);
-  const dCol = (gs.col || '').toUpperCase(), dInc = gs.inc || '';
+  const dInc = gs.inc || '';
   const inputs = c => {
     const m = gs.map[c] || {};
     return `<input data-code="${c}" data-f="row" inputmode="numeric" maxlength="6" value="${rpEsc(m.row || '')}" aria-label="Row">` +
-      `<input data-code="${c}" data-f="col" maxlength="3" autocapitalize="characters" placeholder="${rpEsc(dCol)}" value="${rpEsc(m.col || '')}" aria-label="Day 1 column">` +
+      `<input data-code="${c}" data-f="col" maxlength="3" autocapitalize="characters" value="${rpEsc(m.col || '')}" aria-label="Day 1 column">` +
       `<input data-code="${c}" data-f="inc" inputmode="numeric" maxlength="2" placeholder="${rpEsc(dInc)}" value="${rpEsc(m.inc || '')}" aria-label="Step">`;
   };
   let h = '';
@@ -3192,12 +3202,12 @@ function rpGsDerived() {
   tabNote.innerHTML = /\{[MY]+\}/.test(gs.tab) && resolved
     ? `For ${RP_MON_FULL[M - 1]} ${Y} that's <b>${rpEsc(resolved)}</b>. {MMM} Oct · {MMMM} October · {MM} 10 · {YYYY} 2026 · {YY} 26`
     : 'May include {MMM}, {MMMM}, {MM}, {YYYY} or {YY}, filled in from the report’s month.';
-  const c = rpColNum(gs.col), inc = parseInt(gs.inc, 10);
+  const inc = parseInt(gs.inc, 10);
   const prev = document.getElementById('rpGsPrev');
-  if (c && inc >= 1) {
-    const at = d => rpColName(c + (d - 1) * inc);
-    prev.innerHTML = [1, 2, 3, 4].map(d => `${d}→${at(d)}`).join(' · ') + ` · … · ${dim}→${at(dim)}`;
-  } else prev.textContent = 'Set both to see where each day lands.';
+  if (inc >= 1) {
+    const at = d => rpColName(5 + (d - 1) * inc);
+    prev.innerHTML = `A customer starting in E: ` + [1, 2, 3, 4].map(d => `${d}→${at(d)}`).join(' · ') + ` · … · ${dim}→${at(dim)}`;
+  } else prev.textContent = '';
   // per-row hint: first and last cell
   const parties = rpGsParties(true);
   const idx = rpBuildPartyIndex();
@@ -3225,9 +3235,9 @@ function rpGsDerived() {
 function rpGsSet(f, v, soft) {
   const gs = _rpDraft.gs;
   gs[f] = v;
-  const el = { url: 'rpGsUrl', tab: 'rpGsTab', script: 'rpGsScript', col: 'rpGsCol', inc: 'rpGsInc' }[f];
+  const el = { url: 'rpGsUrl', tab: 'rpGsTab', script: 'rpGsScript', inc: 'rpGsInc' }[f];
   if (el) document.getElementById(el).classList.remove('bad');
-  if (f === 'col' || f === 'inc') renderRpGsList();     // placeholders follow the defaults
+  if (f === 'inc') renderRpGsList();     // the step placeholders follow the common step
   if (soft) rpGsDerived(); else renderRpGs();
 }
 async function rpGsCall(gs, body) {
@@ -3269,6 +3279,49 @@ function rpGsCopyScript() {
   try { navigator.clipboard.writeText(code.trim()).then(() => done(true), () => done(false)); } catch (_) { done(false); }
 }
 
+// After a save: send the saved dates that fall in the latest month — the
+// month of the latest date in the history or the loaded file. Earlier months
+// are never sent, and nothing is written to a sheet whose name points at
+// another month. Answers with a sentence for the status line.
+async function rpGsAutoPush(saved) {
+  const gs = rpGsReady();
+  if (!gs || !saved.length) return '';
+  const latest = rpLatestKey();
+  if (!latest) return '';
+  const mk = latest.slice(0, 7), Y = +mk.slice(0, 4), M = +mk.slice(5, 7);
+  const monName = `${RP_MON_FULL[M - 1]} ${Y}`;
+  const keys = saved.filter(k => k.slice(0, 7) === mk && rpHist.days[k]).sort();
+  if (!keys.length) return ` Not sent to the Google Sheet — it holds ${monName}, the latest month.`;
+  const parties = rpGsParties(false);
+  const probs = rpGsProblems(gs, parties);
+  if (probs.length) return ` Not sent to the Google Sheet: ${probs[0].msg}`;
+  const md = { Y, M, days: {} };
+  keys.forEach(k => { md.days[+k.slice(8, 10)] = { pc: rpHist.days[k].pc || {} }; });
+  const plan = rpGsPlan(rpGsUnits(parties, gs).units, md, Object.keys(md.days).map(Number));
+  if (!plan.length) return ' Not sent to the Google Sheet — no customer has a row yet.';
+  const label = keys.length === 1 ? `${rpDayNum(+keys[0].slice(8, 10))} ${RP_MON[M - 1]}`
+              : `${rpDayNum(+keys[0].slice(8, 10))}–${rpDayNum(+keys[keys.length - 1].slice(8, 10))} ${RP_MON[M - 1]} (${keys.length} days)`;
+  const tab = rpGsTabName(gs.tab, Y, M);
+  try {
+    const j0 = await rpGsCall(gs, { action: 'ping', sheetUrl: gs.url, tab });
+    const clash = rpGsMonthClash(j0, M);
+    if (clash.length) return ` Not sent to the Google Sheet: “${j0.title}” › ${j0.tab} looks like ${clash.map(n => RP_MON_FULL[n - 1]).join(' / ')}, not ${RP_MON_FULL[M - 1]}. Point ⚙ → Google Sheet at this month's sheet, then use the Sheet button.`;
+    const j = await rpGsCall(gs, { action: 'write', sheetUrl: gs.url, tab, month: mk, cells: plan.map(c => ({ a1: c.a1, v: c.v })) });
+    return ` Sent ${label} to “${j.title}” › ${j.tab} (${j.written} cell${j.written === 1 ? '' : 's'}` +
+      (j.skipped && j.skipped.length ? `; ${j.skipped.length} left alone because they hold formulas` : '') + ').';
+  } catch (e) {
+    return ` Not sent to the Google Sheet: ${e.message} Use the Sheet button to try again.`;
+  }
+}
+// a save's status line, followed by what happened at the sheet
+async function rpAfterSave(msg, saved) {
+  rpSetStatus(msg, false);
+  if (!rpGsReady()) return;
+  rpSetStatus(msg + ' Sending to the Google Sheet…', false);
+  const res = await rpGsAutoPush(saved);
+  rpSetStatus(msg + res, /^ Not sent/.test(res));
+}
+
 // ── the send dialog ──
 let _rpGs = null;
 function rpGsReady() {
@@ -3278,14 +3331,15 @@ function rpGsReady() {
 function openRpGs() {
   const gs = rpGsReady();
   if (!gs) return;
-  const md = rpMonthData();
+  const latest = rpLatestKey();
+  const md = latest ? rpMonthData(latest) : null;
   if (!md || !md.onDay) { alert('Nothing to send yet — load a despatch file or reload the saved history.'); return; }
   const probs = rpGsProblems(gs, rpGsParties(false));
   if (probs.length) { alert('The Google Sheet settings need a look:\n\n' + probs[0].msg + '\n\nOpen ⚙ → Google Sheet.'); return; }
   let mode = 'on';
   try { mode = localStorage.getItem('rpGsDays') === 'mtd' ? 'mtd' : 'on'; } catch (_) {}
   _rpGs = { gs, md, mode, tab: rpGsTabName(gs.tab, md.Y, md.M), sent: false };
-  document.getElementById('rpGsSub').textContent = `${RP_MON_FULL[md.M - 1]} ${md.Y} · tab ${_rpGs.tab}`;
+  document.getElementById('rpGsSub').textContent = `${RP_MON_FULL[md.M - 1]} ${md.Y} — the latest month · tab ${_rpGs.tab}`;
   document.getElementById('rpGsStatus').textContent = '';
   document.getElementById('rpGsSend').disabled = false;
   document.getElementById('rpGsOverlay').style.display = 'block';
@@ -3306,7 +3360,7 @@ function rpGsDraw() {
   const { gs, md, mode } = _rpGs;
   const days = mode === 'mtd' ? Object.keys(md.days).map(Number).sort((a, b) => a - b) : [md.onDay];
   const { units, off } = rpGsUnits(rpGsParties(false), gs);
-  const plan = _rpGs.plan = rpGsPlan(units, md, days, gs.dec);
+  const plan = _rpGs.plan = rpGsPlan(units, md, days);
   const mon = RP_MON[md.M - 1];
   const all = Object.keys(md.days).map(Number).sort((a, b) => a - b);
   const span = all.length > 1 ? `${rpDayNum(all[0])}–${rpDayNum(all[all.length - 1])}` : rpDayNum(all[0]);
@@ -3316,11 +3370,10 @@ function rpGsDraw() {
   const rows = {};
   plan.forEach(c => { (rows[c.row] = rows[c.row] || []).push(c); });
   const rk = Object.keys(rows).map(Number).sort((a, b) => a - b);
-  const fmt = v => v.toLocaleString('en-IN', { minimumFractionDigits: gs.dec, maximumFractionDigits: gs.dec });
+  const fmt = v => v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   document.getElementById('rpGsSum').innerHTML = plan.length
     ? `<b>${plan.length}</b> cell${plan.length > 1 ? 's' : ''} in <b>${rk.length}</b> row${rk.length > 1 ? 's' : ''}` +
-      (mode === 'mtd' ? ` · ${days.length} day${days.length > 1 ? 's' : ''}` : '') +
-      ` · ${gs.dec ? 'two decimals' : 'whole tonnes'}`
+      (mode === 'mtd' ? ` · ${days.length} day${days.length > 1 ? 's' : ''}` : '')
     : 'No customer has a row yet — set rows under ⚙ → Google Sheet.';
   let t = `<div class="rp-gstblwrap"><table class="rp-gstbl"><thead><tr><th>Row</th><th>${mode === 'mtd' ? 'Cells' : 'Cell'}</th><th>Customers</th><th style="text-align:right">${mode === 'mtd' ? 'Month total' : 'Tonnes'}</th></tr></thead><tbody>`;
   rk.forEach(r => {
@@ -3353,11 +3406,8 @@ async function rpGsPing() {
   try {
     const j = await rpGsCall(me.gs, { action: 'ping', sheetUrl: me.gs.url, tab: me.tab });
     if (_rpGs !== me) return;
-    // the spreadsheet's name and the tab's are judged apart: a right tab
-    // doesn't excuse a September spreadsheet
-    const named = new Set();
-    [j.title, j.tab].forEach(s => { const ms = rpGsMonthsIn(s); if (ms.size && !ms.has(me.md.M)) ms.forEach(m => named.add(m)); });
-    const clash = named.size > 0;
+    const named = rpGsMonthClash(j, me.md.M);
+    const clash = named.length > 0;
     box.className = 'rp-gsconn ' + (clash ? 'warn' : 'ok');
     box.innerHTML = `${clash ? '⚠' : '✓'} <b>${rpEsc(j.title)}</b> › ${rpEsc(j.tab)}` +
       (clash ? `<br>Its name mentions ${[...named].map(n => RP_MON_FULL[n - 1]).join(' / ')}, but the report is for ${RP_MON_FULL[me.md.M - 1]} — check it's the right sheet before sending.` : '');
@@ -3754,8 +3804,8 @@ async function saveRpDay() {
     if (!res.ok) throw new Error('GitHub ' + res.status);
     const resp = await res.json();
     _rpHistSha = resp.content.sha;
-    rpSetStatus(`✓ ${rpActiveDMY()} saved to ${RP_GH.path}`, false);
     renderRpReports();
+    await rpAfterSave(`✓ ${rpActiveDMY()} saved to ${RP_GH.path}.`, [key]);
   } catch(e) {
     rpSetStatus('Save failed: ' + e.message, true);
   } finally {
@@ -3813,8 +3863,8 @@ async function saveRpAllDays() {
     if (!res.ok) throw new Error('GitHub ' + res.status);
     const resp = await res.json();
     _rpHistSha = resp.content.sha;
-    rpSetStatus(`✓ ${keys.length} day(s) saved to ${RP_GH.path}`, false);
     renderRpReports();
+    await rpAfterSave(`✓ ${keys.length} day(s) saved to ${RP_GH.path}.`, keys);
   } catch(e) {
     rpSetStatus('Bulk save failed: ' + e.message, true);
   } finally {
@@ -4062,8 +4112,8 @@ function rpSwitch(n) {
 
 // Build day → { 'party|colliery': qty } for the month of the active date,
 // with the active date overridden by the live file figures.
-function rpMonthData() {
-  const key = rpActiveKey();
+function rpMonthData(forKey) {
+  const key = forKey || rpActiveKey();
   let Y, M;
   if (key) { Y = +key.slice(0,4); M = +key.slice(5,7); }
   else {
@@ -6547,6 +6597,11 @@ function finishLoad() {
   rowDO     = new Array(n);
 
   maxGWMins = -1; maxGWTimeStr = ''; maxGWDateStr = '';
+  // the file's latest moment — its latest date, then the latest time on that
+  // date — so a 1st-to-5th file reads as the 5th, not as whichever day holds
+  // the latest clock time
+  let maxKey = '';
+  const dateKey = {};
 
   for (let i = 0; i < n; i++) {
     const row = allRows[i];
@@ -6556,10 +6611,13 @@ function finishLoad() {
     rowTar[i]    = idxTar   >= 0 ? parseFloat(row[idxTar])   || 0 : 0;
     rowGWDate[i] = idxGWDate >= 0 ? row[idxGWDate] : '';
     rowDO[i]     = idxRDO   >= 0 ? (row[idxRDO] || '').trim() : '';
-    if (mins > maxGWMins) {
+    const ds = idxGWDate >= 0 ? String(row[idxGWDate] || '').trim() : '';
+    const dk = ds ? (dateKey[ds] !== undefined ? dateKey[ds] : (dateKey[ds] = rpKeyFromDMY(ds) || '')) : '';
+    if (dk > maxKey || (dk === maxKey && mins > maxGWMins)) {
+      maxKey       = dk;
       maxGWMins    = mins;
       maxGWTimeStr = idxGWTime >= 0 ? row[idxGWTime].trim() : '';
-      maxGWDateStr = idxGWDate >= 0 ? row[idxGWDate].trim() : '';
+      maxGWDateStr = ds;
     }
   }
 
@@ -6710,6 +6768,7 @@ function showSavedReports() {
 // ═══════════════════════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════════════════════
+rpThemeUI();
 loadSettingsFromGitHub()
   .then(() => loadRpHistory())
   .then(() => { renderRpReports(); });
