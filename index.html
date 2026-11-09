@@ -1290,6 +1290,31 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 .rp-sttfoot .stt-footer { border-top:none; padding-top:6px; }
 .stt-input.bad, .rp-gsrow input.bad { border-color:var(--red) !important; box-shadow:0 0 0 3px rgba(192,57,43,.12); }
 /* google sheet */
+.rp-sfbtns { display:flex; gap:8px; flex-wrap:wrap; }
+/* customer groups */
+.rp-grprow { display:grid; grid-template-columns:30px 30px minmax(0,1fr) 26px 30px; gap:6px; align-items:center; padding:7px 10px; border-top:1px solid var(--border); }
+.rp-grprow:first-child { border-top:none; }
+.rp-grprow .stt-cell-input { width:100%; box-sizing:border-box; }
+.rp-grpn { font-family:var(--mono); font-size:11px; color:var(--dim); text-align:center; }
+.rp-grpcust-wrap { max-height:360px; overflow-y:auto; }
+.rp-grpcust { display:grid; grid-template-columns:minmax(0,1fr) 150px; gap:8px; align-items:center; padding:6px 10px; border-top:1px solid var(--border); }
+.rp-grpcust:first-child { border-top:none; }
+.rp-grpcust select { width:100%; box-sizing:border-box; padding:6px 4px; }
+.rp-gsrow.g { grid-template-columns:minmax(0,1fr) 80px; }
+#rpGsGcol input { text-transform:uppercase; }
+.rp-gsgrp { font-size:11px; color:var(--mid); text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rp-gsgrp.none { color:var(--dim); font-style:italic; }
+.rp-gsname span i.own { color:var(--dim); font-style:italic; }
+.rp-sfbtns .rp-mini-btn { padding:8px 12px; font-size:12px; }
+.rp-sfrep { font-size:12px; color:var(--mid); line-height:1.5; margin-top:10px; }
+.rp-sfrep:empty { display:none; }
+.rp-sfrep.ok, .rp-sfrep.warn, .rp-sfrep.bad { padding:10px 12px; border-radius:8px; background:var(--bg); border:1.5px solid var(--green); color:var(--text); }
+.rp-sfrep.warn { border-color:#d97a06; }
+.rp-sfrep.bad { border-color:var(--red); color:var(--red); }
+.rp-sfrep ul { margin:6px 0 0; padding-left:18px; }
+.rp-sfrep li { margin:2px 0; }
+.rp-sfrep summary { cursor:pointer; margin-top:6px; font-weight:600; color:#b8620a; }
+.rp-sfwarn { margin-top:8px; font-weight:600; color:#b8620a; }
 .rp-gsform { display:grid; gap:10px; }
 .rp-gsfld { display:block; }
 .rp-gsfld > span { display:block; font-size:11px; font-weight:600; color:var(--mid); margin:0 0 4px 2px; }
@@ -1302,7 +1327,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 .rp-gsstep .rp-gsprev { margin:0 0 9px; flex:1 1 180px; }
 .rp-gsin { font-family:var(--mono); text-transform:uppercase; letter-spacing:.06em; }
 .rp-gsprev { font-family:var(--mono); font-size:11px; color:var(--mid); margin-top:8px; line-height:1.6; }
-.rp-gsrow { display:grid; grid-template-columns:minmax(0,1fr) 64px 72px; gap:5px; align-items:center; padding:7px 8px; border-top:1px solid var(--border); }
+.rp-gsrow { display:grid; grid-template-columns:minmax(0,1fr) 96px 64px; gap:5px; align-items:center; padding:7px 8px; border-top:1px solid var(--border); }
 .rp-gsrow.hd { border-top:none; background:var(--bg); padding-top:6px; padding-bottom:6px; }
 .rp-gsrow.hd span { font-size:10px; font-weight:700; color:var(--dim); text-transform:uppercase; letter-spacing:.6px; }
 .rp-gsrow.hd span.c { text-align:center; }
@@ -1465,7 +1490,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B35-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B37-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1693,6 +1718,22 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 
       <div class="stt-section">
         <div class="stt-section-hdr">
+          <label class="stt-label">Customer Groups</label>
+          <span class="rp-count" id="rpGrpCount"></span>
+        </div>
+        <div class="stt-hint" style="margin:0 0 8px;">
+          Broad groups of Power customers. The Power Sector report lists each group's customers together, in the order below, with a subtotal for the group;
+          on the Google Sheet tab each group gets its own start column. This is separate from merging codes into one customer (⛓).
+        </div>
+        <div class="rp-rlist" id="rpGrpList"></div>
+        <div class="rp-sfbtns" style="margin-top:8px;"><button class="rp-mini-btn" onclick="rpGrpAdd()">+ Add group</button></div>
+        <label class="rp-lkcheck"><input type="checkbox" id="rpGrpTable" onchange="_rpDraft.groupTable = this.checked">Add a table of group totals below the Power Sector report</label>
+        <div class="rp-rsub">Customers</div>
+        <div class="rp-list-wrap rp-grpcust-wrap" id="rpGrpCust"></div>
+      </div>
+
+      <div class="stt-section">
+        <div class="stt-section-hdr">
           <label class="stt-label">Customer Report — Customers &amp; Columns</label>
           <button class="stt-add-btn" onclick="openRpAddR2()">+ Add customer</button>
         </div>
@@ -1780,14 +1821,18 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
             <input id="rpGsInc" class="stt-input rp-gsin" type="text" inputmode="numeric" maxlength="2" placeholder="e.g. 4" oninput="rpGsSet('inc', this.value.trim(), true)"></label>
           <div class="rp-gsprev" id="rpGsPrev"></div>
         </div>
+        <div class="rp-rsub">Group start columns</div>
+        <div class="rp-list-wrap" id="rpGsGcol"></div>
+        <div class="rp-rsub">Rows</div>
         <div class="rp-list-wrap">
-          <div class="rp-gsrow hd"><span>Customer</span><span class="c">Row</span><span class="c" title="The column of the 1st of the month">Start col</span></div>
+          <div class="rp-gsrow hd"><span>Customer</span><span class="c">Group</span><span class="c">Row</span></div>
           <div id="rpGsList"></div>
         </div>
         <div class="rp-gsshared" id="rpGsShared"></div>
         <div class="stt-hint" style="margin-top:6px;">
-          For each customer, type its <strong>Row</strong> and its <strong>Start col</strong> — the column of the 1st of the month. Day <em>n</em> then goes <em>(n − 1) × common step</em> columns on: start col E with a step of 4 puts day 2 in I and day 3 in M.
-          Leave Row empty to keep a customer out of the sheet. Customers or codes given the same cells are added together before sending.
+          Give each customer group its <strong>Start col</strong> — the column of the 1st of the month — and each customer its <strong>Row</strong>; a customer's group is set on the Customers tab.
+          Day <em>n</em> then goes <em>(n − 1) × common step</em> columns on: start col E with a step of 4 puts day 2 in I and day 3 in M.
+          A customer given its own start col before groups existed keeps it until its group has one. Leave Row empty to keep a customer out of the sheet. Customers or codes given the same cells are added together before sending.
           The month is always the latest one with data, in the history or the loaded file — when that's 1 October, the figures go into the October days.
           A merged customer sends its combined figure to one row; tick <strong>Separate rows</strong> to give each of its codes a row of its own.
           The list follows the <strong>Power</strong> ticks on the Customers tab.
@@ -1814,6 +1859,26 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
       </div>
 
       <div class="rp-stab" data-tab="general" role="tabpanel">
+      <div class="stt-section">
+        <div class="stt-section-hdr">
+          <label class="stt-label">Settings File</label>
+        </div>
+        <div class="stt-hint" style="margin:0 0 10px;">
+          Keep a copy of these settings in Excel, edit them there, or bring them back. Each settings tab gets a sheet of its own.
+        </div>
+        <div class="rp-sfbtns">
+          <button class="rp-mini-btn" onclick="rpSfExport()">⬇ Export to Excel</button>
+          <button class="rp-mini-btn" onclick="document.getElementById('rpSfFile').click()">⬆ Import from Excel</button>
+          <input type="file" id="rpSfFile" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none" onchange="rpSfImport(this)">
+        </div>
+        <div id="rpSfReport" class="rp-sfrep"></div>
+        <div class="stt-hint" style="margin-top:8px;">
+          Export takes what's on screen, including changes not saved yet, along with the pinned months and the day-by-day switches.
+          Import fills in the tabs from the file — nothing is saved until you tap Save, and Cancel drops it.
+          A row deleted in the file removes that customer, column or sheet row; a tab deleted from the file leaves that part as it is.
+        </div>
+      </div>
+
       <div class="stt-section">
         <div class="stt-section-hdr">
           <label class="stt-label">Settings Passcode</label>
@@ -2415,7 +2480,8 @@ function rpOpenSettingsNow() {
   }));
   _rpDraft = { historyPath: pr.historyPath || 'roadpower-history-test.json', sel: {},
                show: shDef, reports: rpReportList(pr.reports), exportReports: rpExportList(pr),
-               pdfLevel: rpPdfLevel(pr), pdfMode: rpPdfMode(pr), lock: rpLockDraft(pr), gs: rpGsCfg(pr.gsheet) };
+               pdfLevel: rpPdfLevel(pr), pdfMode: rpPdfMode(pr), lock: rpLockDraft(pr), gs: rpGsCfg(pr.gsheet),
+               groups: rpGroupsOf(pr).map(g => ({ id: g.id, name: g.name })), groupTable: !!pr.groupTable };
   (pr.parties || []).forEach(p => {
     const codes = rpCodesOf(p);
     _rpDraft.sel[codes[0]] = {
@@ -2424,6 +2490,7 @@ function rpOpenSettingsNow() {
       r1:      !!p.r1,
       nil:     !!(p.r1 && p.r1Nil),
       r2:      !!p.r2,
+      grp:     p.grp || '',
       members: codes.slice(1),
       cols:    (p.cols || []).map(c => ({ label: c.label || '', colCodes: c.colCodes || '', isSubtotal: !!c.isSubtotal })),
     };
@@ -2445,6 +2512,7 @@ function rpOpenSettingsNow() {
   renderRpShowGrids();
   renderRpParties();
   renderRpR2();
+  renderRpGroups();
   document.querySelectorAll('#rpSettingsOverlay .bad').forEach(el => el.classList.remove('bad'));
   document.getElementById('rpSettingsOverlay').style.display = 'block';
   document.getElementById('rpSettingsOverlay').scrollTop = 0;
@@ -3022,7 +3090,8 @@ function rpGsCfg(g) {
   });
   // an earlier build had a shared Day 1 column; hand it to each customer that relied on it
   if (g.col) Object.keys(map).forEach(c => { if (map[c].row && !map[c].col) map[c].col = String(g.col).toUpperCase(); });
-  return { on: !!g.on, url: g.url || '', tab: g.tab || '', script: g.script || '', inc: g.inc ? String(g.inc) : '', map };
+  return { on: !!g.on, url: g.url || '', tab: g.tab || '', script: g.script || '', inc: g.inc ? String(g.inc) : '', map,
+           gcol: Object.assign({}, g.gcol || {}) };
 }
 // The sheet always holds the latest month: the month of the latest date in
 // the history or in the loaded file, whichever is later.
@@ -3052,11 +3121,11 @@ function rpGsParties(fromDraft) {
     const idx = rpBuildPartyIndex();
     list = Object.keys(_rpDraft.sel).filter(c => _rpDraft.sel[c].power).map(c => {
       const s = _rpDraft.sel[c];
-      return { code: c, codes: [c, ...(s.members || [])], name: s.name || (idx[c] || {}).name || c };
+      return { code: c, codes: [c, ...(s.members || [])], name: s.name || (idx[c] || {}).name || c, grp: s.grp || '' };
     });
   } else {
     list = ((appSettings.powerReport || {}).parties || []).filter(p => p.power)
-      .map(p => { const codes = rpCodesOf(p); return { code: codes[0], codes, name: p.name || codes[0] }; });
+      .map(p => { const codes = rpCodesOf(p); return { code: codes[0], codes, name: p.name || codes[0], grp: p.grp || '' }; });
   }
   return list.sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -3073,7 +3142,10 @@ function rpGsUnits(parties, gs) {
     parts.forEach(u => {
       const row = parseInt(u.m.row, 10);
       if (!row) { off.push(u.name); return; }
-      units.push({ name: u.name, codes: u.codes, row, col: rpColNum(u.m.col), inc: dInc });
+      // the group's start column; a customer in no group (or one whose group
+      // has none yet) keeps the start column it was given before groups existed
+      const gc = rpColNum((gs.gcol || {})[p.grp]);
+      units.push({ name: u.name, codes: u.codes, row, col: gc || rpColNum(u.m.col), own: !gc && !!rpColNum(u.m.col), inc: dInc, grp: p.grp });
     });
   });
   return { units, off };
@@ -3096,8 +3168,9 @@ function rpGsPlan(units, md, days) {
     .sort((a, b) => a.row - b.row || a.col - b.col);
 }
 // what stops a send, as [{ msg, el }]
-function rpGsProblems(gs, parties) {
+function rpGsProblems(gs, parties, groups) {
   const out = [];
+  groups = groups || [];
   const okInc = v => !v || (/^\d+$/.test(v) && +v >= 1 && +v <= 50);
   if (!/^https:\/\/docs\.google\.com\/spreadsheets\/d\/[\w-]{20,}/.test(gs.url))
     out.push({ msg: 'Paste the spreadsheet’s full address — https://docs.google.com/spreadsheets/d/…', el: 'rpGsUrl' });
@@ -3114,11 +3187,15 @@ function rpGsProblems(gs, parties) {
       const sel = f => `#rpGsList input[data-code="${c}"][data-f="${f}"]`;
       const who = codes.length > 1 ? `${p.name} (${c})` : p.name;
       if (m.row && !/^\d{1,6}$/.test(m.row)) out.push({ msg: `${who}: the row must be a number.`, el: sel('row') });
-      if (m.col && !rpColNum(m.col)) out.push({ msg: `${who}: the start column must be letters, like E.`, el: sel('col') });
-      if (+m.row && !rpColNum(m.col)) out.push({ msg: `${who} has a row but no start column — type the column of the 1st of the month, like E.`, el: sel('col') });
+      if (+m.row && !rpColNum((gs.gcol || {})[p.grp]) && !rpColNum(m.col)) {
+        const g = groups.find(x => x.id === p.grp);
+        out.push(g ? { msg: `group “${g.name}” has no start col — set it under Group start columns.`, el: `#rpGsGcol input[data-g="${g.id}"]` }
+                   : { msg: `${who} has a row but no group — pick its group under Customer Groups on the Customers tab.`, el: `#rpGrpCust select[data-code="${p.code}"]`, tab: 'customers' });
+      }
       if (+m.row) rows++;
     });
   });
+  groups.forEach(g => { const v = (gs.gcol || {})[g.id]; if (v && !rpColNum(v)) out.push({ msg: `group “${g.name}”: the start col must be letters, like E.`, el: `#rpGsGcol input[data-g="${g.id}"]` }); });
   if (rows && !(parseInt(gs.inc, 10) >= 1)) out.push({ msg: 'Set the common step — how many columns apart one day is from the next.', el: 'rpGsInc' });
   return out;
 }
@@ -3127,19 +3204,25 @@ function rpGsForSave(status) {
   const gs = _rpDraft.gs;
   document.querySelectorAll('#rpSettingsOverlay .bad').forEach(el => el.classList.remove('bad'));
   if (gs.on) {
-    const probs = rpGsProblems(gs, rpGsParties(true));
-    if (probs.length) return rpSaveFail(status, 'sheet', 'Google Sheet: ' + probs[0].msg, probs[0].el);
+    const probs = rpGsProblems(gs, rpGsParties(true), _rpDraft.groups);
+    if (probs.length) return rpSaveFail(status, probs[0].tab || 'sheet', 'Google Sheet: ' + probs[0].msg, probs[0].el);
   }
+  // a customer's own start column is kept only until its group has one
+  const grpOf = {};
+  rpGsParties(true).forEach(p => p.codes.forEach(c => { grpOf[c] = p.grp; }));
   const map = {};
   Object.keys(gs.map).forEach(c => {
     const m = gs.map[c], e = {};
     if (+m.row) e.row = +m.row;
-    if (m.col) e.col = m.col.toUpperCase();
+    if (m.col && !rpColNum((gs.gcol || {})[grpOf[c]])) e.col = m.col.toUpperCase();
     if (m.split) e.split = true;
     if (Object.keys(e).length) map[c] = e;
   });
+  const gcol = {};
+  _rpDraft.groups.forEach(g => { const v = (gs.gcol || {})[g.id]; if (rpColNum(v)) gcol[g.id] = v.toUpperCase(); });
   const out = { on: !!gs.on, url: gs.url.trim(), tab: gs.tab.trim(), script: gs.script.trim(), map };
   if (+gs.inc) out.inc = +gs.inc;
+  if (Object.keys(gcol).length) out.gcol = gcol;
   return out;
 }
 
@@ -3154,6 +3237,7 @@ function renderRpGs() {
   });
   const code = document.getElementById('rpGsCode');
   document.getElementById('rpGsCodeView').textContent = code ? code.textContent.trim() : '';
+  renderRpGsGcol();
   renderRpGsList();
   rpGsDerived();
 }
@@ -3162,9 +3246,10 @@ function renderRpGsList() {
   const parties = rpGsParties(true);
   const inputs = c => {
     const m = gs.map[c] || {};
-    return `<input data-code="${c}" data-f="row" inputmode="numeric" maxlength="6" value="${rpEsc(m.row || '')}" aria-label="Row">` +
-      `<input data-code="${c}" data-f="col" maxlength="3" autocapitalize="characters" value="${rpEsc(m.col || '')}" aria-label="Start column">`;
+    return `<input data-code="${c}" data-f="row" inputmode="numeric" maxlength="6" value="${rpEsc(m.row || '')}" aria-label="Row">`;
   };
+  const gname = id => ((_rpDraft.groups.find(g => g.id === id) || {}).name) || '';
+  const grpCell = id => `<span class="rp-gsgrp${gname(id) ? '' : ' none'}" title="${rpEsc(gname(id))}">${rpEsc(gname(id) || 'no group')}</span>`;
   let h = '';
   parties.forEach(p => {
     const m0 = gs.map[p.code] || {};
@@ -3172,10 +3257,10 @@ function renderRpGsList() {
     const toggle = group ? `<label class="rp-gssplit"><input type="checkbox" data-code="${p.code}" data-f="split"${split ? ' checked' : ''}>Separate rows</label>` : '';
     h += `<div class="rp-gsrow${split ? ' grp' : ''}"><div class="rp-gsname"><b title="${rpEsc(p.name)}">${rpEsc(p.name)}</b>` +
          `<span data-info="${p.code}" data-kind="g">${group ? `${p.codes.length} codes` : p.code}</span>${toggle}</div>` +
-         (split ? '<i></i><i></i>' : inputs(p.code)) + '</div>';
+         grpCell(p.grp) + (split ? '<i></i>' : inputs(p.code)) + '</div>';
     if (split) p.codes.forEach(c => {
       h += `<div class="rp-gsrow sub"><div class="rp-gsname"><b>${c}</b>` +
-           `<span data-info="${c}" data-kind="c"></span></div>${inputs(c)}</div>`;
+           `<span data-info="${c}" data-kind="c"></span></div><i></i>${inputs(c)}</div>`;
     });
   });
   const list = document.getElementById('rpGsList');
@@ -3217,7 +3302,8 @@ function rpGsDerived() {
     const split = !sub && n > 1 && (gs.map[code] || {}).split;
     const u = split ? null : units.find(x => x.codes[0] === code && x.codes.length === n);
     const base = sub ? ((idx[code] || {}).name || '') : n > 1 ? `${n} codes` : code;
-    const cells = u && u.col && u.inc ? `<em>${rpColName(u.col)}${u.row}…${rpColName(u.col + (dim - 1) * u.inc)}${u.row}</em>` : '';
+    const cells = u && u.col && u.inc ? `<em>${rpColName(u.col)}${u.row}…${rpColName(u.col + (dim - 1) * u.inc)}${u.row}</em>` +
+      (u.own ? ' <i class="own">own start col until its group has one</i>' : '') : '';
     sp.innerHTML = (sub ? [cells, base ? rpEsc(base) : ''] : [base ? rpEsc(base) : '', cells]).filter(Boolean).join(' · ') || '&nbsp;';
     if (sub) sp.title = base;
   });
@@ -3290,7 +3376,7 @@ async function rpGsAutoPush(saved) {
   const keys = saved.filter(k => k.slice(0, 7) === mk && rpHist.days[k]).sort();
   if (!keys.length) return ` Not sent to the Google Sheet — it holds ${monName}, the latest month.`;
   const parties = rpGsParties(false);
-  const probs = rpGsProblems(gs, parties);
+  const probs = rpGsProblems(gs, parties, rpGroupsOf());
   if (probs.length) return ` Not sent to the Google Sheet: ${probs[0].msg}`;
   const md = { Y, M, days: {} };
   keys.forEach(k => { md.days[+k.slice(8, 10)] = { pc: rpHist.days[k].pc || {} }; });
@@ -3331,7 +3417,7 @@ function openRpGs() {
   const latest = rpLatestKey();
   const md = latest ? rpMonthData(latest) : null;
   if (!md || !md.onDay) { alert('Nothing to send yet — load a despatch file or reload the saved history.'); return; }
-  const probs = rpGsProblems(gs, rpGsParties(false));
+  const probs = rpGsProblems(gs, rpGsParties(false), rpGroupsOf());
   if (probs.length) { alert('The Google Sheet settings need a look:\n\n' + probs[0].msg + '\n\nOpen ⚙ → Google Sheet.'); return; }
   let mode = 'on';
   try { mode = localStorage.getItem('rpGsDays') === 'mtd' ? 'mtd' : 'on'; } catch (_) {}
@@ -3432,6 +3518,885 @@ async function rpGsSend() {
   } finally { btn.disabled = false; }
 }
 
+// ── Settings file: export to Excel, import from Excel ──────────────────
+// One workbook, one sheet per settings tab, laid out for people to edit:
+// key / value rows and tables with drop-downs where there's a fixed choice.
+// Export takes what's on screen; import fills the settings screen from the
+// file, and nothing reaches the shared settings until Save.
+const RP_BUILD = 'rp-B37-test';
+const RP_SF_FORMAT = 'RoadPowerSettings 1';
+const RP_SF_YN = ['Yes', 'No'];
+
+// ── what goes in the workbook ──
+function rpSfDaywise(id) { return _rpDraft.daywise ? _rpDraft.daywise[id] !== false : rpDaywise(id); }
+function rpSfPinned() { return (_rpDraft.r2Months || (appSettings.powerReport || {}).r2Months || []).slice(); }
+function rpSfSheets() {
+  const d = _rpDraft, yn = b => (b ? 'Yes' : 'No');
+  const idx = rpBuildPartyIndex();
+  const name = c => (d.sel[c] && d.sel[c].name) || (idx[c] || {}).name || '';
+  const stamp = new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const codes = Object.keys(d.sel).filter(c => { const s = d.sel[c]; return s.power || s.r1 || s.r2; })
+    .sort((a, b) => name(a).localeCompare(name(b)) || a.localeCompare(b));
+  const pos = (list, id) => list.findIndex(r => r.id === id) + 1;
+
+  const readMe = { name: 'Read me', cols: [26, 70], blocks: [
+    { t: 'title', v: 'Road Power Report — settings' },
+    { t: 'note', v: `Exported ${stamp} from ${RP_BUILD}.` },
+    { t: 'blank' },
+    { t: 'kv', rows: [['Format', RP_SF_FORMAT, { ro: true, note: 'Tells the app this is its settings file — leave it as it is.' }]] },
+    { t: 'blank' },
+    { t: 'head2', v: 'How to use this file' },
+    ...[
+      'Each tab holds one part of the settings: Reports, Customers, Groups, Customer Report, Exports, Google Sheet and General.',
+      'Change the white cells. Grey cells are there for reference and are ignored when the file is read back.',
+      'Keep the tab names and the headings as they are. Rows can be in any order.',
+      'Yes / No and the other fixed choices have drop-downs.',
+      'Add a customer, column or sheet row by adding a row; delete a row to remove it.',
+      'Delete a whole tab to leave that part of the settings as it is.',
+      'To bring the file back: Settings → General → Import from Excel. Check the tabs, then tap Save.',
+    ].map(v => ({ t: 'note', v: '•  ' + v })),
+  ] };
+
+  const reports = { name: 'Reports', cols: [18, 13, 13, 15, 17, 17], blocks: [
+    { t: 'title', v: 'Reports' },
+    { t: 'note', v: 'Which reports show, and in what order, in the app and in exported files. Day-by-day is the switch above each report.' },
+    { t: 'blank' },
+    { t: 'table', head: [{ v: 'Report', ro: true }, { v: 'Show in app', list: RP_SF_YN }, { v: 'App order', num: true },
+                         { v: 'Show in exports', list: RP_SF_YN }, { v: 'Export order', num: true }, { v: 'Day-by-day', list: RP_SF_YN }],
+      rows: d.reports.map(r => [RP_REPORTS[r.id].name, yn(r.show), pos(d.reports, r.id),
+        yn((d.exportReports.find(x => x.id === r.id) || {}).show), pos(d.exportReports, r.id), yn(rpSfDaywise(r.id))]) },
+    { t: 'blank' },
+    { t: 'head2', v: 'Monthwise Total & Average' },
+    { t: 'note', v: 'Which month columns each report shows — once for day-by-day off and once for on. Average and Total are for the pinned months.' },
+    { t: 'table', head: [{ v: 'Report', ro: true }, { v: 'Day-by-day', ro: true }, { v: 'Show Average', list: RP_SF_YN }, { v: 'Show Total', list: RP_SF_YN },
+                         { v: 'Show Average (current month)', list: RP_SF_YN }, { v: 'Show Total (current month)', list: RP_SF_YN }],
+      rows: d.reports.reduce((a, r) => a.concat(['off', 'on'].map(m => {
+        const s = d.show['r' + r.id][m];
+        return [RP_REPORTS[r.id].name, m === 'on' ? 'On' : 'Off', yn(s.avg !== false), yn(s.total !== false), yn(s.cavg !== false), yn(s.ctotal !== false)];
+      })), []) },
+    { t: 'blank' },
+    { t: 'kv', rows: [['Pinned months', rpSfPinned().join(', '), { note: 'The months pinned in Saved days, as YYYY-MM separated by commas.' }]] },
+  ] };
+
+  const gName = id => ((d.groups.find(g => g.id === id) || {}).name) || '';
+  const gList = d.groups.map(g => g.name).filter(n => n && !/[,"]/.test(n));
+  const customers = { name: 'Customers', cols: [14, 44, 30, 22, 9, 8, 8, 8], freeze: true, blocks: [
+    { t: 'title', v: 'Customers' },
+    { t: 'note', v: 'Power: power sector — its figures go into the history. R1: a row in Road Despatch to Power Sector. Nil: keeps that row even with no despatch. R2: in the Customer report (its columns are on another tab). Merged codes: other codes added into this customer, separated by commas. Group: one of the groups on the Groups tab.' },
+    { t: 'table', extra: 300, head: [{ v: 'Code', text: true }, { v: 'Name' }, { v: 'Merged codes', text: true },
+        Object.assign({ v: 'Group' }, gList.length && gList.join(',').length < 250 ? { list: gList } : {}),
+        { v: 'Power', list: RP_SF_YN }, { v: 'R1', list: RP_SF_YN }, { v: 'Nil', list: RP_SF_YN }, { v: 'R2', list: RP_SF_YN }],
+      rows: codes.map(c => { const s = d.sel[c];
+        return [c, s.name || name(c), (s.members || []).join(', '), gName(s.grp), yn(s.power), yn(s.r1), yn(s.r1 && s.nil), yn(s.r2)]; }) },
+  ] };
+
+  const groupsSh = { name: 'Groups', cols: [24, 34, 60], freeze: false, blocks: [
+    { t: 'title', v: 'Customer Groups' },
+    { t: 'note', v: 'Broad groups of Power customers, separate from merged codes. The Power Sector report lists each group’s customers together, in this order, with a subtotal.' },
+    { t: 'blank' },
+    { t: 'kv', rows: [['Group totals table', yn(d.groupTable), { list: RP_SF_YN, note: 'A table of group totals below the Power Sector report.' }]] },
+    { t: 'blank' },
+    { t: 'note', v: 'Id ties a row to its group, so a renamed group keeps its customers — leave it as it is, and leave it empty for a new group.' },
+    { t: 'table', extra: 50, head: [{ v: '#', num: true }, { v: 'Group' }, { v: 'Id', ro: true }],
+      rows: d.groups.map((g, i) => [i + 1, g.name, g.id]) },
+  ] };
+
+  const colRows = [];
+  codes.filter(c => d.sel[c].r2).forEach(c => (d.sel[c].cols || []).forEach((col, i) =>
+    colRows.push([c, name(c), i + 1, col.label || '', col.colCodes || '', yn(!col.isSubtotal)])));
+  const custReport = { name: 'Customer Report', cols: [15, 40, 6, 26, 22, 10], freeze: true, blocks: [
+    { t: 'title', v: 'Customer Report — columns' },
+    { t: 'note', v: 'One row per column of each R2 customer, numbered in the order they show. In total: No for a roll-up column (such as a CF total) that mustn’t be added into the Total again.' },
+    { t: 'table', extra: 300, head: [{ v: 'Customer code', text: true }, { v: 'Customer', ro: true }, { v: '#', num: true },
+        { v: 'Column label' }, { v: 'Colliery codes', text: true }, { v: 'In total', list: RP_SF_YN }], rows: colRows },
+  ] };
+
+  const exportsSh = { name: 'Exports', cols: [22, 14, 60], blocks: [
+    { t: 'title', v: 'Exports' },
+    { t: 'blank' },
+    { t: 'kv', rows: [
+      ['PDF type', d.pdfMode === 'image' ? 'Image' : 'Rendered', { list: ['Image', 'Rendered'], note: 'Image: a picture of each report. Rendered: drawn as text and lines — far smaller.' }],
+      ['Rendered detail', d.pdfLevel.charAt(0).toUpperCase() + d.pdfLevel.slice(1), { list: ['Light', 'Standard', 'High'], note: 'Used when the PDF type is Rendered.' }],
+    ] },
+  ] };
+
+  const gs = d.gs, gsRows = [];
+  rpGsParties(true).forEach(p => {
+    const m0 = gs.map[p.code] || {};
+    gsRows.push([p.code, p.name, gName(p.grp), '', p.codes.length > 1 ? yn(m0.split) : '', +m0.row || '']);
+    if (p.codes.length > 1) p.codes.slice(1).forEach(c => {
+      const m = gs.map[c] || {};
+      gsRows.push([c, (idx[c] || {}).name || '', gName(p.grp), p.code, '', +m.row || '']);
+    });
+  });
+  const sheetSh = { name: 'Google Sheet', cols: [22, 44, 20, 14, 14, 9], blocks: [
+    { t: 'title', v: 'Google Sheet' },
+    { t: 'blank' },
+    { t: 'kv', rows: [
+      ['Send to Google Sheet', yn(gs.on), { list: RP_SF_YN }],
+      ['Spreadsheet URL', gs.url, {}],
+      ['Tab name', gs.tab, { note: 'May use {MMM} {MMMM} {MM} {YYYY} {YY}, filled in from the month.' }],
+      ['Apps Script URL', gs.script, {}],
+      ['Common step', +gs.inc || '', { num: true, note: 'How many columns apart one day is from the next.' }],
+    ] },
+    { t: 'blank' },
+    { t: 'head2', v: 'Start column for each group' },
+    { t: 'note', v: 'The column of the 1st of the month for that group’s customers.' },
+    { t: 'table', head: [{ v: 'Group', ro: true }, { v: 'Start col', text: true }],
+      rows: d.groups.map(g => [g.name, gs.gcol[g.id] || '']) },
+    { t: 'blank' },
+    { t: 'head2', v: 'Row for each Power customer' },
+    { t: 'note', v: 'A customer’s group (set on the Customers tab) gives its start column. For a merged customer, Separate rows: Yes gives each of its codes — listed under it — a row of its own.' },
+    { t: 'table', extra: 200, head: [{ v: 'Code', text: true }, { v: 'Customer', ro: true }, { v: 'Group', ro: true }, { v: 'Part of', ro: true },
+        { v: 'Separate rows', list: RP_SF_YN }, { v: 'Row', num: true }], rows: gsRows },
+  ] };
+
+  const lk = d.lock, mode = RP_LOCK_MODES.find(m => m.id === lk.mode) || RP_LOCK_MODES[0];
+  const general = { name: 'General', cols: [24, 34, 60], blocks: [
+    { t: 'title', v: 'General' },
+    { t: 'blank' },
+    { t: 'head2', v: 'Settings passcode' },
+    { t: 'kv', rows: [
+      ['Passcode', yn(lk.on), { list: RP_SF_YN }],
+      ['Passcode type', mode.name, { list: RP_LOCK_MODES.map(m => m.name) }],
+      ['Stay unlocked', (RP_LOCK_STAY.find(s => s[0] === lk.stay) || RP_LOCK_STAY[0])[1], { list: RP_LOCK_STAY.map(s => s[1]) }],
+      ['Also lock Saved days', yn(lk.days), { list: RP_SF_YN }],
+      ['New PIN', '', { text: true, note: 'Type 4 to 8 digits to set a new PIN; leave it empty to keep the stored one.' }],
+      ['Stored PIN', lk.pin ? `${lk.pin.salt}:${lk.pin.hash}:${lk.pin.len}` : '', { ro: true, note: 'Scrambled — it can’t be read back. Leave it as it is to keep the PIN.' }],
+    ] },
+    { t: 'blank' },
+    { t: 'head2', v: 'History database' },
+    { t: 'kv', rows: [['History file', document.getElementById('rp_histPath').value.trim() || d.historyPath, { note: 'The .json file in epass-db that holds the saved days.' }]] },
+  ] };
+  return [readMe, reports, customers, groupsSh, custReport, exportsSh, sheetSh, general];
+}
+
+// ── writing .xlsx ──
+// cell styles in rpSfStylesXml: 1 title · 2 note · 3 heading · 4 key · 5 text ·
+// 6 number · 7 reference (grey) · 8 sub-heading
+function rpSfStylesXml() {
+  const b = '<border><left style="thin"><color rgb="FFC3CCD6"/></left><right style="thin"><color rgb="FFC3CCD6"/></right>' +
+            '<top style="thin"><color rgb="FFC3CCD6"/></top><bottom style="thin"><color rgb="FFC3CCD6"/></bottom><diagonal/></border>';
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+    '<fonts count="6"><font><sz val="11"/><name val="Calibri"/></font>' +
+    '<font><b/><sz val="15"/><color rgb="FF1F2833"/><name val="Calibri"/></font>' +
+    '<font><i/><sz val="10"/><color rgb="FF5D6A78"/><name val="Calibri"/></font>' +
+    '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>' +
+    '<font><b/><sz val="11"/><color rgb="FF1F2833"/><name val="Calibri"/></font>' +
+    '<font><b/><sz val="12"/><color rgb="FFB8620A"/><name val="Calibri"/></font></fonts>' +
+    '<fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' +
+    '<fill><patternFill patternType="solid"><fgColor rgb="FF1F2833"/><bgColor indexed="64"/></patternFill></fill>' +
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFEEF1F4"/><bgColor indexed="64"/></patternFill></fill></fills>' +
+    `<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>${b}</borders>` +
+    '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+    '<cellXfs count="9"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+    '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+    '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+    '<xf numFmtId="0" fontId="3" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"><alignment vertical="center" wrapText="1"/></xf>' +
+    '<xf numFmtId="0" fontId="4" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/>' +
+    '<xf numFmtId="49" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>' +
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"><alignment horizontal="center"/></xf>' +
+    '<xf numFmtId="49" fontId="2" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>' +
+    '<xf numFmtId="0" fontId="5" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs>' +
+    '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+}
+function rpSfSheetXml(sh) {
+  const rows = [], dv = [];
+  let r = 0, freezeAt = 0;
+  const cell = (col, v, s) => {
+    const ref = rpColLetter(col) + r;
+    if (v === '' || v == null) return `<c r="${ref}" s="${s}"/>`;
+    if (typeof v === 'number') return `<c r="${ref}" s="${s}"><v>${v}</v></c>`;
+    return `<c r="${ref}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${rpXmlEsc(v)}</t></is></c>`;
+  };
+  // the row number moves on first, so its cells carry the right reference
+  const row = (build, ht) => { r++; rows.push(`<row r="${r}"${ht ? ` ht="${ht}" customHeight="1"` : ''}>${build().join('')}</row>`); };
+  const list = (ref, opts) => dv.push(`<dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="${ref}"><formula1>"${rpXmlEsc(opts.join(','))}"</formula1></dataValidation>`);
+  sh.blocks.forEach((b, bi) => {
+    if (b.t === 'title') row(() => [cell(1, b.v, 1)], 24);
+    else if (b.t === 'head2') row(() => [cell(1, b.v, 8)], 20);
+    else if (b.t === 'note') row(() => [cell(1, b.v, 2)]);
+    else if (b.t === 'blank') row(() => []);
+    else if (b.t === 'kv') b.rows.forEach(([k, v, o]) => {
+      row(() => [cell(1, k, 4), cell(2, v, o.ro ? 7 : o.num ? 6 : 5), o.note ? cell(3, o.note, 2) : '']);
+      if (o.list) list('B' + r, o.list);
+    });
+    else if (b.t === 'table') {
+      row(() => b.head.map((h, i) => cell(i + 1, h.v, 3)), 34);
+      if (sh.freeze && !freezeAt) freezeAt = r;
+      const first = r + 1;
+      b.rows.forEach(vals => row(() => vals.map((v, i) => cell(i + 1, v, b.head[i].ro ? 7 : b.head[i].num ? 6 : 5))));
+      const last = Math.max(first, r + (bi === sh.blocks.length - 1 ? (b.extra || 0) : 0));
+      b.head.forEach((h, i) => { if (h.list) list(`${rpColLetter(i + 1)}${first}:${rpColLetter(i + 1)}${last}`, h.list); });
+    }
+  });
+  const cols = (sh.cols || []).map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('');
+  const view = freezeAt
+    ? `<sheetViews><sheetView workbookViewId="0"><pane ySplit="${freezeAt}" topLeftCell="A${freezeAt + 1}" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>`
+    : '<sheetViews><sheetView workbookViewId="0"/></sheetViews>';
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' + view +
+    (cols ? `<cols>${cols}</cols>` : '') + `<sheetData>${rows.join('')}</sheetData>` +
+    (dv.length ? `<dataValidations count="${dv.length}">${dv.join('')}</dataValidations>` : '') +
+    '<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/></worksheet>';
+}
+function rpSfWorkbook(sheets) {
+  const enc = new TextEncoder();
+  const WS = 'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml';
+  const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const files = {
+    '[Content_Types].xml': enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+      '<Default Extension="xml" ContentType="application/xml"/>' +
+      '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+      sheets.map((_, n) => `<Override PartName="/xl/worksheets/sheet${n + 1}.xml" ContentType="${WS}"/>`).join('') +
+      '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'),
+    '_rels/.rels': enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      `<Relationship Id="rId1" Type="${REL}/officeDocument" Target="xl/workbook.xml"/></Relationships>`),
+    'xl/workbook.xml': enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      `<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="${REL}"><sheets>` +
+      sheets.map((sh, n) => `<sheet name="${rpXmlEsc(sh.name)}" sheetId="${n + 1}" r:id="rId${n + 1}"/>`).join('') + '</sheets></workbook>'),
+    'xl/_rels/workbook.xml.rels': enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      sheets.map((_, n) => `<Relationship Id="rId${n + 1}" Type="${REL}/worksheet" Target="worksheets/sheet${n + 1}.xml"/>`).join('') +
+      `<Relationship Id="rId${sheets.length + 1}" Type="${REL}/styles" Target="styles.xml"/></Relationships>`),
+    'xl/styles.xml': enc.encode(rpSfStylesXml()),
+  };
+  sheets.forEach((sh, n) => { files[`xl/worksheets/sheet${n + 1}.xml`] = enc.encode(rpSfSheetXml(sh)); });
+  return _buildZip(files);
+}
+async function rpSfExport() {
+  const rep = document.getElementById('rpSfReport');
+  try {
+    const blob = rpSfWorkbook(rpSfSheets());
+    const t = new Date();
+    const fname = `Road_Power_Settings_${rp2(t.getDate())}_${RP_MON[t.getMonth()]}_${t.getFullYear()}.xlsx`;
+    rep.className = 'rp-sfrep ok';
+    rep.textContent = `✓ ${fname} is ready.`;
+    await rpShareOrSave(blob, fname, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Road Power settings',
+      () => { rep.textContent = `✓ ${fname} is in Downloads — Android won't pass a spreadsheet through the share sheet.`; });
+  } catch (e) {
+    rep.className = 'rp-sfrep bad';
+    rep.textContent = 'Could not build the settings file: ' + e.message;
+  }
+}
+
+// ── reading .xlsx ──
+async function rpUnzip(buf) {
+  const b = new Uint8Array(buf), dv = new DataView(buf);
+  let e = b.length - 22;
+  while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error('it isn’t an Excel (.xlsx) file');
+  const n = dv.getUint16(e + 10, true);
+  let p = dv.getUint32(e + 16, true);
+  const ents = {};
+  for (let i = 0; i < n; i++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) throw new Error('the file is damaged');
+    const nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true);
+    ents[new TextDecoder().decode(b.subarray(p + 46, p + 46 + nl))] =
+      { method: dv.getUint16(p + 10, true), size: dv.getUint32(p + 20, true), at: dv.getUint32(p + 42, true) };
+    p += 46 + nl + xl + cl;
+  }
+  return async name => {
+    const f = ents[name.replace(/^\//, '')];
+    if (!f) return null;
+    const start = f.at + 30 + dv.getUint16(f.at + 26, true) + dv.getUint16(f.at + 28, true);
+    const data = b.subarray(start, start + f.size);
+    if (f.method === 0) return new TextDecoder().decode(data);
+    if (f.method !== 8) throw new Error('the file uses a compression this browser can’t read');
+    const s = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    return new TextDecoder().decode(await new Response(s).arrayBuffer());
+  };
+}
+// every sheet as rows of cell values (strings, numbers or booleans)
+async function rpReadXlsx(file) {
+  const read = await rpUnzip(await file.arrayBuffer());
+  const xml = s => new DOMParser().parseFromString(s, 'application/xml');
+  const all = (n, tag) => Array.from(n.getElementsByTagNameNS('*', tag));
+  const wbTxt = await read('xl/workbook.xml');
+  if (!wbTxt) throw new Error('it isn’t an Excel workbook');
+  const rels = {};
+  all(xml((await read('xl/_rels/workbook.xml.rels')) || '<r/>'), 'Relationship')
+    .forEach(r => { rels[r.getAttribute('Id')] = r.getAttribute('Target'); });
+  const shared = [];
+  const ssTxt = await read('xl/sharedStrings.xml');
+  if (ssTxt) all(xml(ssTxt), 'si').forEach(si =>
+    shared.push(all(si, 't').filter(t => t.parentNode.localName !== 'rPh').map(t => t.textContent).join('')));
+  const out = {};
+  for (const sh of all(xml(wbTxt), 'sheet')) {
+    const rid = sh.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id') || sh.getAttribute('r:id');
+    let target = rels[rid];
+    if (!target) continue;
+    target = target.startsWith('/') ? target.slice(1) : 'xl/' + target.replace(/^\.\//, '');
+    const txt = await read(target);
+    if (!txt) continue;
+    const grid = [];
+    all(xml(txt), 'c').forEach(c => {
+      const m = /^([A-Z]+)(\d+)$/.exec(c.getAttribute('r') || '');
+      if (!m) return;
+      const t = c.getAttribute('t'), vEl = all(c, 'v')[0];
+      let v;
+      if (t === 's') v = shared[+(vEl ? vEl.textContent : -1)];
+      else if (t === 'inlineStr') v = all(c, 't').map(x => x.textContent).join('');
+      else if (t === 'b') v = vEl ? vEl.textContent === '1' : '';
+      else if (t === 'str' || t === 'e') v = vEl ? vEl.textContent : '';
+      else v = vEl && vEl.textContent !== '' ? +vEl.textContent : '';
+      const row = +m[2] - 1, col = rpColNum(m[1]) - 1;
+      (grid[row] = grid[row] || [])[col] = v == null ? '' : v;
+    });
+    out[sh.getAttribute('name')] = grid;
+  }
+  return out;
+}
+
+// ── turning a sheet back into settings ──
+const rpSfTxt = v => (v == null ? '' : typeof v === 'boolean' ? (v ? 'Yes' : 'No') : String(v)).trim();
+const rpSfKey = v => rpSfTxt(v).toLowerCase().replace(/[’']/g, "'").replace(/[\s:]+$/, '').replace(/\s+/g, ' ');
+function rpSfYN(v) {
+  if (typeof v === 'boolean') return v;
+  if (typeof v === 'number') return v === 1 ? true : v === 0 ? false : null;
+  const s = rpSfKey(v);
+  if (/^(yes|y|true|on|1|✓|✔|x)$/.test(s)) return true;
+  if (/^(no|n|false|off|0|-|)$/.test(s)) return false;
+  return null;
+}
+function rpSfCode(v) {
+  if (typeof v === 'number') return Number.isInteger(v) ? String(v) : '';
+  return rpSfTxt(v).replace(/^'/, '').replace(/\s+/g, '');
+}
+function rpSfInt(v) {
+  if (typeof v === 'number') return Number.isInteger(v) ? v : NaN;
+  const s = rpSfTxt(v);
+  return s === '' ? null : /^\d+$/.test(s) ? +s : NaN;
+}
+// a sheet's key/value rows and its tables, found by their headings
+function rpSfReader(grid) {
+  const g = grid || [];
+  const blank = row => !row || row.every(v => rpSfTxt(v) === '');
+  return {
+    has(key) { return g.some(row => row && rpSfKey(row[0]) === key.toLowerCase()); },
+    kv(key) {
+      const row = g.find(rw => rw && rpSfKey(rw[0]) === key.toLowerCase());
+      return row ? { v: row[1] === undefined ? '' : row[1], r: g.indexOf(row) + 1 } : null;
+    },
+    // a table ends at the first empty row, unless it runs to the sheet's end
+    table(heads, toEnd, optional) {
+      const want = heads.map(h => h.toLowerCase()), opt = (optional || []).map(h => h.toLowerCase());
+      for (let i = 0; i < g.length; i++) {
+        const row = g[i];
+        if (!row) continue;
+        const keys = row.map(rpSfKey);
+        if (!want.every(h => keys.indexOf(h) >= 0)) continue;
+        const at = {};
+        want.concat(opt).forEach(h => { at[h] = keys.indexOf(h); });
+        const rows = [];
+        for (let j = i + 1; j < g.length; j++) {
+          if (blank(g[j])) { if (toEnd) continue; break; }
+          const c = {};
+          want.concat(opt).forEach(h => { c[h] = at[h] < 0 ? undefined : g[j][at[h]] === undefined ? '' : g[j][at[h]]; });
+          rows.push({ r: j + 1, c });
+        }
+        return rows;
+      }
+      return null;
+    },
+  };
+}
+// build the new settings from the workbook; returns { draft, done, warn } or throws
+function rpSfApply(book, fileName) {
+  const sheetOf = n => { const k = Object.keys(book).find(x => x.trim().toLowerCase() === n.toLowerCase()); return k ? book[k] : null; };
+  const known = ['Reports', 'Customers', 'Groups', 'Customer Report', 'Exports', 'Google Sheet', 'General'];
+  const readMe = sheetOf('Read me');
+  if (readMe) {
+    const f = rpSfReader(readMe).kv('format');
+    if (f && rpSfTxt(f.v) && !rpSfTxt(f.v).startsWith('RoadPowerSettings')) throw new Error('it’s a settings file for a different app');
+  }
+  if (!known.some(sheetOf)) throw new Error('none of its tabs are settings tabs — export a settings file first to see the layout');
+
+  const d = JSON.parse(JSON.stringify(_rpDraft));
+  const warn = [], done = [];
+  const w = (sheet, r, msg) => warn.push(`${sheet}${r ? ', row ' + r : ''}: ${msg}`);
+  const idx = rpBuildPartyIndex();
+  const repByName = n => +Object.keys(RP_REPORTS).find(id => RP_REPORTS[id].name.toLowerCase() === rpSfKey(n));
+
+  // ── Reports ──
+  const repSh = sheetOf('Reports');
+  if (repSh) {
+    const R = rpSfReader(repSh), parts = [];
+    const t1 = R.table(['Report', 'Show in app', 'App order', 'Show in exports', 'Export order', 'Day-by-day']);
+    if (t1) {
+      const app = [], exp = [], dw = Object.assign({}, d.daywise || { 1: rpDaywise(1), 2: rpDaywise(2), 3: rpDaywise(3), 4: rpDaywise(4) });
+      const seen = new Set();
+      t1.forEach(({ r, c }, k) => {
+        const id = repByName(c['report']);
+        if (!id) { if (rpSfTxt(c['report'])) w('Reports', r, `“${rpSfTxt(c['report'])}” isn’t a report — row skipped.`); return; }
+        if (seen.has(id)) { w('Reports', r, `${RP_REPORTS[id].name} is listed twice — the second row is skipped.`); return; }
+        seen.add(id);
+        const flag = (col, cur) => { const v = rpSfYN(c[col]); if (v === null) { w('Reports', r, `“${rpSfTxt(c[col])}” under ${col.replace(/^./, x => x.toUpperCase())} isn’t Yes or No — kept as it was.`); return cur; } return v; };
+        const curA = (d.reports.find(x => x.id === id) || {}).show, curE = (d.exportReports.find(x => x.id === id) || {}).show;
+        const ord = (col) => { const n = rpSfInt(c[col]); return Number.isFinite(n) && n !== null ? n : 99 + k; };
+        app.push({ id, show: flag('show in app', curA !== false), o: ord('app order'), k });
+        exp.push({ id, show: flag('show in exports', curE !== false), o: ord('export order'), k });
+        dw[id] = flag('day-by-day', dw[id] !== false);
+      });
+      const order = l => l.sort((a, b) => a.o - b.o || a.k - b.k).map(x => ({ id: x.id, show: x.show }));
+      const fix = (l, what) => { const out = rpReportList(order(l)); if (!l.some(x => x.show) && l.length) w('Reports', 0, `no report was left on ${what} — ${RP_REPORTS[out[0].id].name} stays on.`); return out; };
+      if (app.length) { d.reports = fix(app, 'in the app'); d.exportReports = fix(exp, 'in exports'); d.daywise = dw; parts.push('report order'); }
+    } else w('Reports', 0, 'the table with Report, Show in app… wasn’t found — report order left as it was.');
+    const t2 = R.table(['Report', 'Day-by-day', 'Show Average', 'Show Total', 'Show Average (current month)', 'Show Total (current month)']);
+    if (t2) {
+      const map = { 'show average': 'avg', 'show total': 'total', 'show average (current month)': 'cavg', 'show total (current month)': 'ctotal' };
+      t2.forEach(({ r, c }) => {
+        const id = repByName(c['report']);
+        const m = { on: 'on', off: 'off', yes: 'on', no: 'off' }[rpSfKey(c['day-by-day'])];
+        if (!id || !m) { if (rpSfTxt(c['report'])) w('Reports', r, 'Monthwise row needs a report name and Day-by-day On or Off — skipped.'); return; }
+        Object.keys(map).forEach(col => {
+          const v = rpSfYN(c[col]);
+          if (v === null) w('Reports', r, `“${rpSfTxt(c[col])}” isn’t Yes or No — kept as it was.`);
+          else d.show['r' + id][m][map[col]] = v;
+        });
+      });
+      parts.push('monthwise totals');
+    }
+    const pm = R.kv('pinned months');
+    if (pm) {
+      const vals = typeof pm.v === 'number' ? [pm.v] : rpSfTxt(pm.v).split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
+      const months = [];
+      vals.forEach(v => {
+        let k = null;
+        if (typeof v === 'number') { const dt = new Date(Date.UTC(1899, 11, 30) + v * 86400000); k = `${dt.getUTCFullYear()}-${rp2(dt.getUTCMonth() + 1)}`; }
+        else {
+          let m = /^(\d{4})[-/.](\d{1,2})$/.exec(v);
+          if (m) k = `${m[1]}-${rp2(+m[2])}`;
+          else if ((m = /^([A-Za-z]{3})[a-z]*[-\s/]?(\d{4})$/.exec(v))) {
+            const i = RP_MON.findIndex(x => x.toLowerCase() === m[1].toLowerCase());
+            if (i >= 0) k = `${m[2]}-${rp2(i + 1)}`;
+          }
+        }
+        if (k && +k.slice(5) >= 1 && +k.slice(5) <= 12) { if (months.indexOf(k) < 0) months.push(k); }
+        else w('Reports', pm.r, `“${v}” isn’t a month like 2026-04 — left out.`);
+      });
+      d.r2Months = months.sort();
+      parts.push('pinned months');
+    }
+    if (parts.length) done.push('Reports — ' + parts.join(', '));
+  }
+
+  // ── Groups ── (names are matched to the groups on screen, so ids carry over)
+  const grpSh = sheetOf('Groups');
+  // a name the screen knew before the file renamed it still finds its group
+  const oldName = {};
+  d.groups.forEach(g => { oldName[g.name.trim().toLowerCase()] = g.id; });
+  const grpByName = n => {
+    const k = rpSfTxt(n).toLowerCase();
+    return d.groups.find(g => g.name.trim().toLowerCase() === k) || d.groups.find(g => g.id === oldName[k]);
+  };
+  if (grpSh) {
+    const R = rpSfReader(grpSh);
+    const gt = R.kv('group totals table');
+    if (gt) { const v = rpSfYN(gt.v); if (v === null) w('Groups', gt.r, 'Group totals table must be Yes or No — kept as it was.'); else d.groupTable = v; }
+    const t = R.table(['#', 'Group'], true, ['Id']);
+    if (t) {
+      const list = [], seen = {};
+      t.forEach(({ r, c }, k) => {
+        const n = rpSfTxt(c['group']);
+        if (!n) return;
+        if (seen[n.toLowerCase()]) { w('Groups', r, `“${n}” is listed twice — the second is left out.`); return; }
+        seen[n.toLowerCase()] = true;
+        const o = rpSfInt(c['#']);
+        const byId = rpSfTxt(c['id']) && d.groups.find(g => g.id === rpSfTxt(c['id']));
+        const old = byId || d.groups.find(g => g.name.trim().toLowerCase() === n.toLowerCase());
+        list.push({ id: old ? old.id : null, name: n, o: Number.isFinite(o) && o !== null ? o : 999 + k, k });
+      });
+      list.sort((a, b) => a.o - b.o || a.k - b.k);
+      const kept = [];
+      list.forEach(g => { if (!g.id) g.id = rpNewGroupId(kept.concat(list.filter(x => x.id))); kept.push({ id: g.id, name: g.name }); });
+      const goneIds = d.groups.filter(g => !kept.some(x => x.id === g.id)).map(g => g.id);
+      Object.values(d.sel).forEach(s => { if (goneIds.indexOf(s.grp) >= 0) s.grp = ''; });
+      goneIds.forEach(id => { delete d.gs.gcol[id]; });
+      d.groups = kept;
+    }
+    done.push(`Groups — ${d.groups.length}${d.groupTable ? ', with a table of group totals' : ''}`);
+  }
+
+  // ── Customers ──
+  const before = Object.keys(d.sel).filter(c => { const s = d.sel[c]; return s.power || s.r1 || s.r2; });
+  const custSh = sheetOf('Customers');
+  if (custSh) {
+    const t = rpSfReader(custSh).table(['Code', 'Name', 'Merged codes', 'Power', 'R1', 'Nil', 'R2'], true, ['Group']);
+    if (!t) w('Customers', 0, 'the table with Code, Name, Merged codes, Power, R1, Nil, R2 wasn’t found — customers left as they were.');
+    else {
+      const sel = {}, taken = {}, notInDb = [];
+      t.forEach(({ r, c }) => {
+        const code = rpSfCode(c['code']);
+        if (!code) { if (Object.values(c).some(v => rpSfTxt(v))) w('Customers', r, 'no code — row skipped.'); return; }
+        if (!/^\d{3,12}$/.test(code)) { w('Customers', r, `“${code}” isn’t a customer code — row skipped.`); return; }
+        if (taken[code]) { w('Customers', r, `${code} is already ${taken[code]} — row skipped.`); return; }
+        const fl = {};
+        ['power', 'r1', 'nil', 'r2'].forEach(f => {
+          const v = rpSfYN(c[f]);
+          if (v === null) w('Customers', r, `“${rpSfTxt(c[f])}” under ${f === 'power' ? 'Power' : f === 'nil' ? 'Nil' : f.toUpperCase()} isn’t Yes or No — taken as No.`);
+          fl[f] = !!v;
+        });
+        if (fl.nil) fl.r1 = true;
+        if (fl.r1 || fl.r2) fl.power = true;
+        if (!fl.power) return;                           // nothing ticked: not a customer of these reports
+        taken[code] = `on row ${r}`;
+        const members = [];
+        (typeof c['merged codes'] === 'number' ? [String(c['merged codes'])] : rpSfTxt(c['merged codes']).split(/[,;\s]+/))
+          .map(rpSfCode).filter(Boolean).forEach(m => {
+            if (!/^\d{3,12}$/.test(m)) { w('Customers', r, `“${m}” in Merged codes isn’t a code — left out.`); return; }
+            if (m === code || members.indexOf(m) >= 0) return;
+            if (taken[m]) { w('Customers', r, `${m} is already ${taken[m]} — left out of Merged codes.`); return; }
+            taken[m] = `merged into ${code} on row ${r}`;
+            members.push(m);
+          });
+        if (mclhoCount && !idx[code]) notInDb.push(code);
+        const old = _rpDraft.sel[code];
+        // a group named here that the Groups tab doesn't have is added
+        let grp = old && old.grp && d.groups.some(g => g.id === old.grp) ? old.grp : '';
+        if (c['group'] !== undefined) {
+          const gn = rpSfTxt(c['group']);
+          grp = '';
+          if (gn) {
+            let g = grpByName(gn);
+            if (!g) { g = { id: rpNewGroupId(d.groups), name: gn }; d.groups.push(g); w('Customers', r, `group “${gn}” wasn’t on the Groups tab — it’s been added.`); }
+            grp = g.id;
+          }
+        }
+        sel[code] = { name: rpSfTxt(c['name']) || (idx[code] || {}).name || (old && old.name) || '', power: fl.power, r1: fl.r1,
+                      nil: fl.r1 && fl.nil, r2: fl.r2, grp, members, cols: old && old.cols ? old.cols.map(x => Object.assign({}, x)) : [] };
+      });
+      d.sel = sel;
+      if (notInDb.length) w('Customers', 0, `${notInDb.length === 1 ? notInDb[0] + ' isn’t' : notInDb.length + ' codes aren’t'} in the DO database — kept, but they show no despatch until they are: ${notInDb.slice(0, 12).join(', ')}${notInDb.length > 12 ? '…' : ''}.`);
+      const after = Object.keys(sel);
+      const added = after.filter(c => before.indexOf(c) < 0), gone = before.filter(c => after.indexOf(c) < 0);
+      done.push(`Customers — ${after.length}` + (added.length || gone.length ? ` (${[added.length ? added.length + ' added' : '', gone.length ? gone.length + ' removed' : ''].filter(Boolean).join(', ')})` : ''));
+    }
+  }
+
+  // ── Customer Report columns ──
+  const crSh = sheetOf('Customer Report');
+  if (crSh) {
+    const t = rpSfReader(crSh).table(['Customer code', '#', 'Column label', 'Colliery codes', 'In total'], true);
+    if (!t) w('Customer Report', 0, 'the table with Customer code, #, Column label… wasn’t found — columns left as they were.');
+    else {
+      const by = {};
+      t.forEach(({ r, c }, k) => {
+        const code = rpSfCode(c['customer code']);
+        const label = rpSfTxt(c['column label']);
+        const codes = (typeof c['colliery codes'] === 'number' ? String(c['colliery codes']) : rpSfTxt(c['colliery codes']))
+          .split(/[,;\s]+/).map(rpSfCode).filter(Boolean);
+        if (!code && !label && !codes.length) return;
+        if (!d.sel[code]) { w('Customer Report', r, `${code || 'no code'} isn’t a customer on the Customers tab — row skipped.`); return; }
+        if (codes.some(x => !/^\d+$/.test(x))) { w('Customer Report', r, `colliery codes must be numbers separated by commas — row skipped.`); return; }
+        if (!label && !codes.length) return;
+        let inTot = rpSfYN(c['in total']);
+        if (inTot === null) { w('Customer Report', r, `“${rpSfTxt(c['in total'])}” under In total isn’t Yes or No — taken as Yes.`); inTot = true; }
+        if (rpSfTxt(c['in total']) === '') inTot = true;
+        const n = rpSfInt(c['#']);
+        (by[code] = by[code] || []).push({ o: Number.isFinite(n) && n !== null ? n : 999 + k, k, col: { label, colCodes: codes.join(','), isSubtotal: !inTot } });
+      });
+      let cols = 0;
+      Object.keys(d.sel).forEach(code => {
+        const s = d.sel[code];
+        s.cols = (by[code] || []).sort((a, b) => a.o - b.o || a.k - b.k).map(x => x.col);
+        cols += s.cols.length;
+        if (!s.r2 && s.cols.length) w('Customer Report', 0, `${s.name || code} has columns but isn’t ticked R2 on Customers — they’re kept but won’t show.`);
+      });
+      done.push(`Customer Report — ${cols} column${cols === 1 ? '' : 's'} for ${Object.keys(by).length} customer${Object.keys(by).length === 1 ? '' : 's'}`);
+    }
+  }
+
+  if (custSh || crSh) Object.keys(d.sel).forEach(code => {
+    const s = d.sel[code];
+    if (s.r2 && !(s.cols || []).length) w('Customer Report', 0, `${s.name || code} is in the Customer report but has no columns — add them before saving.`);
+  });
+
+  // ── Exports ──
+  const exSh = sheetOf('Exports');
+  if (exSh) {
+    const R = rpSfReader(exSh), parts = [];
+    const ty = R.kv('pdf type'), lv = R.kv('rendered detail');
+    if (ty) {
+      const v = rpSfKey(ty.v);
+      if (v === 'image' || v === 'rendered') { d.pdfMode = v === 'image' ? 'image' : 'render'; parts.push(v === 'image' ? 'Image PDF' : 'Rendered PDF'); }
+      else w('Exports', ty.r, `PDF type must be Image or Rendered — kept as it was.`);
+    }
+    if (lv) {
+      const v = rpSfKey(lv.v);
+      if (RP_PDF_LEVELS.indexOf(v) >= 0) { d.pdfLevel = v; parts.push(v + ' detail'); }
+      else w('Exports', lv.r, `Rendered detail must be Light, Standard or High — kept as it was.`);
+    }
+    if (parts.length) done.push('Exports — ' + parts.join(', '));
+  }
+
+  // ── Google Sheet ──
+  const gsSh = sheetOf('Google Sheet');
+  if (gsSh) {
+    const R = rpSfReader(gsSh), g = d.gs;
+    const on = R.kv('send to google sheet');
+    if (on) { const v = rpSfYN(on.v); if (v === null) w('Google Sheet', on.r, 'Send to Google Sheet must be Yes or No — kept as it was.'); else g.on = v; }
+    [['spreadsheet url', 'url'], ['tab name', 'tab'], ['apps script url', 'script']].forEach(([k, f]) => { const x = R.kv(k); if (x) g[f] = rpSfTxt(x.v); });
+    const st = R.kv('common step');
+    if (st) {
+      const n = rpSfInt(st.v);
+      if (n === null) g.inc = '';
+      else if (Number.isFinite(n) && n >= 1 && n <= 50) g.inc = String(n);
+      else w('Google Sheet', st.r, 'Common step must be a whole number from 1 to 50 — kept as it was.');
+    }
+    // the start column of each group
+    const tg = R.table(['Group', 'Start col']);
+    if (tg) {
+      const gcol = {};
+      tg.forEach(({ r, c }) => {
+        const gn = rpSfTxt(c['group']), col = rpSfTxt(c['start col']).toUpperCase();
+        if (!gn) return;
+        const grp = grpByName(gn);
+        if (!grp) { w('Google Sheet', r, `“${gn}” isn’t a customer group — its start col is left out.`); return; }
+        if (!col) return;
+        if (rpColNum(col)) gcol[grp.id] = col; else w('Google Sheet', r, `start col “${col}” isn’t a column like E — left empty.`);
+      });
+      g.gcol = gcol;
+    }
+    // a file from before groups carries a start col per customer: kept for
+    // customers whose group has none yet
+    const t = R.table(['Code', 'Separate rows', 'Row'], true, ['Start col']);
+    let rows = 0;
+    if (t) {
+      const map = {}, power = new Set();
+      Object.keys(d.sel).forEach(c => { if (d.sel[c].power) [c, ...(d.sel[c].members || [])].forEach(x => power.add(x)); });
+      t.forEach(({ r, c }) => {
+        const code = rpSfCode(c['code']);
+        if (!code) return;
+        const row = rpSfInt(c['row']);
+        const col = c['start col'] === undefined ? (((_rpDraft.gs.map || {})[code] || {}).col || '') : rpSfTxt(c['start col']).toUpperCase();
+        const e = { row: '', col: '', split: false };
+        if (row !== null) { if (Number.isFinite(row) && row >= 1 && row <= 999999) e.row = String(row); else w('Google Sheet', r, `row “${rpSfTxt(c['row'])}” isn’t a row number — left empty.`); }
+        if (col) { if (rpColNum(col)) e.col = col; else w('Google Sheet', r, `start col “${col}” isn’t a column like E — left empty.`); }
+        const sp = rpSfYN(c['separate rows']);
+        e.split = sp === true;
+        if (sp === null) w('Google Sheet', r, `Separate rows must be Yes or No — taken as No.`);
+        if (!power.has(code) && (e.row || e.col)) w('Google Sheet', r, `${code} isn’t a Power customer on the Customers tab — kept, but nothing is sent for it.`);
+        if (e.row || e.col || e.split) map[code] = e;
+        if (e.row) rows++;
+      });
+      g.map = map;
+      // a row needs a start column, from its group or its own
+      const owner = {};
+      Object.keys(d.sel).forEach(pc => [pc, ...(d.sel[pc].members || [])].forEach(x => { owner[x] = pc; }));
+      Object.keys(map).forEach(code => {
+        if (!map[code].row || map[code].col) return;
+        const s = d.sel[owner[code]];
+        if (!s) return;
+        const grp = d.groups.find(x => x.id === s.grp);
+        if (!grp) w('Google Sheet', 0, `${s.name || code} has a row but no group — pick one on the Customers tab before saving.`);
+        else if (!rpColNum(g.gcol[grp.id])) w('Google Sheet', 0, `group “${grp.name}” has customers with rows but no start col — set it before saving.`);
+      });
+    }
+    done.push(`Google Sheet — ${g.on ? 'on' : 'off'}` + (t ? `, ${rows} customer row${rows === 1 ? '' : 's'}` : ''));
+  }
+
+  // ── General ──
+  const gnSh = sheetOf('General');
+  if (gnSh) {
+    const R = rpSfReader(gnSh), lk = d.lock, parts = [];
+    const on = R.kv('passcode');
+    if (on) { const v = rpSfYN(on.v); if (v === null) w('General', on.r, 'Passcode must be Yes or No — kept as it was.'); else lk.on = v; }
+    const ty = R.kv('passcode type');
+    if (ty) {
+      const k = rpSfKey(ty.v).replace(/[^a-z0-9+]/g, '');
+      const m = RP_LOCK_MODES.find(x => x.id === k || x.name.toLowerCase().replace(/[’']/g, "'").replace(/[^a-z0-9+]/g, '') === k);
+      if (m) lk.mode = m.id; else w('General', ty.r, `“${rpSfTxt(ty.v)}” isn’t a passcode type — kept as it was.`);
+    }
+    const sy = R.kv('stay unlocked');
+    if (sy) {
+      const s = RP_LOCK_STAY.find(x => x[1].toLowerCase() === rpSfKey(sy.v) || String(x[0]) === rpSfTxt(sy.v));
+      if (s) lk.stay = s[0]; else w('General', sy.r, `“${rpSfTxt(sy.v)}” isn’t a Stay unlocked choice — kept as it was.`);
+    }
+    const dy = R.kv('also lock saved days');
+    if (dy) { const v = rpSfYN(dy.v); if (v === null) w('General', dy.r, 'Also lock Saved days must be Yes or No — kept as it was.'); else lk.days = v; }
+    const sp = R.kv('stored pin'), np = R.kv('new pin');
+    if (sp && rpSfTxt(sp.v)) {
+      const m = /^([0-9a-f]{8,64}):([0-9a-f]{64}):(\d{1,2})$/.exec(rpSfTxt(sp.v));
+      if (m) lk.pin = { salt: m[1], hash: m[2], len: +m[3] };
+      else w('General', sp.r, 'Stored PIN has been changed and can’t be used — the PIN on screen is kept.');
+    }
+    if (np && rpSfTxt(np.v)) {
+      const pin = typeof np.v === 'number' ? String(np.v) : rpSfTxt(np.v);
+      if (/^\d{4,8}$/.test(pin)) {
+        const salt = Array.from(crypto.getRandomValues(new Uint8Array(8)), x => x.toString(16).padStart(2, '0')).join('');
+        lk.pin = { salt, hash: rpSha256(salt + ':' + pin), len: pin.length };
+        parts.push('new PIN');
+      } else w('General', np.r, 'New PIN must be 4 to 8 digits — the PIN was not changed.');
+    }
+    const mode = RP_LOCK_MODES.find(x => x.id === lk.mode);
+    if (lk.on && mode && mode.pin && !lk.pin) w('General', 0, 'the passcode type needs a PIN and none is set — type one under New PIN, or on the General tab.');
+    parts.unshift(lk.on ? `passcode on (${mode ? mode.name : lk.mode})` : 'passcode off');
+    const hf = R.kv('history file');
+    if (hf) {
+      const v = rpSfTxt(hf.v);
+      if (/^[\w.\-/]+\.json$/.test(v)) { d.historyPath = v; parts.push('history file ' + v); }
+      else w('General', hf.r, 'History file must be a .json path — kept as it was.');
+    }
+    done.push('General — ' + parts.join(', '));
+  }
+  return { draft: d, done, warn };
+}
+async function rpSfImport(input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+  const rep = document.getElementById('rpSfReport');
+  rep.className = 'rp-sfrep'; rep.textContent = 'Reading ' + file.name + '…';
+  let res;
+  try {
+    res = rpSfApply(await rpReadXlsx(file), file.name);
+  } catch (e) {
+    rep.className = 'rp-sfrep bad';
+    rep.textContent = `Couldn’t import ${file.name}: ${e.message}.`;
+    return;
+  }
+  // the settings screen now shows the file; nothing is saved yet
+  const keepTab = _rpSttTab;
+  _rpDraft = res.draft;
+  document.getElementById('rp_histPath').value = _rpDraft.historyPath;
+  document.getElementById('rpLockPin1').value = '';
+  document.getElementById('rpLockPin2').value = '';
+  renderRpReportLists();
+  rpSetPdfLevel(_rpDraft.pdfLevel);
+  rpSetPdfMode(_rpDraft.pdfMode);
+  _rpEstDone = false;
+  renderRpLock();
+  renderRpShowGrids();
+  renderRpParties();
+  renderRpR2();
+  renderRpGroups();
+  renderRpGs();
+  rpSttDots();
+  rpSettingsTab(keepTab);
+  const list = a => a.map(x => `<li>${rpEsc(x)}</li>`).join('');
+  rep.className = 'rp-sfrep ' + (res.warn.length ? 'warn' : 'ok');
+  rep.innerHTML = `<b>✓ Read ${rpEsc(file.name)}.</b> Nothing is saved yet — check the tabs, then tap <b>Save</b> (or Cancel to drop it).` +
+    `<ul>${list(res.done)}</ul>` +
+    (res.warn.length ? (res.warn.length > 6
+      ? `<details><summary>${res.warn.length} things to look at</summary><ul>${list(res.warn)}</ul></details>`
+      : `<div class="rp-sfwarn">To look at:</div><ul>${list(res.warn)}</ul>`) : '');
+  const st = document.getElementById('rpSettingsStatus');
+  st.textContent = 'Imported — check the tabs, then Save.'; st.style.color = 'var(--mid)';
+}
+
+// ── Customer groups ────────────────────────────────────────────────────
+// A broad grouping of Power customers, separate from merging codes:
+//   powerReport.groups     = [{ id, name }] in report order
+//   parties[].grp          = the group's id
+//   powerReport.groupTable = a table of group totals under the Power Sector report
+//   gsheet.gcol            = { id: 'E' } — where each group's days start in the sheet
+function rpGroupsOf(pr) {
+  return ((pr || appSettings.powerReport || {}).groups || []).filter(g => g && g.id && String(g.name || '').trim());
+}
+function rpNewGroupId(list) {
+  let n = 1;
+  while (list.some(g => g.id === 'g' + n)) n++;
+  return 'g' + n;
+}
+function rpGrpPower() {
+  const idx = rpBuildPartyIndex();
+  return Object.keys(_rpDraft.sel).filter(c => _rpDraft.sel[c].power)
+    .map(c => ({ code: c, s: _rpDraft.sel[c], name: _rpDraft.sel[c].name || (idx[c] || {}).name || c }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+function renderRpGroups() {
+  const list = document.getElementById('rpGrpList');
+  if (!list || !_rpDraft) return;
+  const gs = _rpDraft.groups;
+  const power = rpGrpPower();
+  const count = id => power.filter(p => p.s.grp === id).length;
+  list.innerHTML = gs.length ? gs.map((g, i) =>
+    `<div class="rp-grprow">` +
+      `<button class="rp-rord" onclick="rpGrpMove(${i},-1)" title="Move up"${i === 0 ? ' disabled' : ''}>▲</button>` +
+      `<button class="rp-rord" onclick="rpGrpMove(${i},1)" title="Move down"${i === gs.length - 1 ? ' disabled' : ''}>▼</button>` +
+      `<input class="stt-cell-input" data-g="${g.id}" value="${rpEsc(g.name)}" maxlength="60" aria-label="Group name" ` +
+        `oninput="rpGrpName('${g.id}', this.value)" onchange="renderRpGroups()">` +
+      `<span class="rp-grpn">${count(g.id)}</span>` +
+      `<button class="stt-del-btn" onclick="rpGrpDel(${i})" title="Delete group">✕</button></div>`).join('')
+    : '<div class="rp-count" style="padding:10px 12px;">No groups yet.</div>';
+  document.getElementById('rpGrpTable').checked = !!_rpDraft.groupTable;
+  const opts = sel => '<option value="">—</option>' + gs.map(g =>
+    `<option value="${g.id}"${sel === g.id ? ' selected' : ''}>${rpEsc(g.name || '(no name)')}</option>`).join('');
+  const cust = document.getElementById('rpGrpCust');
+  cust.innerHTML = power.length ? power.map(p => {
+    const grp = gs.some(g => g.id === p.s.grp) ? p.s.grp : '';
+    return `<div class="rp-grpcust"><div class="rp-gsname"><b title="${rpEsc(p.name)}">${rpEsc(p.name)}</b><span>${p.code}${p.s.r1 ? '' : ' · not in R1'}</span></div>` +
+      `<select class="stt-cell-input" data-code="${p.code}"${gs.length ? '' : ' disabled'} onchange="rpGrpSet('${p.code}', this.value)">${opts(grp)}</select></div>`;
+  }).join('') : '<div class="rp-count" style="padding:10px 12px;">No Power customers yet.</div>';
+  const nIn = power.filter(p => gs.some(g => g.id === p.s.grp)).length;
+  document.getElementById('rpGrpCount').textContent = gs.length ? `${gs.length} group${gs.length > 1 ? 's' : ''} · ${nIn} of ${power.length} customers in one` : '';
+}
+function rpGrpAdd() {
+  const id = rpNewGroupId(_rpDraft.groups);
+  _rpDraft.groups.push({ id, name: 'Group ' + (_rpDraft.groups.length + 1) });
+  renderRpGroups();
+  const el = document.querySelector(`#rpGrpList input[data-g="${id}"]`);
+  if (el) { el.focus(); el.select(); }
+}
+function rpGrpName(id, v) {
+  const g = _rpDraft.groups.find(x => x.id === id);
+  if (g) g.name = v;
+}
+function rpGrpMove(i, d) {
+  const l = _rpDraft.groups, j = i + d;
+  if (j < 0 || j >= l.length) return;
+  [l[i], l[j]] = [l[j], l[i]];
+  renderRpGroups();
+}
+function rpGrpDel(i) {
+  const g = _rpDraft.groups.splice(i, 1)[0];
+  if (!g) return;
+  Object.values(_rpDraft.sel).forEach(s => { if (s.grp === g.id) s.grp = ''; });
+  if (_rpDraft.gs && _rpDraft.gs.gcol) delete _rpDraft.gs.gcol[g.id];
+  renderRpGroups();
+}
+function rpGrpSet(code, id) {
+  if (_rpDraft.sel[code]) _rpDraft.sel[code].grp = id;
+  renderRpGroups();
+}
+// names must be there and must differ; answers the groups as saved, or null
+function rpGroupsForSave(status) {
+  const seen = {};
+  for (const g of _rpDraft.groups) {
+    const n = String(g.name || '').trim();
+    const el = `#rpGrpList input[data-g="${g.id}"]`;
+    if (!n) return rpSaveFail(status, 'customers', 'Every customer group needs a name.', el);
+    if (seen[n.toLowerCase()]) return rpSaveFail(status, 'customers', `There are two customer groups called “${n}”.`, el);
+    seen[n.toLowerCase()] = true;
+  }
+  return _rpDraft.groups.map(g => ({ id: g.id, name: String(g.name).trim() }));
+}
+
+// the Google Sheet tab's start column for each group
+function renderRpGsGcol() {
+  const box = document.getElementById('rpGsGcol');
+  if (!box) return;
+  const gs = _rpDraft.gs, groups = _rpDraft.groups;
+  box.innerHTML = groups.length
+    ? `<div class="rp-gsrow g hd"><span>Group</span><span class="c" title="The column of the 1st of the month">Start col</span></div>` +
+      groups.map(g => `<div class="rp-gsrow g"><div class="rp-gsname"><b>${rpEsc(g.name || '(no name)')}</b></div>` +
+        `<input data-g="${g.id}" maxlength="3" autocapitalize="characters" value="${rpEsc(gs.gcol[g.id] || '')}" aria-label="Start column for ${rpEsc(g.name)}"></div>`).join('')
+    : '<div class="rp-count" style="padding:10px 12px;">No customer groups yet — make them on the Customers tab, then give each its start column here.</div>';
+  box.oninput = e => {
+    const t = e.target;
+    if (!t.dataset || !t.dataset.g) return;
+    t.classList.remove('bad');
+    const v = t.value.toUpperCase().trim();
+    if (v) gs.gcol[t.dataset.g] = v; else delete gs.gcol[t.dataset.g];
+    rpGsDerived();
+  };
+}
+
 function rpSetPdfMode(mode) {
   _rpDraft.pdfMode = mode === 'image' ? 'image' : 'render';
   ['image', 'render'].forEach(m => document.getElementById('rpPdfM_' + m).classList.toggle('on', _rpDraft.pdfMode === m));
@@ -3508,6 +4473,7 @@ function rpSetFlag(code, name, field, val) {
   if (field === 'r2' && val && (!s.cols || !s.cols.length)) rpAutoCols(code, true);
   renderRpParties();
   renderRpR2();
+  renderRpGroups();
 }
 
 // the Nil box in the list heading: ticked when every R1 customer keeps its
@@ -3604,6 +4570,7 @@ async function saveRpSettings() {
     if (!s.power && !s.r1 && !s.r2) return;
     const e = { code, codes: [code, ...(s.members || [])], name: s.name || '', power: !!s.power, r1: !!s.r1, r2: !!s.r2 };
     if (s.r1 && s.nil) e.r1Nil = true;
+    if (s.grp && _rpDraft.groups.some(g => g.id === s.grp)) e.grp = s.grp;
     if (s.r2) e.cols = (s.cols || []).filter(c => c.label || c.colCodes)
                                      .map(c => ({ label: c.label.trim(), colCodes: c.colCodes.replace(/\s/g,''), isSubtotal: !!c.isSubtotal }));
     parties.push(e);
@@ -3615,6 +4582,8 @@ async function saveRpSettings() {
       return rpSaveFail(status, 'customers', `"${p.name || p.code}": every column is unticked under "In total", so the Total column would be blank. Tick at least one.`);
   }
 
+  const groups = rpGroupsForSave(status);
+  if (!groups) return;
   const lock = rpLockForSave(status);
   if (!lock) return;
   const gsheet = rpGsForSave(status);
@@ -3623,11 +4592,13 @@ async function saveRpSettings() {
   const pr0 = appSettings.powerReport || {};
   const newSettings = Object.assign({}, appSettings, { powerReport: {
     historyPath: histPath,
-    r1Daywise: pr0.r1Daywise !== false,   // owned by the switch above the report
-    r2Daywise: pr0.r2Daywise !== false,
-    r3Daywise: pr0.r3Daywise !== false,
-    r4Daywise: pr0.r4Daywise !== false,
-    r2Months:  pr0.r2Months || [],        // owned by the Saved days view
+    // owned by the switch above each report and by the Saved days view —
+    // the settings screen only changes them when a settings file is imported
+    r1Daywise: _rpDraft.daywise ? _rpDraft.daywise[1] !== false : pr0.r1Daywise !== false,
+    r2Daywise: _rpDraft.daywise ? _rpDraft.daywise[2] !== false : pr0.r2Daywise !== false,
+    r3Daywise: _rpDraft.daywise ? _rpDraft.daywise[3] !== false : pr0.r3Daywise !== false,
+    r4Daywise: _rpDraft.daywise ? _rpDraft.daywise[4] !== false : pr0.r4Daywise !== false,
+    r2Months:  _rpDraft.r2Months || pr0.r2Months || [],
     show:      _rpDraft.show,
     reports:       _rpDraft.reports.map(r => ({ id: r.id, show: r.show })),
     exportReports: _rpDraft.exportReports.map(r => ({ id: r.id, show: r.show })),
@@ -3635,6 +4606,8 @@ async function saveRpSettings() {
     pdfLevel:      _rpDraft.pdfLevel,
     lock,
     gsheet,
+    groups,
+    groupTable: !!_rpDraft.groupTable,
     parties,
   } });
 
@@ -4489,7 +5462,7 @@ function renderRp1(md) {
     const refVals = refs.map(ref => rpSumParty(ref.pc, codes));
     const refSum  = refVals.reduce((a,b) => a+b, 0);
     return { name: p.name || codes[0], codes, vals, prog, cnt, refVals, refSum,
-             today: vals[actD] || 0, keep: !!p.r1Nil };
+             today: vals[actD] || 0, keep: !!p.r1Nil, grp: p.grp || '' };
   });
 
   // hide a customer only when it has lifted nothing in any period on show —
@@ -4509,10 +5482,35 @@ function renderRp1(md) {
     tToday += r.today; tProg += r.prog; tAvg += r.cnt ? r.prog / r.cnt : 0;
     dayCols.forEach(d => dayTotals[d] = (dayTotals[d] || 0) + (r.vals[d] || 0));
     refs.forEach((ref, ri) => { refTot[ri] = (refTot[ri] || 0) + (r.refVals[ri] || 0); });
+  });
+  const custRow = (r, ind) => {
     const lead = { v: r.name, title: r.name + ' · ' + r.codes.join(', '),
       html: rpEsc(r.name) + (r.codes.length > 1 ? ` <span class="rp-codes">${r.codes.length} codes</span>` : '') };
-    outRows.push({ k: 'data', cells: rpSummaryCells(lead, r, refs, sh, dayCols, daywise) });
-  });
+    return { k: 'data', ind, cells: rpSummaryCells(lead, r, refs, sh, dayCols, daywise) };
+  };
+  // a block of customers added up, in the same shape as one customer's row
+  const addUp = rs => {
+    const x = { today: 0, prog: 0, cnt: dayCols.length, vals: {}, refVals: refs.map(() => 0) };
+    rs.forEach(r => {
+      x.today += r.today; x.prog += r.prog;
+      dayCols.forEach(d => { x.vals[d] = (x.vals[d] || 0) + (r.vals[d] || 0); });
+      r.refVals.forEach((v, i) => { x.refVals[i] += v || 0; });
+    });
+    return x;
+  };
+  // Customer groups (powerReport.groups, in their own order): each group's
+  // customers are listed together under its subtotal, the way Sourcewise
+  // lists collieries under a coalfield; customers in no group come last.
+  const grpDefs = rpGroupsOf(pr);
+  const blocks = grpDefs.map(g => ({ g, rows: rows.filter(r => r.grp === g.id) })).filter(b => b.rows.length);
+  const loose = rows.filter(r => !grpDefs.some(g => g.id === r.grp));
+  if (blocks.length) {
+    blocks.forEach(b => {
+      b.rows.forEach(r => outRows.push(custRow(r, true)));
+      outRows.push({ k: 'cf', cells: rpSummaryCells({ v: b.g.name + ' Total' }, addUp(b.rows), refs, sh, dayCols, daywise) });
+    });
+    loose.forEach(r => outRows.push(custRow(r, false)));
+  } else rows.forEach(r => outRows.push(custRow(r, false)));
 
   const sumCells = [{ v: 'All customers' }, { v: tToday }];
   refs.forEach((ref, ri) => {
@@ -4537,6 +5535,18 @@ function renderRp1(md) {
   pane.appendChild(card);
   if (!rows.length) card.querySelector('.rp-scrollx').innerHTML =
     '<div class="rp-empty">No lifting recorded against any of the picked customers this month.</div>';
+
+  // the same figures one row per group, when asked for
+  if (pr.groupTable && blocks.length) {
+    const gRows = blocks.map(b => ({ k: 'data', cells: rpSummaryCells({ v: b.g.name }, addUp(b.rows), refs, sh, dayCols, daywise) }));
+    if (loose.length) gRows.push({ k: 'data', cells: rpSummaryCells({ v: 'Customers in no group' }, addUp(loose), refs, sh, dayCols, daywise) });
+    gRows.push({ k: 'sum', cells: sumCells.map((c, i) => i ? c : { v: 'All customers' }) });
+    const g = rpSummaryHead(md, sh, refs, dayCols, daywise, 'Group');
+    const t2 = Object.assign({}, t, { title: 'Road despatch to power sector — by group', bm: 'Power Sector — by group',
+                                      head: g.head, groups: g.groups, rows: gRows });
+    _rpTables.push(t2);
+    pane.appendChild(rpCard(t2));
+  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -6008,7 +7018,7 @@ async function rpBuildHighPdf() {
       }
     });
     const t = p.t;
-    const title = t ? (t.sheet === 'Customer' ? 'Customer — ' + t.title
+    const title = t ? t.bm || (t.sheet === 'Customer' ? 'Customer — ' + t.title
                       : (RP_REPORTS[[1, 2, 3, 4].find(id => RP_REPORTS[id].sheet === t.sheet)] || {}).name || t.title) : p.name;
     return { w: PW, h: PH, content: ops.join('\n') + '\n', title };
   });
