@@ -1617,7 +1617,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B46-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B47-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1867,7 +1867,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
         <div class="stt-hint">
           Codes: comma-separated colliery codes (e.g. 5046 or 5046,5075,5077).
           Leave <strong>In total</strong> ticked for an ordinary colliery column.
-          Untick it for a roll-up column such as “Talcher Total”, which already contains other columns and would otherwise be counted twice.
+          Untick it for a roll-up column such as Talcher, which already contains other columns and would otherwise be counted twice — the report heads it “Subtotal (Talcher)”.
           At least one column must stay ticked, or the Total has nothing to add.
         </div>
       </div>
@@ -3818,7 +3818,7 @@ async function rpGsSend() {
 // key / value rows and tables with drop-downs where there's a fixed choice.
 // Export takes what's on screen; import fills the settings screen from the
 // file, and nothing reaches the shared settings until Save.
-const RP_BUILD = 'rp-B46-test';
+const RP_BUILD = 'rp-B47-test';
 const RP_SF_FORMAT = 'RoadPowerSettings 1';
 const RP_SF_YN = ['Yes', 'No'];
 
@@ -6056,7 +6056,7 @@ function renderRp1(md) {
     blocks.forEach(b => {
       b.rows.forEach(r => outRows.push(custRow(r, subOn, rpTint(b.col, false))));
       if (subOn) outRows.push({ k: 'cf', tint: rpTint(b.col, true),
-        cells: rpSummaryCells({ v: b.g.name + ' Total' }, addUp(b.rows), refs, sh, dayCols, daywise, fy) });
+        cells: rpSummaryCells({ v: rpSubLabel(b.g.name) }, addUp(b.rows), refs, sh, dayCols, daywise, fy) });
     });
     loose.forEach(r => outRows.push(custRow(r, false, null)));
   } else rows.forEach(r => outRows.push(custRow(r, false, null)));
@@ -6099,6 +6099,17 @@ function renderRp1(md) {
 // ═══════════════════════════════════════════════════════
 //  REPORT 3 — Sourcewise (collierywise road despatch to power sector)
 // ═══════════════════════════════════════════════════════
+
+// Every subtotal reads “Subtotal (name)”: a customer group in Power Sector,
+// a coalfield in Sourcewise and MCL, a roll-up column in the Customer
+// report. A trailing “Total” in the name is dropped (“Talcher Total” →
+// “Subtotal (Talcher)”), and a name already written that way is kept.
+function rpSubLabel(name) {
+  const raw = String(name == null ? '' : name).trim();
+  if (/^sub-?\s?total\s*\(.*\)$/i.test(raw)) return raw;
+  const n = raw.replace(/[\s\-–—:]*\b(sub-?\s?total|total)$/i, '').trim();
+  return n ? `Subtotal (${n})` : 'Subtotal';
+}
 
 // Coalfields read from settings.mines exactly as ePassViewer's
 // buildDynamicMaps reads them: mines up to an isTotal row belong to that
@@ -6243,7 +6254,7 @@ function rpRenderCollieries(md, cfg) {
     if (g.label) {
       const all = [];
       g.mines.forEach(m => m.codes.forEach(c => all.push(c)));
-      outRows.push({ k: 'cf', cells: cells(g.label + ' Total', measure(all)) });
+      outRows.push({ k: 'cf', cells: cells(rpSubLabel(g.label), measure(all)) });
     }
   });
   if (otherCodes.length) {
@@ -6323,7 +6334,7 @@ function renderRp2(md) {
     const real  = cols.filter(c => !c.isSubtotal);
 
     const head = [{ t: 'Date', k: 'lead' }];
-    cols.forEach(c => head.push({ t: c.label || c.colCodes, k: c.isSubtotal ? 'sub' : 'num' }));
+    cols.forEach(c => head.push({ t: c.isSubtotal ? rpSubLabel(c.label || c.colCodes) : (c.label || c.colCodes), k: c.isSubtotal ? 'sub' : 'num' }));
     head.push({ t: 'Total', k: 'on' });
 
     const cellsFor = pc => {
