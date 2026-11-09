@@ -674,6 +674,9 @@ body {
 .db-val.none { color: var(--dim); font-style: italic; }
 /* reading / saving / saved / failed — these wrap rather than trail off, so the whole message shows */
 .db-val.busy, .db-val.ok, .db-val.err, .db-val.info { white-space: pre-line; line-height: 1.45; font-family: var(--sans); font-size: 12.5px; }
+.db-line { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
+.db-tick { flex-shrink: 0; display: inline-flex; margin-top: 0; }
+.db-line .db-val.info, .db-line .db-val.ok { color: var(--text); }
 .db-val.busy { color: var(--amber); }
 .db-val.busy::before { content: ''; display: inline-block; width: 9px; height: 9px; margin-right: 6px; border: 2px solid currentColor;
   border-right-color: transparent; border-radius: 50%; vertical-align: -1px; animation: rpDbSpin .8s linear infinite; }
@@ -1601,7 +1604,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B43-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B44-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1635,7 +1638,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
   <div class="db-card" style="width:100%;max-width:400px;">
     <div class="db-info">
       <div class="db-label">DO Database</div>
-      <div class="db-val none" id="dbStatusDrop">Loading…</div>
+      <div class="db-line"><span class="db-tick" id="dbIndicatorDrop" style="display:none;"></span><div class="db-val none" id="dbStatusDrop">Loading…</div></div>
     </div>
     <div style="display:flex;gap:6px;flex-shrink:0;">
       <button class="db-upload-btn" onclick="pasteFromClipboard()" style="border-color:var(--dim);color:var(--dim);">Paste</button>
@@ -1684,10 +1687,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
   <div class="db-card">
     <div class="db-info">
       <div class="db-label">DO Database</div>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <div class="db-val none" id="dbStatus">Loading…</div>
-        <span id="dbIndicator" style="display:none;flex-shrink:0;"></span>
-      </div>
+      <div class="db-line"><span class="db-tick" id="dbIndicator" style="display:none;"></span><div class="db-val none" id="dbStatus">Loading…</div></div>
     </div>
     <div style="display:flex;gap:6px;flex-shrink:0;">
       <button class="db-upload-btn" onclick="pasteFromClipboard()" style="border-color:var(--dim);color:var(--dim);">Paste</button>
@@ -2073,7 +2073,10 @@ let _dbBusy = false;     // a paste or upload is being read or saved
 
 // One line of status on both DO Database cards — the landing page's and the
 // report screen's. kind: busy | ok | err | none; retry makes the line tappable.
+let _dbKind = '';        // what the status line shows now
+let _dbUnknown = 0;      // DOs in the loaded despatch file that the database doesn't have
 function rpDbSay(text, kind, retry) {
+  _dbKind = kind || '';
   ['dbStatus', 'dbStatusDrop'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
@@ -2083,6 +2086,26 @@ function rpDbSay(text, kind, retry) {
     el.style.cursor = retry ? 'pointer' : '';
     el.onclick = retry ? () => { el.onclick = null; retry(); } : null;
     el.setAttribute('role', 'status');
+  });
+  rpDbTick();
+}
+// The mark before the status: a green tick when the database is loaded and
+// every DO in the loaded file is in it; a red warning when some aren't.
+// Hidden while reading or saving, and when a save failed.
+function rpDbTick() {
+  const show = (_dbKind === 'info' || _dbKind === 'ok') && mclhoCount > 0;
+  const bad = _dbUnknown > 0 && allRows.length > 0;
+  const svg = bad
+    ? `<svg width="18" height="18" fill="none" stroke="var(--red)" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>`
+    : `<svg width="18" height="18" fill="none" stroke="var(--green)" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>`;
+  const title = bad ? `${_dbUnknown} DO${_dbUnknown === 1 ? '' : 's'} in this file aren’t in the DO database — paste or upload the latest list`
+                    : 'DO database loaded — every DO is known';
+  ['dbIndicator', 'dbIndicatorDrop'].forEach(id => {
+    const ind = document.getElementById(id);
+    if (!ind) return;
+    ind.style.display = show ? 'inline-flex' : 'none';
+    ind.innerHTML = svg; ind.title = title;
+    ind.setAttribute('role', 'img'); ind.setAttribute('aria-label', title);
   });
 }
 function rpDbButtons(busy) {
@@ -2104,8 +2127,7 @@ function updateDbStatus(syncing) {
   if (syncing) { rpDbSay('Loading database…', ''); return; }
   if (mclhoCount === 0) rpDbSay('No database loaded — tap Upload or Paste', 'none');
   else {
-    const when = rpDbWhen(_dbUpdated);
-    rpDbSay(`DO Database loaded${when ? ' · saved ' + when : ''}\n${rpDbYearLine()}`, 'info');
+    rpDbSay(rpDbYearLine(), 'info');
   }
 }
 
@@ -2136,24 +2158,8 @@ async function pasteFromClipboard() {
 }
 
 function updateDbIndicator(unknownCount) {
-  const ind = document.getElementById('dbIndicator');
-  if (mclhoCount === 0 || allRows.length === 0) {
-    ind.style.display = 'none';
-    return;
-  }
-  ind.style.display = 'inline-flex';
-  ind.style.alignItems = 'center';
-  if (unknownCount === 0) {
-    ind.innerHTML = `<svg width="18" height="18" fill="none" stroke="var(--green)" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-    </svg>`;
-    ind.title = 'DO Database up to date';
-  } else {
-    ind.innerHTML = `<svg width="18" height="18" fill="none" stroke="var(--red)" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-    </svg>`;
-    ind.title = 'DO Database outdated — tap Update';
-  }
+  _dbUnknown = unknownCount || 0;
+  rpDbTick();
 }
 
 async function loadDbFromGitHub() {
@@ -2247,7 +2253,7 @@ async function saveDbToGitHub(ch) {
       if (res.ok) {
         _ghSha = result.content && result.content.sha;
         _dbUpdated = stamp;
-        rpDbSay(`✓ Saved to cloud ${rpDbWhen(stamp)}${merged ? ' (added to a newer cloud copy)' : ''}\n${what}\n${rpDbYearLine()}`, 'ok');
+        rpDbSay(`Saved · ${what}${merged ? ' · added to a newer cloud copy' : ''}\n${rpDbYearLine()}`, 'ok');
         return true;
       }
       // saved by someone else in the meantime: check again and go round
@@ -2304,14 +2310,18 @@ function rpDbYears(db) {
     const key = rpDbDateKey(rpDecode((db[k] || {}).doDate));
     if (key) { const y = Math.floor(key / 10000); by[y] = (by[y] || 0) + 1; } else undated++;
   }
-  const parts = Object.keys(by).sort().map(y => `${y}:\u00a0${by[y].toLocaleString('en-IN')}`);
-  if (undated) parts.push(`no\u00a0date:\u00a0${undated.toLocaleString('en-IN')}`);
+  const parts = Object.keys(by).sort().map(y => `${y}:\u00a0${by[y].toLocaleString('en-IN')}\u00a0DOs`);
+  if (undated) parts.push(`no\u00a0date:\u00a0${undated.toLocaleString('en-IN')}\u00a0DOs`);
   return parts.join(' · ') || 'none';
 }
-function rpDbYearLine() { return `Total DOs by year of DO date\n${rpDbYears(mclhoDB)}`; }
+// '2025: 8,305 DOs · 2026: 7,326 DOs' and, under it, when the cloud copy was saved
+function rpDbYearLine() {
+  const when = rpDbWhen(_dbUpdated);
+  return rpDbYears(mclhoDB) + (when ? `\nUpdated ${when}` : '');
+}
 // '25 new DOs · existing DOs updated'
 function rpDbWhat(ch) {
-  const nw = ch.added ? `${ch.added.toLocaleString('en-IN')} new DO${ch.added === 1 ? '' : 's'}` : 'No new DOs';
+  const nw = ch.added ? `${ch.added.toLocaleString('en-IN')} new DO${ch.added === 1 ? '' : 's'}` : 'no new DOs';
   return nw + (ch.updated ? ' · existing DOs updated' : '');
 }
 
@@ -2445,7 +2455,7 @@ async function rpParseMclho(raw) {
   if (!added && !updated && !regraded) {
     // nothing new: no need to write the cloud copy again
     _dbBusy = false; rpDbButtons(false);
-    rpDbSay(`✓ Already up to date — nothing new in the ${n.toLocaleString('en-IN')} DOs read\n${rpDbYearLine()}`, 'ok');
+    rpDbSay(`Up to date · nothing new in the ${n.toLocaleString('en-IN')} DOs read\n${rpDbYearLine()}`, 'ok');
     return;
   }
   if (regraded) _dbVer++;
@@ -3746,7 +3756,7 @@ async function rpGsSend() {
 // key / value rows and tables with drop-downs where there's a fixed choice.
 // Export takes what's on screen; import fills the settings screen from the
 // file, and nothing reaches the shared settings until Save.
-const RP_BUILD = 'rp-B43-test';
+const RP_BUILD = 'rp-B44-test';
 const RP_SF_FORMAT = 'RoadPowerSettings 1';
 const RP_SF_YN = ['Yes', 'No'];
 
