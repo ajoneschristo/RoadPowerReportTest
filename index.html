@@ -888,6 +888,16 @@ body.dark {
   display: flex; align-items: center; justify-content: space-between; gap: 6px;
   padding: 7px 10px; background: var(--bg); border-bottom: 1px solid var(--border);
 }
+.rp-r2-hdr { flex-wrap: wrap; }
+.rp-r2-id  { flex: 1 1 210px; min-width: 0; display: flex; align-items: center; gap: 8px; }
+.rp-r2-nm  { flex: 1; min-width: 0; }
+.rp-r2-pos { flex: none; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; box-sizing: border-box;
+             display: inline-flex; align-items: center; justify-content: center;
+             background: var(--surface); border: 1px solid var(--border); color: var(--mid); font: 600 10px var(--mono); }
+.rp-r2-ord { flex: none; display: flex; gap: 4px; }
+.rp-r2-acts { display: flex; gap: 4px; margin-left: auto; }
+.rp-r2-party { transition: border-color .25s, box-shadow .25s; }
+.rp-r2-party.moved { border-color: #d97a06; box-shadow: 0 0 0 2px rgba(217,122,6,.18); }
 .rp-r2-name { font-size: 12px; font-weight: 700; color: var(--text); }
 .rp-r2-sub  { font-size: 10px; color: var(--dim); font-family: var(--mono); }
 .rp-col-row {
@@ -1617,7 +1627,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B47-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B48-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1865,6 +1875,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
         </div>
         <div id="rpR2Body"></div>
         <div class="stt-hint">
+          ▲ ▼ set the order of the customers in the report.
           Codes: comma-separated colliery codes (e.g. 5046 or 5046,5075,5077).
           Leave <strong>In total</strong> ticked for an ordinary colliery column.
           Untick it for a roll-up column such as Talcher, which already contains other columns and would otherwise be counted twice — the report heads it “Subtotal (Talcher)”.
@@ -2788,8 +2799,10 @@ function rpOpenSettingsNow() {
       grp:     p.grp || '',
       members: codes.slice(1),
       cols:    (p.cols || []).map(c => ({ label: c.label || '', colCodes: c.colCodes || '', isSubtotal: !!c.isSubtotal })),
+      r2o:     p.r2 && Number.isFinite(p.r2Order) ? p.r2Order : null,
     };
   });
+  rpR2Codes(_rpDraft.sel);
   document.getElementById('rp_histPath').value = _rpDraft.historyPath;
   document.getElementById('rpSettingsStatus').textContent = '';
   document.getElementById('rpSearch').value = '';
@@ -3818,7 +3831,7 @@ async function rpGsSend() {
 // key / value rows and tables with drop-downs where there's a fixed choice.
 // Export takes what's on screen; import fills the settings screen from the
 // file, and nothing reaches the shared settings until Save.
-const RP_BUILD = 'rp-B47-test';
+const RP_BUILD = 'rp-B48-test';
 const RP_SF_FORMAT = 'RoadPowerSettings 1';
 const RP_SF_YN = ['Yes', 'No'];
 
@@ -3903,11 +3916,11 @@ function rpSfSheets() {
   ] };
 
   const colRows = [];
-  codes.filter(c => d.sel[c].r2).forEach(c => (d.sel[c].cols || []).forEach((col, i) =>
+  rpR2Codes(d.sel).forEach(c => (d.sel[c].cols || []).forEach((col, i) =>
     colRows.push([c, name(c), i + 1, col.label || '', col.colCodes || '', yn(!col.isSubtotal)])));
   const custReport = { name: 'Customer Report', cols: [15, 40, 6, 26, 22, 10], freeze: true, blocks: [
     { t: 'title', v: 'Customer Report — columns' },
-    { t: 'note', v: 'One row per column of each R2 customer, numbered in the order they show. In total: No for a roll-up column (such as a CF total) that mustn’t be added into the Total again.' },
+    { t: 'note', v: 'One row per column of each R2 customer. Customers show in the report in the order they first appear here; # is the order of a customer’s own columns. In total: No for a roll-up column (such as a CF total) that mustn’t be added into the Total again.' },
     { t: 'table', extra: 300, head: [{ v: 'Customer code', text: true }, { v: 'Customer', ro: true }, { v: '#', num: true },
         { v: 'Column label' }, { v: 'Colliery codes', text: true }, { v: 'In total', list: RP_SF_YN }], rows: colRows },
   ] };
@@ -4398,7 +4411,8 @@ function rpSfApply(book, fileName) {
           }
         }
         sel[code] = { name: rpSfTxt(c['name']) || (idx[code] || {}).name || (old && old.name) || '', power: fl.power, r1: fl.r1,
-                      nil: fl.r1 && fl.nil, r2: fl.r2, grp, members, cols: old && old.cols ? old.cols.map(x => Object.assign({}, x)) : [] };
+                      nil: fl.r1 && fl.nil, r2: fl.r2, grp, members, cols: old && old.cols ? old.cols.map(x => Object.assign({}, x)) : [],
+                      r2o: fl.r2 && old ? old.r2o : null };
       });
       d.sel = sel;
       if (notInDb.length) w('Customers', 0, `${notInDb.length === 1 ? notInDb[0] + ' isn’t' : notInDb.length + ' codes aren’t'} in the DO database — kept, but they show no despatch until they are: ${notInDb.slice(0, 12).join(', ')}${notInDb.length > 12 ? '…' : ''}.`);
@@ -4414,7 +4428,7 @@ function rpSfApply(book, fileName) {
     const t = rpSfReader(crSh).table(['Customer code', '#', 'Column label', 'Colliery codes', 'In total'], true);
     if (!t) w('Customer Report', 0, 'the table with Customer code, #, Column label… wasn’t found — columns left as they were.');
     else {
-      const by = {};
+      const by = {}, first = {};
       t.forEach(({ r, c }, k) => {
         const code = rpSfCode(c['customer code']);
         const label = rpSfTxt(c['column label']);
@@ -4429,7 +4443,11 @@ function rpSfApply(book, fileName) {
         if (rpSfTxt(c['in total']) === '') inTot = true;
         const n = rpSfInt(c['#']);
         (by[code] = by[code] || []).push({ o: Number.isFinite(n) && n !== null ? n : 999 + k, k, col: { label, colCodes: codes.join(','), isSubtotal: !inTot } });
+        if (!(code in first)) first[code] = k;
       });
+      // the report takes the customers in the order the sheet first lists them
+      const prev = rpR2Codes(d.sel);
+      rpR2Sort(prev, c => c in first ? first[c] : 1e8 + prev.indexOf(c)).forEach((c, i) => { d.sel[c].r2o = i + 1; });
       let cols = 0;
       Object.keys(d.sel).forEach(code => {
         const s = d.sel[code];
@@ -4949,23 +4967,31 @@ function rpSetNilAll(on) {
 function renderRpR2() {
   const wrap = document.getElementById('rpR2Body');
   wrap.innerHTML = '';
-  const codes = Object.keys(_rpDraft.sel).filter(c => _rpDraft.sel[c].r2);
+  const codes = rpR2Codes(_rpDraft.sel);
   if (!codes.length) {
     wrap.innerHTML = '<div class="rp-count" style="padding:4px 2px;">No customers here yet. Tap <strong>+ Add customer</strong>, or tick <strong>R2</strong> against anyone in the list above.</div>';
     return;
   }
-  codes.forEach(code => {
+  codes.forEach((code, pos) => {
     const s = _rpDraft.sel[code];
     const nCodes = 1 + (s.members || []).length;
     const box = document.createElement('div');
     box.className = 'rp-r2-party';
+    box.dataset.code = code;
     box.innerHTML =
       `<div class="rp-r2-hdr">
-         <div>
-           <div class="rp-r2-name">${s.name || code}</div>
-           <div class="rp-r2-sub">${code}${nCodes > 1 ? ` +${nCodes - 1} merged` : ''}</div>
+         <div class="rp-r2-id">
+           <span class="rp-r2-pos">${pos + 1}</span>
+           <div class="rp-r2-nm">
+             <div class="rp-r2-name">${s.name || code}</div>
+             <div class="rp-r2-sub">${code}${nCodes > 1 ? ` +${nCodes - 1} merged` : ''}</div>
+           </div>
+           <div class="rp-r2-ord">
+             <button class="rp-rord" data-d="-1" title="Move up in the report"${pos === 0 ? ' disabled' : ''}>▲</button>
+             <button class="rp-rord" data-d="1" title="Move down in the report"${pos === codes.length - 1 ? ' disabled' : ''}>▼</button>
+           </div>
          </div>
-         <div style="display:flex;gap:4px;">
+         <div class="rp-r2-acts">
            <button class="rp-mini-btn" data-a="auto">Auto-fill</button>
            <button class="rp-mini-btn" data-a="add">+ Column</button>
            <button class="rp-mini-btn" data-a="rm" style="color:var(--red);border-color:var(--red);">Remove</button>
@@ -4974,6 +5000,7 @@ function renderRpR2() {
        <div class="rp-col-head">
          <span>Column Label</span><span>Colliery Code(s)</span><span class="c">In total</span><span></span>
        </div>`;
+    box.querySelectorAll('.rp-rord').forEach(b => b.onclick = () => rpR2Move(code, +b.dataset.d));
     box.querySelector('[data-a="auto"]').onclick = () => rpAutoCols(code);
     box.querySelector('[data-a="add"]').onclick  = () => { s.cols.push({label:'',colCodes:'',isSubtotal:false}); renderRpR2(); };
     box.querySelector('[data-a="rm"]').onclick  = () => {
@@ -4999,6 +5026,23 @@ function renderRpR2() {
   });
 }
 
+// One place up or down in the Customer report; the card stays in view and
+// flashes so it's easy to follow on a phone.
+function rpR2Move(code, d) {
+  const codes = rpR2Codes(_rpDraft.sel), i = codes.indexOf(code), j = i + d;
+  if (i < 0 || j < 0 || j >= codes.length) return;
+  [codes[i], codes[j]] = [codes[j], codes[i]];
+  codes.forEach((c, k) => { _rpDraft.sel[c].r2o = k + 1; });
+  renderRpR2();
+  const el = document.querySelector(`#rpR2Body .rp-r2-party[data-code="${code}"]`);
+  if (!el) return;
+  try { el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { el.scrollIntoView(false); }
+  el.classList.add('moved');
+  setTimeout(() => el.classList.remove('moved'), 700);
+  const btn = el.querySelector(`.rp-rord[data-d="${d}"]`);
+  if (btn && !btn.disabled) btn.focus({ preventScroll: true });
+}
+
 function rpAutoCols(code, silent) {
   const s = _rpDraft.sel[code];
   if (!s) return;
@@ -5019,12 +5063,14 @@ async function saveRpSettings() {
   if (!/^[\w.\-/]+\.json$/.test(histPath))
     return rpSaveFail(status, 'general', 'History file must be a .json path (letters, digits, - _ . /).', 'rp_histPath');
   const parties = [];
+  rpR2Codes(_rpDraft.sel);
   Object.keys(_rpDraft.sel).forEach(code => {
     const s = _rpDraft.sel[code];
     if (!s.power && !s.r1 && !s.r2) return;
     const e = { code, codes: [code, ...(s.members || [])], name: s.name || '', power: !!s.power, r1: !!s.r1, r2: !!s.r2 };
     if (s.r1 && s.nil) e.r1Nil = true;
     if (s.grp && _rpDraft.groups.some(g => g.id === s.grp)) e.grp = s.grp;
+    if (s.r2) e.r2Order = s.r2o;
     if (s.r2) e.cols = (s.cols || []).filter(c => c.label || c.colCodes)
                                      .map(c => ({ label: c.label.trim(), colCodes: c.colCodes.replace(/\s/g,''), isSubtotal: !!c.isSubtotal }));
     parties.push(e);
@@ -6061,7 +6107,7 @@ function renderRp1(md) {
     loose.forEach(r => outRows.push(custRow(r, false, null)));
   } else rows.forEach(r => outRows.push(custRow(r, false, null)));
 
-  const sumCells = rpSummaryCells({ v: 'All customers' }, addUp(rows), refs, sh, dayCols, daywise, fy);
+  const sumCells = rpSummaryCells({ v: RP_TOTAL_LABEL[1] }, addUp(rows), refs, sh, dayCols, daywise, fy);
   outRows.push({ k: 'sum', cells: sumCells });
 
   const notes = [];
@@ -6087,7 +6133,7 @@ function renderRp1(md) {
     const gRows = blocks.map(b => ({ k: 'data', tint: rpTint(b.col, false),
       cells: rpSummaryCells({ v: b.g.name }, addUp(b.rows), refs, sh, dayCols, daywise, fy) }));
     if (loose.length) gRows.push({ k: 'data', cells: rpSummaryCells({ v: 'Customers in no group' }, addUp(loose), refs, sh, dayCols, daywise, fy) });
-    gRows.push({ k: 'sum', cells: sumCells.map((c, i) => i ? c : { v: 'All customers' }) });
+    gRows.push({ k: 'sum', cells: sumCells.map((c, i) => i ? c : { v: RP_TOTAL_LABEL[1] }) });
     const g = rpSummaryHead(md, sh, refs, dayCols, daywise, 'Group', fy);
     const t2 = Object.assign({}, t, { title: 'Road despatch to power sector — by group', bm: 'Power Sector — by group',
                                       head: g.head, groups: g.groups, rows: gRows });
@@ -6099,6 +6145,27 @@ function renderRp1(md) {
 // ═══════════════════════════════════════════════════════
 //  REPORT 3 — Sourcewise (collierywise road despatch to power sector)
 // ═══════════════════════════════════════════════════════
+
+// The bottom line of each report
+const RP_TOTAL_LABEL = { 1: 'Total (MCL to Power Sector)', 3: 'Total (MCL to Power Sector)', 4: 'Total (MCL to All Sectors)' };
+
+// Customer report order: powerReport.parties[].r2Order (1, 2, …), set with
+// the arrows in Settings → Customers. A customer without one — saved before
+// the arrows existed, or just added — goes after the numbered ones, in the
+// order the list already had.
+function rpR2Sort(list, ord) {
+  return list.map((x, i) => ({ x, i, o: ord(x) }))
+    .sort((a, b) => (Number.isFinite(a.o) ? a.o : 1e9) - (Number.isFinite(b.o) ? b.o : 1e9) || a.i - b.i)
+    .map(e => e.x);
+}
+// The R2 customers of a settings draft in report order, renumbered 1…n;
+// anyone not in the report loses their number.
+function rpR2Codes(sel) {
+  const codes = rpR2Sort(Object.keys(sel).filter(c => sel[c].r2), c => sel[c].r2o);
+  Object.keys(sel).forEach(c => { sel[c].r2o = null; });
+  codes.forEach((c, i) => { sel[c].r2o = i + 1; });
+  return codes;
+}
 
 // Every subtotal reads “Subtotal (name)”: a customer group in Power Sector,
 // a coalfield in Sourcewise and MCL, a roll-up column in the Customer
@@ -6274,7 +6341,7 @@ function rpRenderCollieries(md, cfg) {
     }
   }
   const everything = [...known].concat(otherCodes, isAll ? ['?'] : []);
-  outRows.push({ k: 'sum', cells: cells(cf.grandLabel + ' Total', measure(everything)) });
+  outRows.push({ k: 'sum', cells: cells(RP_TOTAL_LABEL[cfg.id], measure(everything)) });
 
   // tell the reader when some stored days can't contribute
   const notes = [];
@@ -6312,7 +6379,7 @@ function renderRp2(md) {
   const pane = document.getElementById('rpPane2');
   pane.innerHTML = '';
   const pr = appSettings.powerReport || {};
-  const parties = (pr.parties || []).filter(p => p.r2);
+  const parties = rpR2Sort((pr.parties || []).filter(p => p.r2), p => p.r2Order);
   if (!parties.length) {
     pane.innerHTML = '<div class="rp-card"><div class="rp-empty">No customers picked for this report yet. Open ⚙, tap <strong>+ Add customer</strong>, then set the colliery columns.</div></div>';
     return;
