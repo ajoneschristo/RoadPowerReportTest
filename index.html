@@ -670,8 +670,17 @@ body {
 }
 .db-info { flex: 1; min-width: 0; }
 .db-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 2px; }
-.db-val   { font-family: var(--mono); font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.db-val   { font-family: var(--mono); font-size: 12px; color: var(--text); line-height: 1.4; overflow-wrap: anywhere; }
 .db-val.none { color: var(--dim); font-style: italic; }
+/* reading / saving / saved / failed — these wrap rather than trail off, so the whole message shows */
+.db-val.busy, .db-val.ok, .db-val.err { white-space: normal; line-height: 1.4; }
+.db-val.busy { color: var(--amber); }
+.db-val.busy::before { content: ''; display: inline-block; width: 9px; height: 9px; margin-right: 6px; border: 2px solid currentColor;
+  border-right-color: transparent; border-radius: 50%; vertical-align: -1px; animation: rpDbSpin .8s linear infinite; }
+@keyframes rpDbSpin { to { transform: rotate(360deg); } }
+.db-val.ok   { color: var(--green); }
+.db-val.err  { color: var(--red); }
+.db-upload-btn:disabled { cursor: default; }
 .db-upload-btn {
   display: flex; align-items: center; gap: 5px;
   background: none;
@@ -1126,6 +1135,73 @@ body.dark .rp-light .rp-t tbody tr:nth-child(even):not(.rp-sum):not(.rp-avg):not
 body.dark .rp-t tbody tr.rp-tint td, body.dark .rp-t tbody tr.rp-tint td.rp-lead { background: var(--td) !important; }
 body.dark .rp-light .rp-t tbody tr.rp-tint td, body.dark .rp-light .rp-t tbody tr.rp-tint td.rp-lead { background: var(--tl) !important; }
 
+/* ── DO Database report ── */
+.rp-db { --zebra: #eef2f5; }
+body.dark .rp-db { --zebra: #171e26; }
+.rp-dbbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 12px; border-bottom:1px solid var(--ash); }
+.rp-dbsearch { flex:1 1 220px; min-width:0; display:flex; align-items:center; gap:8px; border:1px solid var(--ash); background:var(--paper); padding:0 10px; }
+.rp-dbsearch:focus-within { border-color:var(--live); }
+.rp-dbsearch span, .rp-dbp-q span { font-family:'IBM Plex Sans Condensed', sans-serif; font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--mute); flex-shrink:0; }
+.rp-dbsearch input { flex:1; min-width:0; border:0; outline:0; background:transparent; color:var(--ink); font-family:var(--mono); font-size:13px; padding:9px 0; }
+.rp-dbbtn {
+  padding:7px 12px; cursor:pointer; border:1px solid var(--ash); background:transparent; color:var(--ink);
+  font-family:'IBM Plex Sans Condensed', sans-serif; font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap;
+}
+.rp-dbbtn:disabled { opacity:.4; cursor:default; }
+.rp-dbbtn:active { background:var(--ash-soft); }
+.rp-dbchips { display:flex; flex-wrap:wrap; gap:6px; padding:8px 12px 0; }
+.rp-dbchip { display:inline-flex; align-items:center; gap:6px; padding:3px 4px 3px 9px; border:1px solid var(--live); color:var(--live);
+  font-family:var(--mono); font-size:11px; max-width:100%; }
+.rp-dbchip button { border:0; background:transparent; color:inherit; cursor:pointer; font-size:12px; padding:2px 5px; }
+.rp-dbsum { padding:8px 12px; font-family:var(--mono); font-size:11px; color:var(--mute); border-bottom:1px solid var(--ash); }
+.rp-dbsum b { color:var(--ink); font-weight:600; }
+.rp-dbscroll { overflow:auto; max-height:calc(100vh - 200px); max-height:calc(100dvh - 200px); -webkit-overflow-scrolling:touch; }
+.rp-dbt { border-collapse:separate; border-spacing:0; min-width:100%; font-family:var(--mono); font-size:12px; color:var(--ink); background:var(--paper); }
+.rp-dbt th, .rp-dbt td { border-right:1px solid var(--ash); border-bottom:1px solid var(--ash); white-space:nowrap; text-align:left; background:var(--paper); }
+.rp-dbt td { padding:5px 9px; }
+.rp-dbt tbody tr:nth-child(even) td { background:var(--zebra); }
+.rp-dbt td.n, .rp-dbt th.n .rp-dbh { text-align:right; justify-content:flex-end; font-variant-numeric:tabular-nums; }
+.rp-dbt td.k { color:var(--mute); }
+.rp-dbt td:first-child { color:var(--ink); font-weight:600; }
+.rp-dbt td.w { max-width:280px; overflow:hidden; text-overflow:ellipsis; font-family:'IBM Plex Sans', sans-serif; }
+.rp-dbt thead th { position:sticky; top:0; z-index:3; background:var(--ash-soft); border-bottom:2px solid var(--ink); }
+.rp-dbt th:first-child, .rp-dbt td:first-child { position:sticky; left:0; z-index:2; box-shadow:1px 0 0 var(--ash); }
+.rp-dbt thead th:first-child { z-index:4; }
+.rp-dbh { display:flex; align-items:center; gap:6px; width:100%; box-sizing:border-box; padding:9px 9px 8px; border:0; background:transparent; cursor:pointer;
+  font-family:'IBM Plex Sans Condensed', sans-serif; font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--mute); white-space:nowrap; text-align:left; }
+.rp-dbh:focus-visible { outline:2px solid var(--live); outline-offset:-2px; }
+.rp-dbi { display:inline-flex; align-items:center; gap:3px; color:var(--ink); font-size:9px; }
+.rp-dbcar { color:var(--mute); font-size:10px; }
+.rp-dbt th.f .rp-dbh, .rp-dbt th.f .rp-dbi { color:var(--live); }
+.rp-dbfun { width:11px; height:11px; }
+.rp-dbnone { text-align:center !important; color:var(--mute); padding:22px 12px !important; font-family:'IBM Plex Sans', sans-serif; white-space:normal !important; }
+.rp-dbmore { display:flex; align-items:center; gap:12px; padding:10px 12px; border-top:1px solid var(--ash); font-family:var(--mono); font-size:11px; color:var(--mute); }
+/* the column menu */
+#rpDbPopBg { position:fixed; inset:0; z-index:1000; }
+#rpDbPopBg.dim { background:rgba(0,0,0,.35); }
+#rpDbPop { position:fixed; z-index:1001; width:min(330px, calc(100vw - 16px)); max-height:min(72vh, 560px); display:flex; flex-direction:column;
+  background:var(--surface); color:var(--text); border:1px solid var(--edge); box-shadow:0 10px 30px rgba(0,0,0,.28); font-family:var(--sans); }
+#rpDbPop.sheet { left:0; right:0; bottom:0; width:auto; max-height:80vh; max-height:80dvh; border-radius:14px 14px 0 0; padding-bottom:env(safe-area-inset-bottom); }
+.rp-dbp-h { display:flex; align-items:center; justify-content:space-between; padding:10px 12px 4px; font-size:13px; }
+.rp-dbp-x { border:0; background:transparent; color:var(--dim); font-size:15px; cursor:pointer; padding:4px 6px; }
+.rp-dbp-sort { display:flex; gap:6px; padding:6px 12px 8px; }
+.rp-dbp-sort button { flex:1; padding:8px 6px; border:1px solid var(--edge); background:transparent; color:var(--text); cursor:pointer; font-size:12px; white-space:nowrap; }
+.rp-dbp-sort button.on { border-color:#d97a06; color:#d97a06; }
+.rp-dbp-q { display:flex; align-items:center; gap:8px; margin:0 12px 6px; padding:0 10px; border:1px solid var(--edge); }
+.rp-dbp-q:focus-within { border-color:#d97a06; }
+.rp-dbp-q input { flex:1; min-width:0; border:0; outline:0; background:transparent; color:var(--text); font-size:13px; padding:8px 0; font-family:var(--mono); }
+.rp-dbp-all label, .rp-dbp-list label { display:flex; align-items:center; gap:9px; padding:6px 12px; font-size:13px; cursor:pointer; }
+.rp-dbp-all label { border-bottom:1px solid var(--edge); font-weight:600; }
+.rp-dbp-all input, .rp-dbp-list input { width:16px; height:16px; accent-color:#d97a06; margin:0; flex-shrink:0; }
+.rp-dbp-list { flex:1; min-height:80px; overflow:auto; }
+.rp-dbp-list .v { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+.rp-dbp-all .c, .rp-dbp-list .c { margin-left:auto; padding-left:8px; color:var(--dim); font-family:var(--mono); font-size:11px; flex-shrink:0; }
+.rp-dbp-cap { padding:8px 12px; font-size:11px; color:var(--dim); }
+.rp-dbp-foot { display:flex; align-items:center; gap:8px; padding:10px 12px; border-top:1px solid var(--edge); }
+#rpDbPop .rp-dbbtn { border-color:var(--edge); color:var(--text); }
+#rpDbPop .rp-dbok { background:#d97a06; border-color:#d97a06; color:#fff; }
+#rpDbPop .rp-dbok:disabled { opacity:.4; }
+
 .rp-foot {
   padding: 7px 14px; font-family: var(--mono); font-size: 10px;
   color: var(--mute); border-top: 1px solid var(--ash); letter-spacing: .03em;
@@ -1517,7 +1593,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B41-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B42-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1631,6 +1707,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <button class="rp-tab"    id="rpTab3" onclick="rpSwitch(3)">Sourcewise</button>
     <button class="rp-tab"    id="rpTab4" onclick="rpSwitch(4)">MCL</button>
     <button class="rp-tab"    id="rpTab2" onclick="rpSwitch(2)">Customer</button>
+    <button class="rp-tab"    id="rpTab5" onclick="rpSwitch(5)">DO Database</button>
     <label class="rp-sw" title="Show or hide the day-by-day breakdown for this report">
       <input type="checkbox" id="rpDaywiseTgl" onchange="rpToggleDaywise()">
       <span class="rp-sw-track"><span class="rp-sw-knob"></span></span>
@@ -1653,6 +1730,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
   <div class="rp-tblwrap" id="rpPane3" style="display:none;"></div>
   <div class="rp-tblwrap" id="rpPane4" style="display:none;"></div>
   <div class="rp-tblwrap" id="rpPane2" style="display:none;"></div>
+  <div class="rp-tblwrap" id="rpPane5" style="display:none;"></div>
 
 </div><!-- /dashboard -->
 
@@ -1978,21 +2056,48 @@ const GH = {
   api:    'https://api.github.com',
 };
 
+// The DO database (i3MS "mclho" list), kept in epass-db/mclho.json as
+// { db: { doNumber: record }, updated } and shared with ePass Viewer.
+let mclhoDB = {}, mclhoCount = 0, _ghSha = null;
+let _dbUpdated = '';     // when the cloud copy was last written (ISO), from the file
+let _dbVer = 0;          // moves on whenever mclhoDB changes, so the DO Database report rebuilds
+let _dbBusy = false;     // a paste or upload is being read or saved
+
+// One line of status on both DO Database cards — the landing page's and the
+// report screen's. kind: busy | ok | err | none; retry makes the line tappable.
+function rpDbSay(text, kind, retry) {
+  ['dbStatus', 'dbStatusDrop'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'db-val' + (kind ? ' ' + kind : '');
+    el.title = text;
+    el.style.cursor = retry ? 'pointer' : '';
+    el.onclick = retry ? () => { el.onclick = null; retry(); } : null;
+    el.setAttribute('role', 'status');
+  });
+}
+function rpDbButtons(busy) {
+  document.querySelectorAll('.db-upload-btn').forEach(b => { b.disabled = busy; b.style.opacity = busy ? '.45' : ''; });
+}
+function rpDbWhen(iso) {
+  const d = iso ? new Date(iso) : null;
+  if (!d || isNaN(d)) return '';
+  const t = d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
+  return d.toDateString() === new Date().toDateString() ? 'today ' + t : `${d.getDate()} ${RP_MON[d.getMonth()]} ${d.getFullYear()}, ${t}`;
+}
+function rpDbChanged() {
+  _dbVer++;
+  const pane = document.getElementById('rpPane5');
+  if (pane && (pane.style.display !== 'none' || pane.querySelector('.rp-db'))) renderRpDb();
+}
+
 function updateDbStatus(syncing) {
-  const el = document.getElementById('dbStatus');
-  const elDrop = document.getElementById('dbStatusDrop');
-  el.style.cursor = ''; el.onclick = null;
-  if (syncing) {
-    el.textContent = 'Loading database…'; el.className = 'db-val';
-    if (elDrop) { elDrop.textContent = 'Loading…'; elDrop.className = 'db-val'; }
-    return;
-  }
-  if (mclhoCount === 0) {
-    el.textContent = 'No database loaded — tap Update to load'; el.className = 'db-val none';
-    if (elDrop) { elDrop.textContent = 'No database loaded'; elDrop.className = 'db-val none'; }
-  } else {
-    el.textContent = 'DO Database loaded'; el.className = 'db-val';
-    if (elDrop) { elDrop.textContent = 'DO Database loaded'; elDrop.className = 'db-val'; }
+  if (syncing) { rpDbSay('Loading database…', ''); return; }
+  if (mclhoCount === 0) rpDbSay('No database loaded — tap Upload or Paste', 'none');
+  else {
+    const when = rpDbWhen(_dbUpdated);
+    rpDbSay(`DO Database loaded · ${mclhoCount.toLocaleString('en-IN')} DOs${when ? ' · saved ' + when : ''}`, '');
   }
 }
 
@@ -2002,6 +2107,7 @@ async function pasteFromClipboard() {
       alert('Clipboard access not supported on this browser.\nUse the Update button to upload the mclho file instead.');
       return;
     }
+    if (_dbBusy) return;
     const text = await navigator.clipboard.readText();
     if (!text || text.length < 100) {
       alert('Clipboard content is too small or empty.\nPlease select all (Ctrl+A) and copy (Ctrl+C) the full mclho page in your browser first.');
@@ -2054,8 +2160,9 @@ async function loadDbFromGitHub() {
         { headers }
       );
       if (metaRes.status === 404) {
-        _ghSha = null; mclhoDB = {}; mclhoCount = 0;
-        updateDbStatus(false); return;
+        _ghSha = null; mclhoDB = {}; mclhoCount = 0; _dbUpdated = '';
+        if (!_dbBusy) updateDbStatus(false);
+        rpDbChanged(); return;
       }
       if (!metaRes.ok) throw new Error(`Metadata fetch failed: ${metaRes.status}`);
       const meta = await metaRes.json();
@@ -2070,91 +2177,100 @@ async function loadDbFromGitHub() {
       const json = await blobRes.json();
       mclhoDB    = json.db || {};
       mclhoCount = Object.keys(mclhoDB).length;
-      updateDbStatus(false);
+      _dbUpdated = json.updated || '';
+      if (!_dbBusy) updateDbStatus(false);
+      rpDbChanged();
       // If despatch already loaded, re-run stats with restored DB
       if (allRows.length > 0) updateStats();
       return; // success — exit
     } catch(e) {
       console.warn(`DB load attempt ${attempt} failed:`, e);
       if (attempt < 3) {
-        updateDbStatus(true); // keep showing syncing
+        if (!_dbBusy) updateDbStatus(true); // keep showing syncing
         await new Promise(r => setTimeout(r, 2000 * attempt)); // wait 2s, 4s
-      } else {
+      } else if (!_dbBusy) {
         // All retries failed — show a tap-to-retry message
-        const el = document.getElementById('dbStatus');
-        el.textContent = 'Could not load database — tap to retry';
-        el.className = 'db-val none';
-        el.style.cursor = 'pointer';
-        el.onclick = () => { el.onclick = null; el.style.cursor = ''; loadDbFromGitHub(); };
+        rpDbSay('Could not load database — tap to retry', 'err', loadDbFromGitHub);
       }
     }
   }
 }
 
-async function saveDbToGitHub() {
-  const btn = document.getElementById('dbUpdateBtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+// Save the DO database to the cloud, saying what is happening on both cards.
+//   ch = { recs: { doNumber: record } added or changed by this paste/upload, added, updated }
+// The cloud copy is checked first: when ePass Viewer or another phone has
+// saved since this page loaded it, this paste's records are laid over that
+// newer copy instead of overwriting it with the older one held here.
+async function saveDbToGitHub(ch) {
+  ch = ch || { recs: {}, added: 0, updated: 0 };
+  const what = [ch.added ? `${ch.added.toLocaleString('en-IN')} new` : '', ch.updated ? `${ch.updated.toLocaleString('en-IN')} updated` : ''].filter(Boolean).join(', ');
+  _dbBusy = true; rpDbButtons(true);
+  rpDbSay(`Saving to cloud… ${what}`, 'busy');
+  const auth = { 'Authorization': `token ${GH.token}`, 'Accept': 'application/vnd.github.v3+json' };
+  const url = `${GH.api}/repos/${GH.owner}/${GH.repo}/contents/${GH.path}`;
+  let merged = false;
   try {
-    const content = btoa(unescape(encodeURIComponent(
-      JSON.stringify({ db: mclhoDB, updated: new Date().toISOString() })
-    )));
-    const body = {
-      message: `Update mclho DB — ${new Date().toISOString().slice(0,10)}`,
-      content,
-      branch: GH.branch,
-    };
-    if (_ghSha) body.sha = _ghSha;
-
-    const url = `${GH.api}/repos/${GH.owner}/${GH.repo}/contents/${GH.path}`;
-    const res = await fetch(url, {
-      method:  'PUT',
-      headers: {
-        'Authorization': `token ${GH.token}`,
-        'Accept':        'application/vnd.github.v3+json',
-        'Content-Type':  'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-
-    const result = await res.json();
-
-    if (!res.ok) {
-      // If SHA conflict (422), re-fetch SHA and retry once
-      if (res.status === 422) {
-        const refetch = await fetch(
-          `${GH.api}/repos/${GH.owner}/${GH.repo}/contents/${GH.path}?ref=${GH.branch}`,
-          { headers: { 'Authorization': `token ${GH.token}`, 'Accept': 'application/vnd.github.v3+json' } }
-        );
-        if (refetch.ok) {
-          const refetchData = await refetch.json();
-          _ghSha = refetchData.sha;
-          body.sha = _ghSha;
-          const retry = await fetch(url, {
-            method: 'PUT',
-            headers: {
-              'Authorization': `token ${GH.token}`,
-              'Accept':        'application/vnd.github.v3+json',
-              'Content-Type':  'application/json',
-            },
-            body: JSON.stringify(body),
-          });
-          const retryResult = await retry.json();
-          if (!retry.ok) throw new Error(`${retry.status}: ${retryResult.message}`);
-          _ghSha = retryResult.content.sha;
-          return;
-        }
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const metaRes = await fetch(`${url}?ref=${GH.branch}&t=${Date.now()}`, { headers: auth });
+      if (!metaRes.ok && metaRes.status !== 404) throw new Error(`the cloud copy couldn't be checked (${metaRes.status})`);
+      const sha = metaRes.ok ? (await metaRes.json()).sha : null;
+      if (sha && sha !== _ghSha) {
+        rpDbSay(`Saving to cloud… fetching the newer cloud copy first`, 'busy');
+        const blobRes = await fetch(`${GH.api}/repos/${GH.owner}/${GH.repo}/git/blobs/${sha}`,
+                                    { headers: { ...auth, 'Accept': 'application/vnd.github.v3.raw' } });
+        if (!blobRes.ok) throw new Error(`the newer cloud copy couldn't be read (${blobRes.status})`);
+        const base = (await blobRes.json()).db || {};
+        for (const k in ch.recs) base[k] = ch.recs[k];
+        mclhoDB = base; mclhoCount = Object.keys(mclhoDB).length;
+        _ghSha = sha; merged = true;
+        rpDbSay(`Saving to cloud… ${what}`, 'busy');
       }
-      throw new Error(`${res.status}: ${result.message}`);
+      const stamp = new Date().toISOString();
+      const body = {
+        message: `Update mclho DB — ${stamp.slice(0,10)}`,
+        content: btoa(unescape(encodeURIComponent(JSON.stringify({ db: mclhoDB, updated: stamp })))),
+        branch:  GH.branch,
+      };
+      if (sha) body.sha = sha;
+      const res = await fetch(url, { method: 'PUT', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const result = await res.json().catch(() => ({}));
+      if (res.ok) {
+        _ghSha = result.content && result.content.sha;
+        _dbUpdated = stamp;
+        rpDbSay(`✓ Saved to cloud ${rpDbWhen(stamp)} · ${what || 'no changes'} · ${mclhoCount.toLocaleString('en-IN')} DOs` +
+                (merged ? ' (added to a newer cloud copy)' : ''), 'ok');
+        return true;
+      }
+      // saved by someone else in the meantime: check again and go round
+      if ((res.status === 409 || res.status === 422) && attempt < 3) continue;
+      throw new Error(`${res.status}${result.message ? ': ' + result.message : ''}`);
     }
-    _ghSha = result.content.sha;
-  } catch(e) {
-    alert(`Could not save to cloud: ${e.message}\nData is still in memory for this session.`);
+  } catch (e) {
+    rpDbSay(`⚠ Not saved to cloud — ${e.message || e}. The DOs are kept for this session; tap here to try again.`, 'err',
+            () => saveDbToGitHub(ch));
+    return false;
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Upload'; }
+    _dbBusy = false; rpDbButtons(false);
+    rpDbChanged();
   }
+}
+
+// a problem reading a paste or upload: put the status back, then say why
+function rpDbFail(msg) {
+  _dbBusy = false; rpDbButtons(false);
+  updateDbStatus(false);
+  alert(msg);
 }
 
 async function parseMclho(raw) {
+  try { await rpParseMclho(raw); }
+  catch (e) { rpDbFail('Could not read the DO list: ' + (e.message || e)); }
+}
+async function rpParseMclho(raw) {
+  if (_dbBusy) return;
+  _dbBusy = true; rpDbButtons(true);
+  rpDbSay('Reading the DO list…', 'busy');
+  await new Promise(r => setTimeout(r, 30));     // let the status paint before the heavy parse
   // ── Step 1: Determine if input is MHTML or plain HTML/text ────────────
   const isMhtml = raw.includes('MIME-Version:') || raw.includes('Content-Type: multipart/');
 
@@ -2167,15 +2283,15 @@ async function parseMclho(raw) {
     }
     const decoded = decodeQP(raw);
     const tableStart = decoded.indexOf('DO Number');
-    if (tableStart < 0) { alert('DO Number column not found in mclho file.'); return; }
+    if (tableStart < 0) { rpDbFail('DO Number column not found in mclho file.'); return; }
     const tableTagIdx = decoded.lastIndexOf('<table', tableStart);
     const tableEndIdx = decoded.indexOf('</table>', tableStart);
-    if (tableTagIdx < 0 || tableEndIdx < 0) { alert('Could not locate data table in mclho file.'); return; }
+    if (tableTagIdx < 0 || tableEndIdx < 0) { rpDbFail('Could not locate data table in mclho file.'); return; }
     tableHTML = decoded.slice(tableTagIdx, tableEndIdx + 8);
   } else {
     // ── Plain text/HTML path (clipboard) ────────────────────────────
     const tableStart = raw.indexOf('DO Number');
-    if (tableStart < 0) { alert('DO Number column not found in clipboard content.'); return; }
+    if (tableStart < 0) { rpDbFail('DO Number column not found in clipboard content.'); return; }
     const tableTagIdx = raw.lastIndexOf('<table', tableStart);
     const tableEndIdx = raw.indexOf('</table>', tableStart);
     if (tableTagIdx >= 0 && tableEndIdx >= 0) {
@@ -2186,7 +2302,7 @@ async function parseMclho(raw) {
       const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l);
       // Find header row containing 'DO Number' or 'Sl No'
       const hdrIdx = lines.findIndex(l => l.includes('DO Number') || (l.includes('Sl') && l.includes('Unique')));
-      if (hdrIdx < 0) { alert('Could not find column headers in clipboard.'); return; }
+      if (hdrIdx < 0) { rpDbFail('Could not find column headers in clipboard.'); return; }
       let fakeTable = '<table>';
       // Header
       fakeTable += '<tr>' + lines[hdrIdx].split('\t').map(h => `<th>${h}</th>`).join('') + '</tr>';
@@ -2242,29 +2358,38 @@ async function parseMclho(raw) {
     parsed++;
   }
 
-  if (parsed === 0) { alert('No DO data rows found. Please check the source and try again.'); return; }
+  if (parsed === 0) { rpDbFail('No DO data rows found. Please check the source and try again.'); return; }
 
   // Second pass: merge into mclhoDB
   let added = 0, updated = 0, unchanged = 0;
+  const recs = {};
   for (const doNum in incoming) {
     const newRec = incoming[doNum].record;
     if (!mclhoDB[doNum]) {
-      mclhoDB[doNum] = newRec;
+      mclhoDB[doNum] = newRec; recs[doNum] = newRec;
       added++;
     } else {
       // Check for any changes
       const existing = mclhoDB[doNum];
       const changed = Object.keys(newRec).some(k => newRec[k] !== existing[k]);
-      if (changed) { mclhoDB[doNum] = newRec; updated++; }
+      if (changed) { mclhoDB[doNum] = newRec; recs[doNum] = newRec; updated++; }
       else unchanged++;
     }
   }
 
   mclhoCount = Object.keys(mclhoDB).length;
-  updateDbStatus(false);
+  const n = Object.keys(incoming).length;
+
+  if (!added && !updated) {
+    // nothing new: no need to write the cloud copy again
+    _dbBusy = false; rpDbButtons(false);
+    rpDbSay(`✓ Already up to date — all ${n.toLocaleString('en-IN')} DOs read were saved before · ${mclhoCount.toLocaleString('en-IN')} DOs`, 'ok');
+    return;
+  }
 
   // Save merged DB to GitHub cloud
-  await saveDbToGitHub();
+  _dbBusy = false;
+  await saveDbToGitHub({ recs, added, updated });
 
   // Re-run stats if despatch data is already loaded
   if (allRows.length > 0) updateStats();
@@ -3558,7 +3683,7 @@ async function rpGsSend() {
 // key / value rows and tables with drop-downs where there's a fixed choice.
 // Export takes what's on screen; import fills the settings screen from the
 // file, and nothing reaches the shared settings until Save.
-const RP_BUILD = 'rp-B41-test';
+const RP_BUILD = 'rp-B42-test';
 const RP_SF_FORMAT = 'RoadPowerSettings 1';
 const RP_SF_YN = ['Yes', 'No'];
 
@@ -3598,7 +3723,7 @@ function rpSfSheets() {
     { t: 'blank' },
     { t: 'table', head: [{ v: 'Report', ro: true }, { v: 'Show in app', list: RP_SF_YN }, { v: 'App order', num: true },
                          { v: 'Show in exports', list: RP_SF_YN }, { v: 'Export order', num: true }, { v: 'Day-by-day', list: RP_SF_YN }],
-      rows: d.reports.map(r => [RP_REPORTS[r.id].name, yn(r.show), pos(d.reports, r.id),
+      rows: d.reports.map(r => RP_REPORTS[r.id].appOnly ? [RP_REPORTS[r.id].name, yn(r.show), pos(d.reports, r.id), '', '', ''] : [RP_REPORTS[r.id].name, yn(r.show), pos(d.reports, r.id),
         yn((d.exportReports.find(x => x.id === r.id) || {}).show), pos(d.exportReports, r.id), yn(rpSfDaywise(r.id))]) },
     { t: 'blank' },
     { t: 'head2', v: 'Monthwise Total & Average' },
@@ -3606,7 +3731,7 @@ function rpSfSheets() {
     { t: 'table', head: [{ v: 'Report', ro: true }, { v: 'Day-by-day', ro: true }, { v: 'Show Average', list: RP_SF_YN }, { v: 'Show Total', list: RP_SF_YN },
                          { v: 'Show Average (current month)', list: RP_SF_YN }, { v: 'Show Total (current month)', list: RP_SF_YN },
                          { v: 'Show Average (financial year)', list: RP_SF_YN }, { v: 'Show Total (financial year)', list: RP_SF_YN }],
-      rows: d.reports.reduce((a, r) => a.concat(['off', 'on'].map(m => {
+      rows: rpNoAppOnly(d.reports).reduce((a, r) => a.concat(['off', 'on'].map(m => {
         const s = d.show['r' + r.id][m];
         return [RP_REPORTS[r.id].name, m === 'on' ? 'On' : 'Off', yn(s.avg !== false), yn(s.total !== false), yn(s.cavg !== false), yn(s.ctotal !== false),
                 r.id === 2 ? '' : yn(s.fyavg !== false), r.id === 2 ? '' : yn(s.fytotal === true)];
@@ -3721,6 +3846,7 @@ function rpSfStylesXml() {
             '<top style="thin"><color rgb="FFC3CCD6"/></top><bottom style="thin"><color rgb="FFC3CCD6"/></bottom><diagonal/></border>';
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+    '<numFmts count="1"><numFmt numFmtId="165" formatCode="dd\\-mmm\\-yyyy"/></numFmts>' +
     '<fonts count="6"><font><sz val="11"/><name val="Calibri"/></font>' +
     '<font><b/><sz val="15"/><color rgb="FF1F2833"/><name val="Calibri"/></font>' +
     '<font><i/><sz val="10"/><color rgb="FF5D6A78"/><name val="Calibri"/></font>' +
@@ -3732,7 +3858,7 @@ function rpSfStylesXml() {
     '<fill><patternFill patternType="solid"><fgColor rgb="FFEEF1F4"/><bgColor indexed="64"/></patternFill></fill></fills>' +
     `<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>${b}</borders>` +
     '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-    '<cellXfs count="9"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+    '<cellXfs count="12"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
     '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
     '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
     '<xf numFmtId="0" fontId="3" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"><alignment vertical="center" wrapText="1"/></xf>' +
@@ -3740,7 +3866,11 @@ function rpSfStylesXml() {
     '<xf numFmtId="49" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>' +
     '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"><alignment horizontal="center"/></xf>' +
     '<xf numFmtId="49" fontId="2" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>' +
-    '<xf numFmtId="0" fontId="5" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs>' +
+    '<xf numFmtId="0" fontId="5" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+    // 9 a date, 10 a whole number, 11 a number with decimals — the DO Database export
+    '<xf numFmtId="165" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>' +
+    '<xf numFmtId="3" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>' +
+    '<xf numFmtId="4" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/></cellXfs>' +
     '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
 }
 function rpSfSheetXml(sh) {
@@ -3768,7 +3898,8 @@ function rpSfSheetXml(sh) {
       row(() => b.head.map((h, i) => cell(i + 1, h.v, 3)), 34);
       if (sh.freeze && !freezeAt) freezeAt = r;
       const first = r + 1;
-      b.rows.forEach(vals => row(() => vals.map((v, i) => cell(i + 1, v, b.head[i].ro ? 7 : b.head[i].num ? 6 : 5))));
+      b.rows.forEach(vals => row(() => vals.map((v, i) => cell(i + 1, v, b.head[i].style != null ? b.head[i].style : b.head[i].ro ? 7 : b.head[i].num ? 6 : 5))));
+      if (sh.filter) sh._af = `A${first - 1}:${rpColLetter(b.head.length)}${Math.max(first, r)}`;
       const last = Math.max(first, r + (bi === sh.blocks.length - 1 ? (b.extra || 0) : 0));
       b.head.forEach((h, i) => { if (h.list) list(`${rpColLetter(i + 1)}${first}:${rpColLetter(i + 1)}${last}`, h.list); });
     }
@@ -3780,6 +3911,7 @@ function rpSfSheetXml(sh) {
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' + view +
     (cols ? `<cols>${cols}</cols>` : '') + `<sheetData>${rows.join('')}</sheetData>` +
+    (sh._af ? `<autoFilter ref="${sh._af}"/>` : '') +
     (dv.length ? `<dataValidations count="${dv.length}">${dv.join('')}</dataValidations>` : '') +
     '<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/></worksheet>';
 }
@@ -3981,12 +4113,13 @@ function rpSfApply(book, fileName) {
         const curA = (d.reports.find(x => x.id === id) || {}).show, curE = (d.exportReports.find(x => x.id === id) || {}).show;
         const ord = (col) => { const n = rpSfInt(c[col]); return Number.isFinite(n) && n !== null ? n : 99 + k; };
         app.push({ id, show: flag('show in app', curA !== false), o: ord('app order'), k });
+        if (RP_REPORTS[id].appOnly) return;            // on screen only: no export or day-by-day columns
         exp.push({ id, show: flag('show in exports', curE !== false), o: ord('export order'), k });
         dw[id] = flag('day-by-day', dw[id] !== false);
       });
       const order = l => l.sort((a, b) => a.o - b.o || a.k - b.k).map(x => ({ id: x.id, show: x.show }));
       const fix = (l, what) => { const out = rpReportList(order(l)); if (!l.some(x => x.show) && l.length) w('Reports', 0, `no report was left on ${what} — ${RP_REPORTS[out[0].id].name} stays on.`); return out; };
-      if (app.length) { d.reports = fix(app, 'in the app'); d.exportReports = fix(exp, 'in exports'); d.daywise = dw; parts.push('report order'); }
+      if (app.length) { d.reports = fix(app, 'in the app'); d.exportReports = rpNoAppOnly(fix(exp, 'in exports')); d.daywise = dw; parts.push('report order'); }
     } else w('Reports', 0, 'the table with Report, Show in app… wasn’t found — report order left as it was.');
     const t2 = R.table(['Report', 'Day-by-day', 'Show Average', 'Show Total', 'Show Average (current month)', 'Show Total (current month)'], false,
                        ['Show Average (financial year)', 'Show Total (financial year)']);
@@ -3996,6 +4129,7 @@ function rpSfApply(book, fileName) {
       t2.forEach(({ r, c }) => {
         const id = repByName(c['report']);
         const m = { on: 'on', off: 'off', yes: 'on', no: 'off' }[rpSfKey(c['day-by-day'])];
+        if (id && RP_REPORTS[id].appOnly) return;
         if (!id || !m) { if (rpSfTxt(c['report'])) w('Reports', r, 'Monthwise row needs a report name and Day-by-day On or Off — skipped.'); return; }
         Object.keys(map).forEach(col => {
           // a file from before the financial-year column, or the Customer
@@ -4576,7 +4710,7 @@ async function rpPdfEstimate() {
 }
 
 function rpExportsMatchApp() {
-  _rpDraft.exportReports = _rpDraft.reports.map(r => ({ id: r.id, show: r.show }));
+  _rpDraft.exportReports = rpNoAppOnly(_rpDraft.reports).map(r => ({ id: r.id, show: r.show }));
   renderRpReportList('exp'); renderRpShowGrids();
 }
 
@@ -4586,7 +4720,7 @@ function renderRpShowGrids() {
   // grids follow the report order chosen above; a switched-off report keeps
   // its settings but is dimmed
   const inExp = id => (_rpDraft.exportReports.find(x => x.id === id) || {}).show;
-  _rpDraft.reports.map(r => {
+  rpNoAppOnly(_rpDraft.reports).map(r => {
     const a = r.show, e = inExp(r.id);
     const note = a && e ? '' : a ? ' · app only' : e ? ' · exports only' : ' · switched off';
     return ['r' + r.id, RP_REPORTS[r.id].name + ' Report', a || e, note];
@@ -5240,10 +5374,19 @@ async function rpPersistPrefs() {
 function rpSwitch(n) {
   _rpTab = n;
   rpSyncDaywiseToggle();
-  [1, 2, 3, 4].forEach(i => {
+  [1, 2, 3, 4, 5].forEach(i => {
     document.getElementById('rpTab' + i).classList.toggle('on', n === i);
     document.getElementById('rpPane' + i).style.display = n === i ? 'block' : 'none';
   });
+  // the DO Database has no day-by-day view and isn't a picture to share
+  const db = !!(RP_REPORTS[n] && RP_REPORTS[n].appOnly);
+  const sw = document.getElementById('rpDaywiseTgl');
+  if (sw && sw.closest('.rp-sw')) sw.closest('.rp-sw').style.display = db ? 'none' : '';
+  const sh = document.getElementById('rpShareBtn');
+  if (sh) sh.style.display = db ? 'none' : '';
+  const sub = document.getElementById('rpViewSub');
+  if (sub) sub.style.display = db ? 'none' : '';
+  if (n === 5) renderRpDb();
 }
 
 // Build day → { 'party|colliery': qty } for the month of the active date,
@@ -5399,8 +5542,11 @@ const RP_REPORTS = {
   3: { name: 'Sourcewise',   sheet: 'Sourcewise',   hint: 'Power-sector despatch by colliery' },
   4: { name: 'MCL',          sheet: 'MCL',          hint: 'All despatch by colliery, power and non-power' },
   2: { name: 'Customer',     sheet: 'Customer',     hint: 'Colliery split for each customer, day by day' },
+  // the saved i3MS DO list, to search and filter — on screen only, never in the PDF, Excel or HTML
+  5: { name: 'DO Database',  sheet: 'DO database',  hint: 'The saved i3MS DO database — search and filter', appOnly: true },
 };
-const RP_DEFAULT_ORDER = [1, 3, 4, 2];
+const RP_DEFAULT_ORDER = [1, 3, 4, 2, 5];
+function rpNoAppOnly(list) { return list.filter(r => !RP_REPORTS[r.id].appOnly); }
 function rpReportList(saved) {
   if (saved === undefined) saved = (appSettings.powerReport || {}).reports;
   const out = [], seen = new Set();
@@ -5418,7 +5564,9 @@ function rpVisibleReports() { return rpReportList().filter(r => r.show).map(r =>
 // follow the app, so nothing changes for anyone who never sets it.
 function rpExportList(pr) {
   pr = pr || appSettings.powerReport || {};
-  return rpReportList(pr.exportReports !== undefined ? pr.exportReports : pr.reports);
+  const out = rpNoAppOnly(rpReportList(pr.exportReports !== undefined ? pr.exportReports : pr.reports));
+  if (out.length && !out.some(r => r.show)) out[0].show = true;      // an export always has something in it
+  return out;
 }
 function rpExportReports() { return rpExportList().filter(r => r.show).map(r => r.id); }
 
@@ -5537,8 +5685,8 @@ function renderRpReports() {
   _rpTables = [];
   const vis = rpVisibleReports();
   const need = vis.concat(rpExportReports().filter(id => vis.indexOf(id) < 0));
-  const RENDER = { 1: renderRp1, 2: renderRp2, 3: renderRp3, 4: renderRp4 };
-  [1, 2, 3, 4].forEach(id => { if (need.indexOf(id) < 0) document.getElementById('rpPane' + id).innerHTML = ''; });
+  const RENDER = { 1: renderRp1, 2: renderRp2, 3: renderRp3, 4: renderRp4, 5: renderRpDb };
+  [1, 2, 3, 4, 5].forEach(id => { if (need.indexOf(id) < 0) document.getElementById('rpPane' + id).innerHTML = ''; });
   need.forEach(id => RENDER[id](md));
   rpApplyReportTabs();
   if (vis.indexOf(_rpTab) < 0) _rpTab = vis[0];
@@ -6055,6 +6203,326 @@ function renderRp2(md) {
     _rpTables.push(t);
     pane.appendChild(rpCard(t));
   });
+}
+
+// ═══════════════════════════════════════════════════════
+//  REPORT 5 — DO Database: the saved i3MS DO list, searchable
+// ═══════════════════════════════════════════════════════
+// One search box looks through every column; each column heading opens an
+// Excel-style menu — sort, and a list of the column's values to tick, with a
+// search of its own. A filter is { q: text the value must contain,
+// only: Set of values ticked, or null for all }. The list is built once per
+// change of the database (_dbVer), and only a page of rows is drawn at a time.
+const RP_DB_COLS = [
+  { k: 'doNum',        t: 'DO Number',     type: 'code' },
+  { k: 'doDate',       t: 'DO Date',       type: 'date' },
+  { k: 'doQty',        t: 'DO Qty',        type: 'num'  },
+  { k: 'partyCode',    t: 'Party Code',    type: 'code' },
+  { k: 'partyName',    t: 'Party Name',    type: 'text', wide: true },
+  { k: 'collieryCode', t: 'Colliery Code', type: 'code' },
+  { k: 'collieryName', t: 'Colliery Name', type: 'text', wide: true },
+  { k: 'grade',        t: 'Grade',         type: 'text' },
+  { k: 'size',         t: 'Size',          type: 'text' },
+  { k: 'doStartDate',  t: 'DO Start Date', type: 'date' },
+  { k: 'doEndDate',    t: 'DO End Date',   type: 'date' },
+];
+const RP_DB_PAGE = 200;
+const _rpDb = { ver: -1, rows: [], cols: [], q: '', filt: {}, sort: { c: 1, dir: -1 }, shown: RP_DB_PAGE, fv: 0, cache: null, pop: null };
+
+// '08-Jun-2026', '08/06/2026' or '2026-06-08' → 20260608
+function rpDbDateKey(v) {
+  let m = /^(\d{1,2})[-\/. ]([A-Za-z]{3})[A-Za-z]*[-\/. ](\d{4})/.exec(v);
+  if (m) { const i = RP_MON.findIndex(x => x.toLowerCase() === m[2].toLowerCase()); if (i >= 0) return +m[3] * 10000 + (i + 1) * 100 + +m[1]; }
+  if ((m = /^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/.exec(v))) return +m[3] * 10000 + +m[2] * 100 + +m[1];
+  if ((m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v))) return +m[1] * 10000 + +m[2] * 100 + +m[3];
+  return null;
+}
+function rpDbQty(x) {
+  const n = parseFloat(String(x == null ? '' : x).replace(/,/g, ''));
+  return isFinite(n) ? n : null;
+}
+function rpDbBuild() {
+  if (_rpDb.ver === _dbVer) return;
+  const db = mclhoDB || {};
+  _rpDb.rows = Object.keys(db).map(doNum => {
+    const r = db[doNum] || {};
+    let qty = null;
+    const v = RP_DB_COLS.map(c => {
+      if (c.k === 'doNum') return doNum;
+      if (c.type === 'num') { qty = rpDbQty(r[c.k]); return qty == null ? String(r[c.k] == null ? '' : r[c.k]).trim() : qty.toLocaleString('en-IN', { maximumFractionDigits: 2 }); }
+      return rpDecode(r[c.k]);
+    });
+    const s = RP_DB_COLS.map((c, i) => !v[i] ? null : c.type === 'date' ? rpDbDateKey(v[i])
+                              : c.type === 'num' ? qty : c.type === 'code' && /^\d+$/.test(v[i]) ? v[i].padStart(20, '0') : v[i].toLowerCase());
+    return { v, s, qty, h: v.join('\u0001').toLowerCase() };
+  });
+  // columns no record fills (older saves kept fewer fields) are left out
+  _rpDb.cols = RP_DB_COLS.map((c, i) => i).filter(i => i === 0 || _rpDb.rows.some(r => r.v[i] !== ''));
+  Object.keys(_rpDb.filt).forEach(c => { if (_rpDb.cols.indexOf(+c) < 0) delete _rpDb.filt[c]; });
+  if (_rpDb.sort && _rpDb.cols.indexOf(_rpDb.sort.c) < 0) _rpDb.sort = null;
+  _rpDb.ver = _dbVer; _rpDb.cache = null;
+}
+function rpDbWords(q) { return String(q || '').toLowerCase().split(/\s+/).filter(Boolean); }
+// does a row pass the search and every column filter but one (skip)?
+function rpDbPass(row, words, skip) {
+  for (const w of words) if (row.h.indexOf(w) < 0) return false;
+  for (const c in _rpDb.filt) {
+    if (+c === skip) continue;
+    const f = _rpDb.filt[c], v = row.v[c];
+    if (f.q && v.toLowerCase().indexOf(f.q) < 0) return false;
+    if (f.only && !f.only.has(v)) return false;
+  }
+  return true;
+}
+// blanks go last whichever way a column is sorted, as in Excel
+function rpDbCmp(c, dir) {
+  return (a, b) => {
+    const x = a.s[c], y = b.s[c], xe = x == null, ye = y == null;
+    if (xe || ye) return xe === ye ? 0 : xe ? 1 : -1;
+    return (x < y ? -1 : x > y ? 1 : 0) * dir;
+  };
+}
+function rpDbFiltered() {
+  const sig = [_rpDb.ver, _rpDb.q, _rpDb.fv, _rpDb.sort ? _rpDb.sort.c + ':' + _rpDb.sort.dir : ''].join('|');
+  if (_rpDb.cache && _rpDb.cache.sig === sig) return _rpDb.cache.list;
+  const words = rpDbWords(_rpDb.q);
+  let list = _rpDb.rows.filter(r => rpDbPass(r, words, -1));
+  if (_rpDb.sort) list.sort(rpDbCmp(_rpDb.sort.c, _rpDb.sort.dir));
+  _rpDb.cache = { sig, list };
+  return list;
+}
+
+function renderRpDb() {
+  const pane = document.getElementById('rpPane5');
+  if (!pane) return;
+  if (!mclhoCount) {
+    pane.innerHTML = '<div class="rp-card"><div class="rp-empty">' + (_ghSha === null && !_dbUpdated
+      ? 'The DO database is loading, or there isn’t one yet. Use <strong>Paste</strong> or <strong>Upload</strong> on the DO Database card to add the i3MS list.'
+      : 'The DO database is empty.') + '</div></div>';
+    return;
+  }
+  rpDbBuild();
+  if (!pane.querySelector('.rp-db')) {
+    pane.innerHTML =
+      `<div class="rp-card rp-db">
+         <div class="rp-cap"><h3>i3MS DO Database</h3><div class="rp-cap-meta" id="rpDbMeta"></div></div>
+         <div class="rp-dbbar">
+           <label class="rp-dbsearch"><span>Search</span>
+             <input id="rpDbQ" type="search" autocomplete="off" spellcheck="false" aria-label="Search every column"></label>
+           <button class="rp-dbbtn" id="rpDbClear" onclick="rpDbClearAll()">Clear all</button>
+           <button class="rp-dbbtn" onclick="rpDbExport()" title="The rows shown, as an Excel file with filters">Excel</button>
+         </div>
+         <div class="rp-dbchips" id="rpDbChips"></div>
+         <div class="rp-dbsum" id="rpDbSum"></div>
+         <div class="rp-dbscroll" id="rpDbScroll"><table class="rp-dbt" id="rpDbTable"></table></div>
+         <div class="rp-dbmore" id="rpDbMore"></div>
+       </div>`;
+    const q = document.getElementById('rpDbQ');
+    q.value = _rpDb.q;
+    let t = null;
+    q.oninput = () => { clearTimeout(t); t = setTimeout(() => { _rpDb.q = q.value.trim(); _rpDb.shown = RP_DB_PAGE; rpDbDraw(); }, 160); };
+  }
+  rpDbDraw();
+}
+
+function rpDbDraw() {
+  const list = rpDbFiltered(), cols = _rpDb.cols, total = _rpDb.rows.length;
+  const n = Math.min(list.length, _rpDb.shown);
+  const fmtN = x => x.toLocaleString('en-IN');
+  const qty = list.reduce((a, r) => a + (r.qty || 0), 0);
+  const any = _rpDb.q || Object.keys(_rpDb.filt).length;
+  const when = rpDbWhen(_dbUpdated);
+  document.getElementById('rpDbMeta').textContent = `${fmtN(total)} DOs${when ? ' · saved ' + when : ''}`;
+  document.getElementById('rpDbSum').innerHTML =
+    (any ? `<b>${fmtN(list.length)}</b> of ${fmtN(total)} DOs match` : `<b>${fmtN(total)}</b> DOs`) +
+    (cols.indexOf(2) >= 0 ? ` · DO Qty <b>${qty.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</b>` : '') +
+    (list.length > n ? ` · showing the first ${fmtN(n)}` : '');
+  document.getElementById('rpDbClear').style.display = any ? '' : 'none';
+  // what is filtered, each with its own ✕
+  const chips = [];
+  if (_rpDb.q) chips.push(`<span class="rp-dbchip">Search: “${rpEsc(_rpDb.q)}”<button onclick="rpDbClearSearch()" aria-label="Clear the search">✕</button></span>`);
+  Object.keys(_rpDb.filt).forEach(c => {
+    const f = _rpDb.filt[c], parts = [];
+    if (f.q) parts.push(`contains “${rpEsc(f.q)}”`);
+    if (f.only) parts.push(f.only.size === 1 ? `= ${rpEsc([...f.only][0] || '(Blanks)')}` : `${fmtN(f.only.size)} values`);
+    chips.push(`<span class="rp-dbchip">${rpEsc(RP_DB_COLS[c].t)}: ${parts.join(', ')}<button onclick="rpDbClearCol(${c})" aria-label="Clear the ${rpEsc(RP_DB_COLS[c].t)} filter">✕</button></span>`);
+  });
+  const chipBox = document.getElementById('rpDbChips');
+  chipBox.innerHTML = chips.join('');
+  chipBox.style.display = chips.length ? '' : 'none';
+
+  const sortOf = c => _rpDb.sort && _rpDb.sort.c === c ? (_rpDb.sort.dir > 0 ? '▲' : '▼') : '';
+  let h = '<thead><tr>' + cols.map(c => {
+    const col = RP_DB_COLS[c], f = !!_rpDb.filt[c], so = sortOf(c);
+    return `<th class="${col.type === 'num' ? 'n' : ''}${f ? ' f' : ''}"><button class="rp-dbh" data-c="${c}" onclick="rpDbOpen(${c}, this)" aria-haspopup="dialog" ` +
+      `title="Sort and filter ${rpEsc(col.t)}">${rpEsc(col.t)}<span class="rp-dbi">${so}${f ? RP_DB_FUNNEL : so ? '' : '<span class="rp-dbcar">▾</span>'}</span></button></th>`;
+  }).join('') + '</tr></thead><tbody>';
+  for (let i = 0; i < n; i++) {
+    const r = list[i];
+    h += '<tr>' + cols.map(c => {
+      const col = RP_DB_COLS[c], v = r.v[c];
+      return `<td class="${col.type === 'num' ? 'n' : col.type === 'code' ? 'k' : ''}${col.wide ? ' w' : ''}"${col.wide && v.length > 28 ? ` title="${rpEsc(v)}"` : ''}>${rpEsc(v)}</td>`;
+    }).join('') + '</tr>';
+  }
+  if (!list.length) h += `<tr><td class="rp-dbnone" colspan="${cols.length}">No DO matches the search${Object.keys(_rpDb.filt).length ? ' and filters' : ''}.</td></tr>`;
+  document.getElementById('rpDbTable').innerHTML = h + '</tbody>';
+  const more = document.getElementById('rpDbMore');
+  const left = list.length - n;
+  more.innerHTML = left > 0
+    ? `<button class="rp-dbbtn" onclick="rpDbMore()">Show ${fmtN(Math.min(left, RP_DB_PAGE))} more</button><span>${fmtN(left)} more to show</span>`
+    : '';
+  more.style.display = left > 0 ? '' : 'none';
+}
+const RP_DB_FUNNEL = '<svg class="rp-dbfun" viewBox="0 0 24 24" aria-label="filtered"><path d="M3 5h18l-7 8v5l-4 2v-7z" fill="currentColor"/></svg>';
+function rpDbMore() { _rpDb.shown += RP_DB_PAGE; rpDbDraw(); }
+function rpDbClearSearch() { _rpDb.q = ''; const q = document.getElementById('rpDbQ'); if (q) q.value = ''; _rpDb.shown = RP_DB_PAGE; rpDbDraw(); }
+function rpDbClearCol(c) { delete _rpDb.filt[c]; _rpDb.fv++; _rpDb.shown = RP_DB_PAGE; rpDbDraw(); }
+function rpDbClearAll() { _rpDb.filt = {}; _rpDb.fv++; rpDbClearSearch(); }
+
+// ── the column menu: sort, and the values to tick ──
+function rpDbOpen(c, anchor) {
+  rpDbClose();
+  const col = RP_DB_COLS[c], words = rpDbWords(_rpDb.q);
+  // the column's values among the rows the other filters and the search let through
+  const count = new Map();
+  _rpDb.rows.forEach(r => { if (rpDbPass(r, words, c)) count.set(r.v[c], (count.get(r.v[c]) || 0) + 1); });
+  const key = new Map();
+  _rpDb.rows.forEach(r => { if (count.has(r.v[c]) && !key.has(r.v[c])) key.set(r.v[c], r.s[c]); });
+  const vals = [...count.keys()].sort((a, b) => {
+    const x = key.get(a), y = key.get(b);
+    if (x == null || y == null) return x == null && y == null ? 0 : x == null ? 1 : -1;
+    return x < y ? -1 : x > y ? 1 : 0;
+  });
+  const f = _rpDb.filt[c] || {};
+  const pop = _rpDb.pop = { c, vals, count, q: f.q || '', unt: new Set() };
+  if (f.only) vals.forEach(v => { if (!f.only.has(v)) pop.unt.add(v); });
+  const label = { date: ['Oldest to newest', 'Newest to oldest'], num: ['Smallest to largest', 'Largest to smallest'] }[col.type] || ['A to Z', 'Z to A'];
+
+  const bg = document.createElement('div');
+  bg.id = 'rpDbPopBg'; bg.onclick = rpDbClose;
+  const el = document.createElement('div');
+  el.id = 'rpDbPop'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', col.t + ' — sort and filter');
+  el.innerHTML =
+    `<div class="rp-dbp-h"><b>${rpEsc(col.t)}</b><button class="rp-dbp-x" onclick="rpDbClose()" aria-label="Close">✕</button></div>
+     <div class="rp-dbp-sort">
+       <button onclick="rpDbSort(${c}, 1)" class="${_rpDb.sort && _rpDb.sort.c === c && _rpDb.sort.dir > 0 ? 'on' : ''}">▲ ${label[0]}</button>
+       <button onclick="rpDbSort(${c}, -1)" class="${_rpDb.sort && _rpDb.sort.c === c && _rpDb.sort.dir < 0 ? 'on' : ''}">▼ ${label[1]}</button>
+     </div>
+     <label class="rp-dbp-q"><span>Search values</span><input id="rpDbPopQ" type="search" autocomplete="off" spellcheck="false" value="${rpEsc(pop.q)}"></label>
+     <div class="rp-dbp-all"></div>
+     <div class="rp-dbp-list" id="rpDbPopList"></div>
+     <div class="rp-dbp-foot">
+       <button class="rp-dbbtn" onclick="rpDbClearCol(${c}); rpDbClose()"${_rpDb.filt[c] ? '' : ' disabled'}>Clear filter</button>
+       <span style="flex:1"></span>
+       <button class="rp-dbbtn" onclick="rpDbClose()">Cancel</button>
+       <button class="rp-dbbtn rp-dbok" id="rpDbPopOk" onclick="rpDbApply()">OK</button>
+     </div>`;
+  document.body.appendChild(bg);
+  document.body.appendChild(el);
+  // a sheet from the bottom on a phone, a menu under the heading elsewhere
+  if (window.innerWidth < 600) { el.classList.add('sheet'); bg.classList.add('dim'); }
+  else {
+    const r = anchor.getBoundingClientRect(), w = el.offsetWidth;
+    el.style.left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8)) + 'px';
+    const top = r.bottom + 4, room = window.innerHeight - top - 8;
+    if (room >= 260) { el.style.top = top + 'px'; el.style.maxHeight = room + 'px'; }
+    else { el.style.top = Math.max(8, r.top - 4 - Math.min(el.offsetHeight, r.top - 12)) + 'px'; el.style.maxHeight = (r.top - 12) + 'px'; }
+  }
+  const q = document.getElementById('rpDbPopQ');
+  q.oninput = () => { pop.q = q.value.trim().toLowerCase(); rpDbPopList(); };
+  q.onkeydown = e => { if (e.key === 'Enter') rpDbApply(); };
+  document.addEventListener('keydown', rpDbKey);
+  rpDbPopList();
+  if (window.innerWidth >= 600) q.focus();
+}
+const RP_DB_POPMAX = 300;
+function rpDbPopMatch() {
+  const p = _rpDb.pop, q = (p.q || '').toLowerCase();
+  return q ? p.vals.filter(v => v.toLowerCase().indexOf(q) >= 0) : p.vals;
+}
+function rpDbPopList() {
+  const p = _rpDb.pop;
+  if (!p) return;
+  const match = rpDbPopMatch();
+  const ticked = match.filter(v => !p.unt.has(v)).length;
+  const all = document.querySelector('#rpDbPop .rp-dbp-all');
+  all.innerHTML = `<label><input type="checkbox" id="rpDbPopAll"${ticked === match.length && match.length ? ' checked' : ''}>` +
+    `<span>${p.q ? '(Select all search results)' : '(Select all)'}</span><span class="c">${match.length.toLocaleString('en-IN')}</span></label>`;
+  const cb = document.getElementById('rpDbPopAll');
+  cb.indeterminate = ticked > 0 && ticked < match.length;
+  cb.onchange = () => { match.forEach(v => cb.checked ? p.unt.delete(v) : p.unt.add(v)); rpDbPopList(); };
+  const shown = match.slice(0, RP_DB_POPMAX);
+  document.getElementById('rpDbPopList').innerHTML = shown.map((v, i) =>
+    `<label><input type="checkbox" data-i="${i}"${p.unt.has(v) ? '' : ' checked'}><span class="v">${v ? rpEsc(v) : '<i>(Blanks)</i>'}</span>` +
+    `<span class="c">${p.count.get(v).toLocaleString('en-IN')}</span></label>`).join('') +
+    (match.length > shown.length ? `<div class="rp-dbp-cap">Showing ${RP_DB_POPMAX} of ${match.length.toLocaleString('en-IN')} — search to find the rest</div>` : '') +
+    (!match.length ? '<div class="rp-dbp-cap">No value matches.</div>' : '');
+  document.getElementById('rpDbPopList').onchange = e => {
+    const i = e.target.dataset && e.target.dataset.i;
+    if (i == null) return;
+    const v = shown[+i];
+    if (e.target.checked) p.unt.delete(v); else p.unt.add(v);
+    const t = match.filter(x => !p.unt.has(x)).length;
+    cb.checked = t === match.length; cb.indeterminate = t > 0 && t < match.length;
+    document.getElementById('rpDbPopOk').disabled = !t;
+  };
+  document.getElementById('rpDbPopOk').disabled = !ticked;
+}
+function rpDbApply() {
+  const p = _rpDb.pop;
+  if (!p) return;
+  const match = rpDbPopMatch(), ticked = match.filter(v => !p.unt.has(v));
+  if (!ticked.length) return;
+  const q = (p.q || '').toLowerCase();
+  if (!q && ticked.length === p.vals.length) delete _rpDb.filt[p.c];               // everything ticked: no filter
+  else _rpDb.filt[p.c] = { q, only: ticked.length === match.length ? null : new Set(ticked) };
+  _rpDb.fv++; _rpDb.shown = RP_DB_PAGE;
+  rpDbClose(); rpDbDraw();
+}
+function rpDbSort(c, dir) {
+  _rpDb.sort = { c, dir };
+  _rpDb.shown = RP_DB_PAGE;
+  rpDbClose(); rpDbDraw();
+}
+function rpDbKey(e) { if (e.key === 'Escape') rpDbClose(); }
+function rpDbClose() {
+  ['rpDbPop', 'rpDbPopBg'].forEach(id => { const el = document.getElementById(id); if (el) el.remove(); });
+  document.removeEventListener('keydown', rpDbKey);
+  _rpDb.pop = null;
+}
+
+// the rows that match, as an Excel file with Excel's own filter buttons on
+async function rpDbExport() {
+  const list = rpDbFiltered(), cols = _rpDb.cols;
+  if (!list.length) { alert('No DO matches the search and filters.'); return; }
+  const frac = list.some(r => r.qty != null && Math.round(r.qty) !== r.qty);
+  const serial = k => k ? (Date.UTC(Math.floor(k / 10000), Math.floor(k / 100) % 100 - 1, k % 100) - Date.UTC(1899, 11, 30)) / 864e5 : '';
+  const head = cols.map(c => {
+    const col = RP_DB_COLS[c];
+    return { v: col.t, style: col.type === 'date' ? 9 : col.type === 'num' ? (frac ? 11 : 10) : 5 };
+  });
+  const rows = list.map(r => cols.map(c => {
+    const col = RP_DB_COLS[c];
+    if (col.type === 'date') return r.s[c] ? serial(r.s[c]) : r.v[c];
+    if (col.type === 'num') return r.qty != null ? r.qty : r.v[c];
+    return r.v[c];
+  }));
+  const parts = [];
+  if (_rpDb.q) parts.push(`search “${_rpDb.q}”`);
+  Object.keys(_rpDb.filt).forEach(c => parts.push(RP_DB_COLS[c].t + ' filtered'));
+  const sh = { name: 'DO Database', freeze: true, filter: true,
+    cols: cols.map(c => ({ doNum: 14, doDate: 13, doQty: 11, partyCode: 13, partyName: 44, collieryCode: 12, collieryName: 30 }[RP_DB_COLS[c].k] || 13)),
+    blocks: [
+      { t: 'title', v: 'i3MS DO Database' },
+      { t: 'note', v: `${list.length.toLocaleString('en-IN')} of ${_rpDb.rows.length.toLocaleString('en-IN')} DOs` + (parts.length ? ' · ' + parts.join(' · ') : '') +
+                      (_dbUpdated ? ` · database saved ${rpDbWhen(_dbUpdated)}` : '') },
+      { t: 'table', head, rows },
+    ] };
+  const t = new Date();
+  const fname = `DO_Database_${rp2(t.getDate())}_${RP_MON[t.getMonth()]}_${t.getFullYear()}.xlsx`;
+  try {
+    await rpShareOrSave(rpSfWorkbook([sh]), fname, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'DO Database');
+  } catch (e) { alert('Could not build the Excel file: ' + e.message); }
 }
 
 // ── Share the visible report as an image ────────────────
@@ -7915,8 +8383,11 @@ document.getElementById('fileInput').addEventListener('change', e => {
 document.getElementById('mclhoInput').addEventListener('change', e => {
   const f = e.target.files[0];
   if (!f) return;
+  if (_dbBusy) { e.target.value = ''; return; }
   const r = new FileReader();
+  rpDbSay(`Reading ${f.name}…`, 'busy');
   r.onload = ev => parseMclho(ev.target.result);
+  r.onerror = () => rpDbFail(`Could not read ${f.name}.`);
   r.readAsText(f);
   e.target.value = '';
 });
