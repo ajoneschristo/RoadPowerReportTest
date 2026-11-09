@@ -674,7 +674,10 @@ body {
 .db-val.none { color: var(--dim); font-style: italic; }
 /* reading / saving / saved / failed — these wrap rather than trail off, so the whole message shows */
 .db-val.busy, .db-val.ok, .db-val.err, .db-val.info { white-space: pre-line; line-height: 1.45; font-family: var(--sans); font-size: 12.5px; }
-.db-line { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
+.db-line { display: flex; align-items: center; gap: 6px; min-width: 0; min-height: 22px; }
+.db-more { border: 0; background: transparent; color: var(--dim); font-family: var(--sans); font-size: 11.5px; cursor: pointer; padding: 3px 4px; white-space: nowrap; flex-shrink: 0; }
+.db-more:hover, .db-more[aria-expanded="true"] { color: var(--text); }
+.db-stats { margin-top: 4px; font-family: var(--sans); font-size: 12px; line-height: 1.5; color: var(--dim); white-space: pre-line; }
 .db-tick { flex-shrink: 0; display: inline-flex; margin-top: 0; }
 .db-line .db-val.info, .db-line .db-val.ok { color: var(--text); }
 .db-val.busy { color: var(--amber); }
@@ -1001,6 +1004,19 @@ body.dark .rp-card {
   color: var(--mute); white-space: nowrap;
 }
 .rp-cap-meta b { color: var(--live); font-weight: 600; }
+/* the corner download icon — on screen only; snapshots (PDF, image) leave it and its room out */
+.rp-dlcard { position: relative; }
+.rp-dlcard > .rp-cap { padding-right: 46px; }
+.rp-dl {
+  position: absolute; top: 7px; right: 7px; width: 30px; height: 30px; padding: 0; z-index: 2;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--ash); border-radius: 3px; background: var(--paper); color: var(--mute); cursor: pointer;
+}
+.rp-dl:hover { color: var(--ink); border-color: var(--mute); }
+.rp-dl:focus-visible { outline: 2px solid var(--live); outline-offset: 1px; }
+.rp-dl:disabled { opacity: .45; cursor: default; }
+.rp-light .rp-dl { display: none !important; }
+.rp-light .rp-dlcard > .rp-cap { padding-right: 15px; }
 
 /* ── grid ── */
 .rp-scrollx { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -1162,7 +1178,8 @@ body.dark .rp-db { --zebra: #171e26; }
 .rp-dbt { border-collapse:separate; border-spacing:0; min-width:100%; font-family:var(--mono); font-size:12px; color:var(--ink); background:var(--paper); }
 .rp-dbt th, .rp-dbt td { border-right:1px solid var(--ash); border-bottom:1px solid var(--ash); white-space:nowrap; text-align:left; background:var(--paper); }
 .rp-dbt td { padding:5px 9px; }
-.rp-dbt tbody tr:nth-child(even) td { background:var(--zebra); }
+.rp-dbt tbody tr.z td { background:var(--zebra); }
+.rp-dbt tbody tr.sp td { padding:0; border:0; background:transparent; box-shadow:none; position:static; }
 .rp-dbt td.n, .rp-dbt th.n .rp-dbh { text-align:right; justify-content:flex-end; font-variant-numeric:tabular-nums; }
 .rp-dbt td.k { color:var(--mute); }
 .rp-dbt td:first-child { color:var(--ink); font-weight:600; }
@@ -1178,7 +1195,14 @@ body.dark .rp-db { --zebra: #171e26; }
 .rp-dbt th.f .rp-dbh, .rp-dbt th.f .rp-dbi { color:var(--live); }
 .rp-dbfun { width:11px; height:11px; }
 .rp-dbnone { text-align:center !important; color:var(--mute); padding:22px 12px !important; font-family:'IBM Plex Sans', sans-serif; white-space:normal !important; }
-.rp-dbmore { display:flex; align-items:center; gap:12px; padding:10px 12px; border-top:1px solid var(--ash); font-family:var(--mono); font-size:11px; color:var(--mute); }
+.rp-dbmore { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; padding:10px 12px; border-top:1px solid var(--ash); font-family:var(--mono); font-size:11px; color:var(--mute); }
+.rp-dbmore .rp-dbgap { flex:1; }
+.rp-dbpg { padding:5px 11px; font-size:14px; line-height:1; }
+.rp-dbbtn.on { border-color:var(--live); color:var(--live); }
+.rp-dbper { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+.rp-dbnum { width:64px; padding:5px 6px; border:1px solid var(--ash); background:var(--paper); color:var(--ink); font-family:var(--mono); font-size:12px; text-align:right; }
+.rp-dbnum:focus { outline:none; border-color:var(--live); }
+#rpDbPageN { width:52px; }
 /* the column menu */
 #rpDbPopBg { position:fixed; inset:0; z-index:1000; }
 #rpDbPopBg.dim { background:rgba(0,0,0,.35); }
@@ -1604,7 +1628,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B44-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B45-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1638,7 +1662,8 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
   <div class="db-card" style="width:100%;max-width:400px;">
     <div class="db-info">
       <div class="db-label">DO Database</div>
-      <div class="db-line"><span class="db-tick" id="dbIndicatorDrop" style="display:none;"></span><div class="db-val none" id="dbStatusDrop">Loading…</div></div>
+      <div class="db-line"><span class="db-tick" id="dbIndicatorDrop" style="display:none;"></span><div class="db-val none" id="dbStatusDrop">Loading…</div><button class="db-more" id="dbMoreDrop" onclick="rpDbToggleStats()" style="display:none;" aria-expanded="false" aria-controls="dbStatsDrop">Stats ▾</button></div>
+      <div class="db-stats" id="dbStatsDrop" style="display:none;"></div>
     </div>
     <div style="display:flex;gap:6px;flex-shrink:0;">
       <button class="db-upload-btn" onclick="pasteFromClipboard()" style="border-color:var(--dim);color:var(--dim);">Paste</button>
@@ -1687,7 +1712,8 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
   <div class="db-card">
     <div class="db-info">
       <div class="db-label">DO Database</div>
-      <div class="db-line"><span class="db-tick" id="dbIndicator" style="display:none;"></span><div class="db-val none" id="dbStatus">Loading…</div></div>
+      <div class="db-line"><span class="db-tick" id="dbIndicator" style="display:none;"></span><div class="db-val none" id="dbStatus">Loading…</div><button class="db-more" id="dbMore" onclick="rpDbToggleStats()" style="display:none;" aria-expanded="false" aria-controls="dbStats">Stats ▾</button></div>
+      <div class="db-stats" id="dbStats" style="display:none;"></div>
     </div>
     <div style="display:flex;gap:6px;flex-shrink:0;">
       <button class="db-upload-btn" onclick="pasteFromClipboard()" style="border-color:var(--dim);color:var(--dim);">Paste</button>
@@ -2075,19 +2101,51 @@ let _dbBusy = false;     // a paste or upload is being read or saved
 // report screen's. kind: busy | ok | err | none; retry makes the line tappable.
 let _dbKind = '';        // what the status line shows now
 let _dbUnknown = 0;      // DOs in the loaded despatch file that the database doesn't have
-function rpDbSay(text, kind, retry) {
+let _dbNote = '';        // the last paste/save's own figures, first line of the stats
+let _dbStatsOpen = false;
+// The status line holds only the mark (tick or warning) and a word or two;
+// the figures — what the last save added, DOs by year, when the cloud copy
+// was saved — wait behind Stats, on both cards at once.
+//   note: figures of this paste or save, shown first in the stats
+function rpDbSay(text, kind, retry, note) {
   _dbKind = kind || '';
+  _dbNote = note || '';
   ['dbStatus', 'dbStatusDrop'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.textContent = text;
     el.className = 'db-val' + (kind ? ' ' + kind : '');
     el.title = text;
+    el.style.display = text ? '' : 'none';
     el.style.cursor = retry ? 'pointer' : '';
     el.onclick = retry ? () => { el.onclick = null; retry(); } : null;
     el.setAttribute('role', 'status');
   });
   rpDbTick();
+}
+function rpDbToggleStats() { _dbStatsOpen = !_dbStatsOpen; rpDbStatsPaint(); }
+function rpDbStatsPaint() {
+  // figures are there to show once the database is in, and after a failed save (its reason)
+  const has = (mclhoCount > 0 && (_dbKind === 'info' || _dbKind === 'ok')) || (_dbKind === 'err' && !!_dbNote);
+  let lines = '';
+  if (has && _dbStatsOpen) {
+    const L = [];
+    if (_dbNote) L.push(_dbNote);
+    if (_dbKind !== 'err') {
+      if (_dbUnknown > 0 && allRows.length) L.push(`${_dbUnknown.toLocaleString('en-IN')} DO${_dbUnknown === 1 ? '' : 's'} in this file aren’t in the database`);
+      L.push(rpDbYearLine());
+    }
+    lines = L.join('\n');
+  }
+  [['dbMore', 'dbStats'], ['dbMoreDrop', 'dbStatsDrop']].forEach(([b, p]) => {
+    const btn = document.getElementById(b), box = document.getElementById(p);
+    if (!btn || !box) return;
+    btn.style.display = has ? '' : 'none';
+    btn.textContent = _dbStatsOpen ? 'Hide stats ▴' : 'Stats ▾';
+    btn.setAttribute('aria-expanded', String(has && _dbStatsOpen));
+    box.textContent = lines;
+    box.style.display = lines ? '' : 'none';
+  });
 }
 // The mark before the status: a green tick when the database is loaded and
 // every DO in the loaded file is in it; a red warning when some aren't.
@@ -2107,6 +2165,7 @@ function rpDbTick() {
     ind.innerHTML = svg; ind.title = title;
     ind.setAttribute('role', 'img'); ind.setAttribute('aria-label', title);
   });
+  rpDbStatsPaint();
 }
 function rpDbButtons(busy) {
   document.querySelectorAll('.db-upload-btn').forEach(b => { b.disabled = busy; b.style.opacity = busy ? '.45' : ''; });
@@ -2127,7 +2186,7 @@ function updateDbStatus(syncing) {
   if (syncing) { rpDbSay('Loading database…', ''); return; }
   if (mclhoCount === 0) rpDbSay('No database loaded — tap Upload or Paste', 'none');
   else {
-    rpDbSay(rpDbYearLine(), 'info');
+    rpDbSay('', 'info');
   }
 }
 
@@ -2219,7 +2278,7 @@ async function saveDbToGitHub(ch) {
   ch = ch || { recs: {}, added: 0, updated: 0 };
   const what = rpDbWhat(ch);
   _dbBusy = true; rpDbButtons(true);
-  rpDbSay(`Saving to cloud… ${what}`, 'busy');
+  rpDbSay('Saving to cloud…', 'busy');
   const auth = { 'Authorization': `token ${GH.token}`, 'Accept': 'application/vnd.github.v3+json' };
   const url = `${GH.api}/repos/${GH.owner}/${GH.repo}/contents/${GH.path}`;
   let merged = false;
@@ -2229,7 +2288,7 @@ async function saveDbToGitHub(ch) {
       if (!metaRes.ok && metaRes.status !== 404) throw new Error(`the cloud copy couldn't be checked (${metaRes.status})`);
       const sha = metaRes.ok ? (await metaRes.json()).sha : null;
       if (sha && sha !== _ghSha) {
-        rpDbSay(`Saving to cloud… fetching the newer cloud copy first`, 'busy');
+        rpDbSay('Saving to cloud… fetching the newer cloud copy first', 'busy');
         const blobRes = await fetch(`${GH.api}/repos/${GH.owner}/${GH.repo}/git/blobs/${sha}`,
                                     { headers: { ...auth, 'Accept': 'application/vnd.github.v3.raw' } });
         if (!blobRes.ok) throw new Error(`the newer cloud copy couldn't be read (${blobRes.status})`);
@@ -2238,7 +2297,7 @@ async function saveDbToGitHub(ch) {
         rpDbGrades(base);
         mclhoDB = base; mclhoCount = Object.keys(mclhoDB).length;
         _ghSha = sha; merged = true;
-        rpDbSay(`Saving to cloud… ${what}`, 'busy');
+        rpDbSay('Saving to cloud…', 'busy');
       }
       rpDbGrades(mclhoDB);
       const stamp = new Date().toISOString();
@@ -2253,7 +2312,7 @@ async function saveDbToGitHub(ch) {
       if (res.ok) {
         _ghSha = result.content && result.content.sha;
         _dbUpdated = stamp;
-        rpDbSay(`Saved · ${what}${merged ? ' · added to a newer cloud copy' : ''}\n${rpDbYearLine()}`, 'ok');
+        rpDbSay('Saved', 'ok', null, what.charAt(0).toUpperCase() + what.slice(1) + (merged ? ' · added to a newer cloud copy' : ''));
         return true;
       }
       // saved by someone else in the meantime: check again and go round
@@ -2261,8 +2320,8 @@ async function saveDbToGitHub(ch) {
       throw new Error(`${res.status}${result.message ? ': ' + result.message : ''}`);
     }
   } catch (e) {
-    rpDbSay(`⚠ Not saved to cloud — ${e.message || e}. The DOs are kept for this session; tap here to try again.`, 'err',
-            () => saveDbToGitHub(ch));
+    rpDbSay('⚠ Not saved — tap to try again', 'err', () => saveDbToGitHub(ch),
+            `The cloud said: ${e.message || e}. The DOs are kept for this session.`);
     return false;
   } finally {
     _dbBusy = false; rpDbButtons(false);
@@ -2455,7 +2514,7 @@ async function rpParseMclho(raw) {
   if (!added && !updated && !regraded) {
     // nothing new: no need to write the cloud copy again
     _dbBusy = false; rpDbButtons(false);
-    rpDbSay(`Up to date · nothing new in the ${n.toLocaleString('en-IN')} DOs read\n${rpDbYearLine()}`, 'ok');
+    rpDbSay('Up to date', 'ok', null, `Nothing new in the ${n.toLocaleString('en-IN')} DOs read`);
     return;
   }
   if (regraded) _dbVer++;
@@ -3756,7 +3815,7 @@ async function rpGsSend() {
 // key / value rows and tables with drop-downs where there's a fixed choice.
 // Export takes what's on screen; import fills the settings screen from the
 // file, and nothing reaches the shared settings until Save.
-const RP_BUILD = 'rp-B44-test';
+const RP_BUILD = 'rp-B45-test';
 const RP_SF_FORMAT = 'RoadPowerSettings 1';
 const RP_SF_YN = ['Yes', 'No'];
 
@@ -4969,6 +5028,9 @@ async function saveRpSettings() {
     r3Daywise: _rpDraft.daywise ? _rpDraft.daywise[3] !== false : pr0.r3Daywise !== false,
     r4Daywise: _rpDraft.daywise ? _rpDraft.daywise[4] !== false : pr0.r4Daywise !== false,
     r2Months:  _rpDraft.r2Months || pr0.r2Months || [],
+    // owned by the DO Database report's page controls
+    dbPageSize: pr0.dbPageSize,
+    dbPageAll:  pr0.dbPageAll,
     show:      _rpDraft.show,
     reports:       _rpDraft.reports.map(r => ({ id: r.id, show: r.show })),
     exportReports: _rpDraft.exportReports.map(r => ({ id: r.id, show: r.show })),
@@ -5429,7 +5491,7 @@ async function rpPersistPrefs() {
         r3Daywise: pr.r3Daywise !== false,
         r4Daywise: pr.r4Daywise !== false,
         r2Months:  pr.r2Months || [],
-      }),
+      }, pr.dbPageSize != null ? { dbPageSize: pr.dbPageSize } : {}, pr.dbPageAll != null ? { dbPageAll: !!pr.dbPageAll } : {}),
     });
     const put = await fetch(
       `${SETTINGS_GH.api}/repos/${SETTINGS_GH.owner}/${SETTINGS_GH.repo}/contents/${SETTINGS_GH.path}`,
@@ -5440,7 +5502,7 @@ async function rpPersistPrefs() {
     const resp = await put.json();
     _settingsSha = resp.content.sha;
   } catch(e) {
-    rpSetStatus('Day-by-day view changed here, but could not be saved: ' + e.message, true);
+    rpSetStatus('A view setting changed here, but could not be saved: ' + e.message, true);
   }
 }
 
@@ -5736,9 +5798,13 @@ function rpTableHTML(t) {
 
 function rpCard(t) {
   const card = document.createElement('div');
-  card.className = 'rp-card';
+  card.className = 'rp-card rp-dlcard';
   card._rpT = t;
+  const rid = Object.keys(RP_REPORTS).find(id => RP_REPORTS[id].sheet === t.sheet);
+  const rname = rpEsc(rid ? RP_REPORTS[rid].name : t.sheet);
   card.innerHTML =
+    `<button class="rp-dl" onclick="rpReportXlsx('${rpEsc(t.sheet)}', this)" title="Download the ${rname} report as Excel" aria-label="Download the ${rname} report as Excel">` +
+      `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg></button>` +
     `<div class="rp-cap"><h3>${rpEsc(t.title)}</h3><div class="rp-cap-meta">${t.metaHtml || rpEsc(t.meta || '')}</div></div>
      <div class="rp-scrollx"><table class="rp-t">${rpTableHTML(t)}</table></div>
      ${t.foot ? `<div class="rp-foot">${rpEsc(t.foot)}</div>` : ''}`;
@@ -6306,7 +6372,18 @@ const RP_DB_COLS = [
   { k: 'doEndDate',    t: 'DO End Date',   type: 'date' },
 ];
 const RP_DB_PAGE = 200;
-const _rpDb = { ver: -1, rows: [], cols: [], q: '', filt: {}, sort: { c: 1, dir: -1 }, shown: RP_DB_PAGE, fv: 0, cache: null, pop: null };
+const _rpDb = { ver: -1, rows: [], cols: [], q: '', filt: {}, sort: { c: 1, dir: -1 }, page: 0, fv: 0, cache: null, pop: null, tok: 0 };
+// rows per page and View all, kept in the settings (powerReport.dbPageSize / dbPageAll)
+function rpDbSize() { const n = +((appSettings.powerReport || {}).dbPageSize); return n >= 10 && n <= 100000 ? Math.round(n) : RP_DB_PAGE; }
+function rpDbAll() { return !!(appSettings.powerReport || {}).dbPageAll; }
+let _rpDbPrefT = null;
+function rpDbSavePref(size, all) {
+  const pr = appSettings.powerReport = appSettings.powerReport || {};
+  if (size != null) pr.dbPageSize = size;
+  if (all != null) pr.dbPageAll = all;
+  clearTimeout(_rpDbPrefT);
+  _rpDbPrefT = setTimeout(rpPersistPrefs, 1200);
+}
 
 // '08-Jun-2026', '08/06/2026' or '2026-06-08' → 20260608
 function rpDbDateKey(v) {
@@ -6400,14 +6477,17 @@ function renderRpDb() {
     const q = document.getElementById('rpDbQ');
     q.value = _rpDb.q;
     let t = null;
-    q.oninput = () => { clearTimeout(t); t = setTimeout(() => { _rpDb.q = q.value.trim(); _rpDb.shown = RP_DB_PAGE; rpDbDraw(); }, 160); };
+    q.oninput = () => { clearTimeout(t); t = setTimeout(() => { _rpDb.q = q.value.trim(); _rpDb.page = 0; rpDbDraw(); }, 160); };
   }
   rpDbDraw();
 }
 
 function rpDbDraw() {
   const list = rpDbFiltered(), cols = _rpDb.cols, total = _rpDb.rows.length;
-  const n = Math.min(list.length, _rpDb.shown);
+  const all = rpDbAll(), size = rpDbSize();
+  const pages = all ? 1 : Math.max(1, Math.ceil(list.length / size));
+  _rpDb.page = Math.min(Math.max(0, _rpDb.page), pages - 1);
+  const from = all ? 0 : _rpDb.page * size, to = all ? list.length : Math.min(list.length, from + size);
   const fmtN = x => x.toLocaleString('en-IN');
   const qty = list.reduce((a, r) => a + (r.qty || 0), 0);
   const any = _rpDb.q || Object.keys(_rpDb.filt).length;
@@ -6416,7 +6496,7 @@ function rpDbDraw() {
   document.getElementById('rpDbSum').innerHTML =
     (any ? `<b>${fmtN(list.length)}</b> of ${fmtN(total)} DOs match` : `<b>${fmtN(total)}</b> DOs`) +
     (cols.indexOf(2) >= 0 ? ` · DO Qty <b>${qty.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</b>` : '') +
-    (list.length > n ? ` · showing the first ${fmtN(n)}` : '');
+    (list.length > to - from ? ` · showing ${fmtN(from + 1)}–${fmtN(to)}` : '');
   document.getElementById('rpDbClear').style.display = any ? '' : 'none';
   const xl = document.getElementById('rpDbXls');
   xl.textContent = any ? `Excel · ${fmtN(list.length)} DOs` : 'Excel · all';
@@ -6440,22 +6520,117 @@ function rpDbDraw() {
     return `<th class="${col.type === 'num' ? 'n' : ''}${f ? ' f' : ''}"><button class="rp-dbh" data-c="${c}" onclick="rpDbOpen(${c}, this)" aria-haspopup="dialog" ` +
       `title="Sort and filter ${rpEsc(col.t)}">${rpEsc(col.t)}<span class="rp-dbi">${so}${f ? RP_DB_FUNNEL : so ? '' : '<span class="rp-dbcar">▾</span>'}</span></button></th>`;
   }).join('') + '</tr></thead><tbody>';
-  for (let i = 0; i < n; i++) {
-    const r = list[i];
-    h += '<tr>' + cols.map(c => {
-      const col = RP_DB_COLS[c], v = r.v[c];
-      return `<td class="${col.type === 'num' ? 'n' : col.type === 'code' ? 'k' : ''}${col.wide ? ' w' : ''}"${col.wide && v.length > 28 ? ` title="${rpEsc(v)}"` : ''}>${rpEsc(v)}</td>`;
-    }).join('') + '</tr>';
+  const table = document.getElementById('rpDbTable');
+  const sc = document.getElementById('rpDbScroll');
+  // A long page (View all, or many rows per page) is drawn only where the
+  // table is scrolled to: the rows in view plus a margin, with spacers above
+  // and below standing in for the rest. Columns get fixed widths worked out
+  // from the longest value in each, so nothing shifts as rows come and go.
+  const virt = to - from > RP_DB_VIRT;
+  _rpDb.view = { list, from, to, cols, virt, s: -1, e: -1, rowH: (_rpDb.view && _rpDb.view.rowH) || 0 };
+  table.style.tableLayout = ''; table.style.width = '';
+  if (!list.length) {
+    table.innerHTML = h + `<tr><td class="rp-dbnone" colspan="${cols.length}">No DO matches the search${Object.keys(_rpDb.filt).length ? ' and filters' : ''}.</td></tr></tbody>`;
+  } else if (!virt) {
+    let b = '';
+    for (let i = from; i < to; i++) b += rpDbRowHtml(list[i], cols, i);
+    table.innerHTML = h + b + '</tbody>';
+  } else {
+    const W = rpDbColWidths(list, from, to, cols);
+    table.innerHTML = '<colgroup>' + W.map(w => `<col style="width:${w}px">`).join('') + '</colgroup>' + h + '</tbody>';
+    table.style.tableLayout = 'fixed';
+    table.style.width = W.reduce((a, b) => a + b, 0) + 'px';
+    rpDbWindow(true);
   }
-  if (!list.length) h += `<tr><td class="rp-dbnone" colspan="${cols.length}">No DO matches the search${Object.keys(_rpDb.filt).length ? ' and filters' : ''}.</td></tr>`;
-  document.getElementById('rpDbTable').innerHTML = h + '</tbody>';
-  const more = document.getElementById('rpDbMore');
-  const left = list.length - n;
-  more.innerHTML = left > 0
-    ? `<button class="rp-dbbtn" onclick="rpDbMore()">Show ${fmtN(Math.min(left, RP_DB_PAGE))} more</button><span>${fmtN(left)} more to show</span>`
-    : '';
-  more.style.display = left > 0 ? '' : 'none';
+  sc.onscroll = _rpDb.view.virt ? () => { if (!_rpDb.raf) _rpDb.raf = requestAnimationFrame(() => { _rpDb.raf = 0; rpDbWindow(false); }); } : null;
+  rpDbPager(list.length, pages, all, size);
 }
+const RP_DB_VIRT = 400;        // past this many rows on one page, draw only what is in view
+function rpDbRowHtml(r, cols, i) {
+  return `<tr${i % 2 ? ' class="z"' : ''}>` + cols.map(c => {
+    const col = RP_DB_COLS[c], v = r.v[c];
+    return `<td class="${col.type === 'num' ? 'n' : col.type === 'code' ? 'k' : ''}${col.wide ? ' w' : ''}"${col.wide && v.length > 28 ? ` title="${rpEsc(v)}"` : ''}>${rpEsc(v)}</td>`;
+  }).join('') + '</tr>';
+}
+// the rows in view (and a margin) between two spacers
+function rpDbWindow(force) {
+  const V = _rpDb.view, sc = document.getElementById('rpDbScroll'), table = document.getElementById('rpDbTable');
+  if (!V || !V.virt || !sc || !table.tBodies[0]) return;
+  const n = V.to - V.from;
+  if (!V.rowH) {                                 // one row drawn, to learn the row height
+    table.tBodies[0].innerHTML = rpDbRowHtml(V.list[V.from], V.cols, V.from);
+    V.rowH = table.tBodies[0].rows[0].getBoundingClientRect().height || 27;
+  }
+  const headH = table.tHead ? table.tHead.getBoundingClientRect().height : 0;
+  const top = Math.max(0, sc.scrollTop - headH), seen = Math.ceil((sc.clientHeight || 600) / V.rowH);
+  const MARGIN = 40;
+  let s = Math.max(0, Math.floor(top / V.rowH) - MARGIN);
+  let e = Math.min(n, Math.floor(top / V.rowH) + seen + MARGIN);
+  if (!force && s >= V.s && e <= V.e) return;    // still inside what is drawn
+  s = Math.max(0, s - MARGIN); e = Math.min(n, e + MARGIN);
+  let b = s ? `<tr class="sp"><td colspan="${V.cols.length}" style="height:${s * V.rowH}px"></td></tr>` : '';
+  for (let i = s; i < e; i++) b += rpDbRowHtml(V.list[V.from + i], V.cols, V.from + i);
+  if (e < n) b += `<tr class="sp"><td colspan="${V.cols.length}" style="height:${(n - e) * V.rowH}px"></td></tr>`;
+  table.tBodies[0].innerHTML = b;
+  V.s = s; V.e = e;
+}
+// fixed column widths for a long page, from the widest heading or value
+function rpDbColWidths(list, from, to, cols) {
+  const cv = rpDbColWidths.cv || (rpDbColWidths.cv = document.createElement('canvas').getContext('2d'));
+  return cols.map(c => {
+    const col = RP_DB_COLS[c];
+    // the few longest values of the column, measured in the font they are shown in
+    const top = [];
+    for (let i = from; i < to; i++) {
+      const v = list[i].v[c];
+      if (top.length < 6 || v.length > top[top.length - 1].length) { top.push(v); top.sort((a, b) => b.length - a.length); if (top.length > 6) top.pop(); }
+    }
+    cv.font = col.wide ? '12px "IBM Plex Sans", sans-serif' : (c === 0 ? '600 ' : '') + '12px "IBM Plex Mono", monospace';
+    let w = Math.max(0, ...top.map(v => cv.measureText(v).width)) + 20;
+    if (col.wide) w = Math.min(w, 300);
+    cv.font = '600 10px "IBM Plex Sans Condensed", sans-serif';
+    const head = cv.measureText(col.t.toUpperCase()).width + col.t.length * 1 + 40;
+    return Math.ceil(Math.max(w, head));
+  });
+}
+// under the table: ‹ page n of N ›, the rows per page (typed in), View all
+function rpDbPager(count, pages, all, size) {
+  const bar = document.getElementById('rpDbMore');
+  if (!count) { bar.style.display = 'none'; return; }
+  bar.style.display = '';
+  const fmtN = x => x.toLocaleString('en-IN');
+  bar.innerHTML =
+    (all ? `<span>All ${fmtN(count)} DOs</span>`
+         : `<button class="rp-dbbtn rp-dbpg" onclick="rpDbGo(-1)" aria-label="Previous page"${_rpDb.page ? '' : ' disabled'}>‹</button>` +
+           `<span>Page <input class="rp-dbnum" id="rpDbPageN" type="number" inputmode="numeric" min="1" max="${pages}" value="${_rpDb.page + 1}" aria-label="Page"> of ${fmtN(pages)}</span>` +
+           `<button class="rp-dbbtn rp-dbpg" onclick="rpDbGo(1)" aria-label="Next page"${_rpDb.page < pages - 1 ? '' : ' disabled'}>›</button>`) +
+    `<span class="rp-dbgap"></span>` +
+    (all ? '' : `<label class="rp-dbper">Rows per page <input class="rp-dbnum" id="rpDbSizeN" type="number" inputmode="numeric" min="10" max="100000" step="10" value="${size}"></label>`) +
+    `<button class="rp-dbbtn${all ? ' on' : ''}" onclick="rpDbViewAll(${!all})" aria-pressed="${all}">${all ? 'Show in pages' : 'View all'}</button>`;
+  const pn = document.getElementById('rpDbPageN');
+  if (pn) {
+    const go = () => { const v = Math.round(+pn.value); if (v >= 1 && v <= pages && v - 1 !== _rpDb.page) { _rpDb.page = v - 1; rpDbDraw(); rpDbTop(); } else pn.value = _rpDb.page + 1; };
+    pn.onchange = go;
+    pn.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); go(); } };
+  }
+  const sz = document.getElementById('rpDbSizeN');
+  if (sz) {
+    const set = () => {
+      const v = Math.round(+sz.value);
+      if (!(v >= 10 && v <= 100000)) { sz.value = rpDbSize(); return; }
+      if (v === rpDbSize()) return;
+      const first = _rpDb.page * rpDbSize();          // keep the first row on screen in view
+      rpDbSavePref(v, null);
+      _rpDb.page = Math.floor(first / v);
+      rpDbDraw();
+    };
+    sz.onchange = set;
+    sz.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); set(); } };
+  }
+}
+function rpDbGo(d) { _rpDb.page += d; rpDbDraw(); rpDbTop(); }
+function rpDbTop() { const sc = document.getElementById('rpDbScroll'); if (sc) sc.scrollTop = 0; }
+function rpDbViewAll(on) { rpDbSavePref(null, on); _rpDb.page = 0; rpDbDraw(); rpDbTop(); }
 // a date filter told by its months when there are few: 'Oct-2026, Nov-2026'
 function rpDbChipDates(c, only) {
   if (RP_DB_COLS[c].type !== 'date') return '';
@@ -6464,9 +6639,8 @@ function rpDbChipDates(c, only) {
   return months.size <= 3 ? [...months].join(', ') : `${only.size.toLocaleString('en-IN')} dates`;
 }
 const RP_DB_FUNNEL = '<svg class="rp-dbfun" viewBox="0 0 24 24" aria-label="filtered"><path d="M3 5h18l-7 8v5l-4 2v-7z" fill="currentColor"/></svg>';
-function rpDbMore() { _rpDb.shown += RP_DB_PAGE; rpDbDraw(); }
-function rpDbClearSearch() { _rpDb.q = ''; const q = document.getElementById('rpDbQ'); if (q) q.value = ''; _rpDb.shown = RP_DB_PAGE; rpDbDraw(); }
-function rpDbClearCol(c) { delete _rpDb.filt[c]; _rpDb.fv++; _rpDb.shown = RP_DB_PAGE; rpDbDraw(); }
+function rpDbClearSearch() { _rpDb.q = ''; const q = document.getElementById('rpDbQ'); if (q) q.value = ''; _rpDb.page = 0; rpDbDraw(); }
+function rpDbClearCol(c) { delete _rpDb.filt[c]; _rpDb.fv++; _rpDb.page = 0; rpDbDraw(); }
 function rpDbClearAll() { _rpDb.filt = {}; _rpDb.fv++; rpDbClearSearch(); }
 
 // ── the column menu: sort, and the values to tick ──
@@ -6628,12 +6802,12 @@ function rpDbApply() {
   const q = (p.q || '').toLowerCase();
   if (!q && ticked.length === p.vals.length) delete _rpDb.filt[p.c];               // everything ticked: no filter
   else _rpDb.filt[p.c] = { q, only: ticked.length === match.length ? null : new Set(ticked) };
-  _rpDb.fv++; _rpDb.shown = RP_DB_PAGE;
+  _rpDb.fv++; _rpDb.page = 0;
   rpDbClose(); rpDbDraw();
 }
 function rpDbSort(c, dir) {
   _rpDb.sort = { c, dir };
-  _rpDb.shown = RP_DB_PAGE;
+  _rpDb.page = 0;
   rpDbClose(); rpDbDraw();
 }
 function rpDbKey(e) { if (e.key === 'Escape') rpDbClose(); }
@@ -8369,6 +8543,26 @@ function rpStylesXml(xt) {
   '</styleSheet>';
 }
 
+// one report's own workbook, from the icon in its corner
+async function rpReportXlsx(sheet, btn) {
+  if (_rpBusy) return;
+  const id = Object.keys(RP_REPORTS).find(k => RP_REPORTS[k].sheet === sheet);
+  const tables = _rpTables.filter(t => t.sheet === sheet);
+  if (!id || !tables.length) return;
+  const name = RP_REPORTS[id].name;
+  if (btn) btn.disabled = true;
+  try {
+    const blob = rpBuildXlsx([{ name, tables }]);
+    const fname = `${name.replace(/[^A-Za-z0-9]+/g, '_')}_${rpStamp()}.xlsx`;
+    await rpShareOrSave(blob, fname, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', name + ' report',
+      () => rpSetStatus(`${fname} is in Downloads.`, true));
+  } catch (e) {
+    alert('Could not build the workbook: ' + e.message);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
 async function rpExportXlsx() {
   if (_rpBusy) return;
   if (!_rpTables.length) { alert('Nothing to export yet — the reports are empty.'); return; }
@@ -8378,6 +8572,23 @@ async function rpExportXlsx() {
       .map(id => ({ name: RP_REPORTS[id].name, tables: _rpTables.filter(t => t.sheet === RP_REPORTS[id].sheet) }))
       .filter(sh => sh.tables.length);
     if (!sheets.length) throw new Error('nothing to export');
+    const blob = rpBuildXlsx(sheets);
+    const fname = `Road_Power_Report_${rpStamp()}.xlsx`;
+    await rpShareOrSave(blob, fname,
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Road Power Report',
+      () => rpSetStatus(
+        `Android won't put a spreadsheet through the share sheet, so ${fname} is in Downloads — attach it from there, or use HTML to share straight to WhatsApp.`, true));
+  } catch(e) {
+    rpSetStatus('Could not build the workbook: ' + e.message, true);
+    alert('Could not build the workbook: ' + e.message);
+  } finally {
+    rpLockBtns(false);
+  }
+}
+
+// sheets = [{ name, tables }] → the .xlsx as a Blob
+function rpBuildXlsx(sheets) {
+  {
     const enc = new TextEncoder();
     const WS = 'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml';
     const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
@@ -8408,17 +8619,7 @@ async function rpExportXlsx() {
     const xt = rpXlTints();
     sheets.forEach((sh, n) => { files[`xl/worksheets/sheet${n + 1}.xml`] = enc.encode(rpSheetXml(sh.tables, xt)); });
     files['xl/styles.xml'] = enc.encode(rpStylesXml(xt));
-    const blob = _buildZip(files);
-    const fname = `Road_Power_Report_${rpStamp()}.xlsx`;
-    await rpShareOrSave(blob, fname,
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Road Power Report',
-      () => rpSetStatus(
-        `Android won't put a spreadsheet through the share sheet, so ${fname} is in Downloads — attach it from there, or use HTML to share straight to WhatsApp.`, true));
-  } catch(e) {
-    rpSetStatus('Could not build the workbook: ' + e.message, true);
-    alert('Could not build the workbook: ' + e.message);
-  } finally {
-    rpLockBtns(false);
+    return _buildZip(files);
   }
 }
 
