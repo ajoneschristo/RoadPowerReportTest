@@ -1310,9 +1310,15 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 .rp-grprow.sw { grid-template-columns:30px 30px 30px minmax(0,1fr) 26px 30px; }
 .rp-swatch { width:26px; height:26px; border-radius:50%; border:2px solid var(--border); cursor:pointer; padding:0; justify-self:center; }
 .rp-swatch.open { border-color:var(--text); }
-.rp-swpick { display:flex; flex-wrap:wrap; gap:8px; padding:4px 10px 10px 82px; }
-.rp-swpick button { width:26px; height:26px; border-radius:50%; border:2px solid transparent; cursor:pointer; padding:0; }
-.rp-swpick button.on { border-color:var(--text); }
+.rp-swpick { display:flex; flex-wrap:wrap; gap:8px; padding:2px 12px 12px; }
+.rp-swname { flex:0 0 100%; font-size:11px; color:var(--dim); margin:0 0 2px; }
+.rp-swname b { color:var(--text); font-weight:600; }
+.rp-swpick button { width:28px; height:28px; border-radius:50%; border:2px solid transparent; background-clip:padding-box; cursor:pointer; padding:0; }
+.rp-swpick button.on { border-color:var(--text); background-clip:border-box; box-shadow:inset 0 0 0 2px var(--surface); }
+/* No colour: an empty dot struck through */
+.rp-sw-none { background:linear-gradient(135deg, transparent calc(50% - 1.2px), #d23f3f calc(50% - 1.2px), #d23f3f calc(50% + 1.2px), transparent calc(50% + 1.2px)), transparent;
+              border:2px solid var(--border) !important; }
+.rp-swpick button.rp-sw-none.on { border-color:var(--text) !important; }
 .rp-swpick button:focus-visible, .rp-swatch:focus-visible { outline:2px solid #d97a06; outline-offset:2px; }
 .rp-grprow:first-child { border-top:none; }
 .rp-grprow .stt-cell-input { width:100%; box-sizing:border-box; }
@@ -1511,7 +1517,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B40-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B41-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -3552,7 +3558,7 @@ async function rpGsSend() {
 // key / value rows and tables with drop-downs where there's a fixed choice.
 // Export takes what's on screen; import fills the settings screen from the
 // file, and nothing reaches the shared settings until Save.
-const RP_BUILD = 'rp-B40-test';
+const RP_BUILD = 'rp-B41-test';
 const RP_SF_FORMAT = 'RoadPowerSettings 1';
 const RP_SF_YN = ['Yes', 'No'];
 
@@ -3622,7 +3628,7 @@ function rpSfSheets() {
   ] };
 
   const gCols = rpGroupColors(d.groups);
-  const tintNames = RP_TINTS.map(t => t[1]);
+  const tintNames = RP_TINT_SHOW.map(rpTintName).concat(RP_NO_TINT);
   const groupsSh = { name: 'Groups', cols: [24, 34, 14, 60], freeze: false, blocks: [
     { t: 'title', v: 'Customer Groups' },
     { t: 'note', v: 'Broad groups of Power customers, separate from merged codes. The Power Sector report lists each group’s customers together, in this order, with a subtotal unless that is switched off.' },
@@ -3633,7 +3639,7 @@ function rpSfSheets() {
     { t: 'blank' },
     { t: 'note', v: 'Id ties a row to its group, so a renamed group keeps its customers — leave it as it is, and leave it empty for a new group. Colour: ' + tintNames.join(', ') + '.' },
     { t: 'table', extra: 50, head: [{ v: '#', num: true }, { v: 'Group' }, { v: 'Colour', list: tintNames }, { v: 'Id', ro: true }],
-      rows: d.groups.map((g, i) => [i + 1, g.name, (RP_TINTS.find(t => t[0] === gCols[g.id]) || [])[1] || '', g.id]) },
+      rows: d.groups.map((g, i) => [i + 1, g.name, rpTintName(gCols[g.id]), g.id]) },
   ] };
 
   const colRows = [];
@@ -4056,9 +4062,9 @@ function rpSfApply(book, fileName) {
         const old = byId || d.groups.find(g => g.name.trim().toLowerCase() === n.toLowerCase());
         // a colour by name; empty keeps the group's colour, or picks a free one
         const cn = rpSfTxt(c['colour']);
-        const tint = cn ? RP_TINTS.find(x => x[1].toLowerCase() === cn.toLowerCase() || x[0] === cn.toLowerCase()) : null;
-        if (cn && !tint) w('Groups', r, `“${cn}” isn’t one of the colours (${RP_TINTS.map(x => x[1]).join(', ')}) — ${n} keeps its colour.`);
-        list.push({ id: old ? old.id : null, name: n, color: tint ? tint[0] : (old && old.color) || '',
+        const tint = cn ? rpTintByName(cn) : null;
+        if (cn && !tint) w('Groups', r, `“${cn}” isn’t one of the colours (${RP_TINT_SHOW.map(rpTintName).join(', ')}, or ${RP_NO_TINT}) — ${n} keeps its colour.`);
+        list.push({ id: old ? old.id : null, name: n, color: tint || (old && old.color) || '',
                     o: Number.isFinite(o) && o !== null ? o : 999 + k, k });
       });
       list.sort((a, b) => a.o - b.o || a.k - b.k);
@@ -4359,14 +4365,30 @@ function rpGroupsOf(pr) {
 }
 
 // Group colours: powerReport.groupColors switches them on, group.color names
-// a hue below. Rows get solid shades mixed from the hue and the report's
-// paper — light for customers, deeper for a subtotal — in a light and a dark
-// version, so the screen follows the theme while every export stays light.
+// a hue below — or 'none', for a group left plain. Rows get solid shades mixed
+// from the hue and the report's paper — light for customers, deeper for a
+// subtotal — in a light and a dark version, so the screen follows the theme
+// while every export stays light.
+// A new group takes the first colour still free in this order, so the first
+// eight stay as they were; the picker shows them by hue (RP_TINT_SHOW).
 const RP_TINTS = [
   ['blue', 'Blue', '#3b7dd8'], ['green', 'Green', '#2f9e62'], ['amber', 'Amber', '#e0a00e'], ['violet', 'Violet', '#8457d1'],
   ['teal', 'Teal', '#159fae'], ['rose', 'Rose', '#d9507a'], ['olive', 'Olive', '#8fa11c'], ['orange', 'Orange', '#e07a2e'],
+  ['sky', 'Sky', '#2b9ad8'], ['red', 'Red', '#d23f3f'], ['mint', 'Mint', '#34b98a'], ['indigo', 'Indigo', '#4c5fd6'],
+  ['pink', 'Pink', '#d4479b'], ['lime', 'Lime', '#79b51b'], ['brown', 'Brown', '#9b6a3c'], ['slate', 'Slate', '#67788c'],
 ];
+const RP_TINT_SHOW = ['red', 'rose', 'pink', 'orange', 'amber', 'brown', 'olive', 'lime',
+                      'green', 'mint', 'teal', 'sky', 'blue', 'indigo', 'violet', 'slate'];
+const RP_NO_TINT = 'No colour';
 function rpTintHue(key) { const t = RP_TINTS.find(x => x[0] === key); return t ? t[2] : null; }
+function rpTintName(key) { return key === 'none' ? RP_NO_TINT : (RP_TINTS.find(t => t[0] === key) || [])[1] || ''; }
+// a colour named in a settings file: 'none' for No colour, null if unknown
+function rpTintByName(v) {
+  const k = String(v || '').trim().toLowerCase();
+  if (['no colour', 'no color', 'none', 'plain'].indexOf(k) >= 0) return 'none';
+  const t = RP_TINTS.find(x => x[1].toLowerCase() === k || x[0] === k);
+  return t ? t[0] : null;
+}
 function rpTintMix(hex, paper, a) {
   const c = [1, 3, 5].map(i => Math.round(a * parseInt(hex.slice(i, i + 2), 16) + (1 - a) * parseInt(paper.slice(i, i + 2), 16)));
   return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
@@ -4387,7 +4409,10 @@ function rpFreeColor(list) {
 // without a colour the first still free — the same answer the settings give
 function rpGroupColors(list) {
   const out = {}, done = [];
-  list.forEach(g => { if (rpTintHue(g.color)) { out[g.id] = g.color; done.push({ color: g.color }); } });
+  list.forEach(g => {
+    if (rpTintHue(g.color)) { out[g.id] = g.color; done.push({ color: g.color }); }
+    else if (g.color === 'none') out[g.id] = 'none';      // left plain on purpose
+  });
   list.forEach(g => { if (!out[g.id]) { out[g.id] = rpFreeColor(done); done.push({ color: out[g.id] }); } });
   return out;
 }
@@ -4416,22 +4441,25 @@ function renderRpGroups() {
   const power = rpGrpPower();
   const count = id => power.filter(p => p.s.grp === id).length;
   const col = !!_rpDraft.groupColors;
-  const tintName = k => (RP_TINTS.find(t => t[0] === k) || [])[1] || '';
+  const tintName = rpTintName;
   const cols = rpGroupColors(gs);
+  const sw = (k, extra) => k === 'none' ? `class="rp-sw-none${extra}"` : `class="${extra.trim()}" style="background:${rpTintHue(k)}"`;
   list.innerHTML = gs.length ? gs.map((g, i) => {
     const c = cols[g.id], open = col && _rpGrpPick === g.id;
     return `<div class="rp-grprow${col ? ' sw' : ''}">` +
       `<button class="rp-rord" onclick="rpGrpMove(${i},-1)" title="Move up"${i === 0 ? ' disabled' : ''}>▲</button>` +
       `<button class="rp-rord" onclick="rpGrpMove(${i},1)" title="Move down"${i === gs.length - 1 ? ' disabled' : ''}>▼</button>` +
-      (col ? `<button class="rp-swatch${open ? ' open' : ''}" data-g="${g.id}" style="background:${rpTintHue(c)}" onclick="rpGrpPick('${g.id}')" ` +
+      (col ? `<button ${sw(c, ' rp-swatch' + (open ? ' open' : ''))} data-g="${g.id}" onclick="rpGrpPick('${g.id}')" ` +
                `title="Colour: ${tintName(c)} — tap to change" aria-label="Colour for ${rpEsc(g.name)}: ${tintName(c)}" aria-expanded="${open}"></button>` : '') +
       `<input class="stt-cell-input" data-g="${g.id}" value="${rpEsc(g.name)}" maxlength="60" aria-label="Group name" ` +
         `oninput="rpGrpName('${g.id}', this.value)" onchange="renderRpGroups()">` +
       `<span class="rp-grpn">${count(g.id)}</span>` +
       `<button class="stt-del-btn" onclick="rpGrpDel(${i})" title="Delete group">✕</button></div>` +
-      (open ? `<div class="rp-swpick" role="group" aria-label="Colours">` + RP_TINTS.map(t =>
-        `<button class="${t[0] === c ? 'on' : ''}" style="background:${t[2]}" title="${t[1]}" aria-label="${t[1]}" ` +
-        `onclick="rpGrpColor('${g.id}','${t[0]}')"></button>`).join('') + `</div>` : '');
+      (open ? `<div class="rp-swpick" role="group" aria-label="Colours for ${rpEsc(g.name)}">` +
+        `<div class="rp-swname">${rpEsc(g.name)} · <b>${tintName(c)}</b></div>` +
+        ['none'].concat(RP_TINT_SHOW).map(k =>
+          `<button ${sw(k, k === c ? ' on' : '')} title="${tintName(k)}" aria-label="${tintName(k)}" aria-pressed="${k === c}" ` +
+          `onclick="rpGrpColor('${g.id}','${k}')"></button>`).join('') + `</div>` : '');
   }).join('')
     : '<div class="rp-count" style="padding:10px 12px;">No groups yet.</div>';
   document.getElementById('rpGrpTable').checked = !!_rpDraft.groupTable;
