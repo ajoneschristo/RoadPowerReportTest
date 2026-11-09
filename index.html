@@ -1511,7 +1511,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B39-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B40-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1803,6 +1803,8 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
           </div>
         </div>
         <div class="stt-hint" style="margin-top:6px;">Sizes are for the reports you'd export right now.</div>
+        <label class="rp-lkcheck"><input type="checkbox" id="rpPdfOnePage" onchange="_rpDraft.pdfOnePage = this.checked">Put the Power Sector report and its group totals table on one page</label>
+        <div class="stt-hint" style="margin-top:4px;">For every PDF type. Only matters when the group totals table is on (Customers tab → Customer Groups); otherwise each table has a page of its own.</div>
       </div>
       </div>
 
@@ -2505,7 +2507,7 @@ function rpOpenSettingsNow() {
   }));
   _rpDraft = { historyPath: pr.historyPath || 'roadpower-history-test.json', sel: {},
                show: shDef, reports: rpReportList(pr.reports), exportReports: rpExportList(pr),
-               pdfLevel: rpPdfLevel(pr), pdfMode: rpPdfMode(pr), lock: rpLockDraft(pr), gs: rpGsCfg(pr.gsheet),
+               pdfLevel: rpPdfLevel(pr), pdfMode: rpPdfMode(pr), pdfOnePage: rpPdfPowerOnePage(pr), lock: rpLockDraft(pr), gs: rpGsCfg(pr.gsheet),
                groups: rpDraftGroups(pr), groupTable: !!pr.groupTable,
                groupSub: pr.groupSubtotals !== false, groupColors: !!pr.groupColors };
   _rpGrpPick = null;
@@ -3550,7 +3552,7 @@ async function rpGsSend() {
 // key / value rows and tables with drop-downs where there's a fixed choice.
 // Export takes what's on screen; import fills the settings screen from the
 // file, and nothing reaches the shared settings until Save.
-const RP_BUILD = 'rp-B39-test';
+const RP_BUILD = 'rp-B40-test';
 const RP_SF_FORMAT = 'RoadPowerSettings 1';
 const RP_SF_YN = ['Yes', 'No'];
 
@@ -3650,6 +3652,7 @@ function rpSfSheets() {
     { t: 'kv', rows: [
       ['PDF type', d.pdfMode === 'image' ? 'Image' : 'Rendered', { list: ['Image', 'Rendered'], note: 'Image: a picture of each report. Rendered: drawn as text and lines — far smaller.' }],
       ['Rendered detail', d.pdfLevel.charAt(0).toUpperCase() + d.pdfLevel.slice(1), { list: ['Light', 'Standard', 'High'], note: 'Used when the PDF type is Rendered.' }],
+      ['Power Sector on one page', yn(d.pdfOnePage), { list: RP_SF_YN, note: 'Yes: the Power Sector report and its group totals table share one PDF page.' }],
     ] },
   ] };
 
@@ -4181,6 +4184,12 @@ function rpSfApply(book, fileName) {
       if (RP_PDF_LEVELS.indexOf(v) >= 0) { d.pdfLevel = v; parts.push(v + ' detail'); }
       else w('Exports', lv.r, `Rendered detail must be Light, Standard or High — kept as it was.`);
     }
+    const op = R.kv('power sector on one page');
+    if (op) {
+      const v = rpSfYN(op.v);
+      if (v === null) w('Exports', op.r, 'Power Sector on one page must be Yes or No — kept as it was.');
+      else { d.pdfOnePage = v; if (v) parts.push('Power Sector on one page'); }
+    }
     if (parts.length) done.push('Exports — ' + parts.join(', '));
   }
 
@@ -4514,6 +4523,8 @@ function renderRpGsGcol() {
 }
 
 function rpSetPdfMode(mode) {
+  const one = document.getElementById('rpPdfOnePage');
+  if (one) one.checked = !!_rpDraft.pdfOnePage;
   _rpDraft.pdfMode = mode === 'image' ? 'image' : 'render';
   ['image', 'render'].forEach(m => document.getElementById('rpPdfM_' + m).classList.toggle('on', _rpDraft.pdfMode === m));
   document.getElementById('rpPdfLevels').style.display = _rpDraft.pdfMode === 'render' ? '' : 'none';
@@ -4728,6 +4739,7 @@ async function saveRpSettings() {
     exportReports: _rpDraft.exportReports.map(r => ({ id: r.id, show: r.show })),
     pdfMode:       _rpDraft.pdfMode,
     pdfLevel:      _rpDraft.pdfLevel,
+    pdfPowerOnePage: !!_rpDraft.pdfOnePage,
     lock,
     gsheet,
     groups,
@@ -6290,17 +6302,15 @@ function rpPdfCtx(pageH, M) {
   return ctx;
 }
 
-// one report table → one page
-//   opt.mono   black and white, hairlines only (Light)
-function rpPdfPage(t, opt) {
-  opt = opt || {};
-  const C = opt.mono ? RP_PDF_MONO : RP_PDF_C;
-  const M = 16, PAD = 5, GH = 14, HH = 17, RH = 14, LEADMAX = 210, CAP = 34;
+const RP_PDF_GEO = { M: 16, PAD: 5, GH: 14, HH: 17, RH: 14, LEADMAX: 210, CAP: 34, GAP: 26 };
+function rpPdfZero(c) { return typeof c.v === 'number' && isFinite(c.v) && Math.round(c.v) === 0; }
+
+// column widths from the widest thing each column has to hold
+function rpPdfColWidths(t, C) {
+  const { PAD, LEADMAX } = RP_PDF_GEO;
   const ncol = t.head.length;
   const W = new Array(ncol).fill(0);
-  const isZero = c => typeof c.v === 'number' && isFinite(c.v) && Math.round(c.v) === 0;
-
-  // column widths from the widest thing each has to hold
+  const isZero = rpPdfZero;
   t.head.forEach((h, i) => { W[i] = rpPdfWidth(String(h.t).toUpperCase(), 'HB', RP_PDF_HEAD.size, RP_PDF_HEAD.tc); });
   t.rows.forEach(r => r.cells.forEach((c, i) => {
     const st = rpPdfCellStyle((t.head[i] || {}).k || 'num', r.k, isZero(c), C);
@@ -6319,23 +6329,53 @@ function rpPdfPage(t, opt) {
       at += g.span;
     });
   }
-  const X = [0];
-  W.forEach((w, i) => X.push(X[i] + w));
-  const TW = X[ncol];
+  return W;
+}
 
-  const title = String(t.title).toUpperCase();
-  const contentW = Math.ceil(Math.max(TW, rpPdfWidth(title, 'HB', 10.5, 1), rpPdfWidth(t.meta || '', 'C', 6.6)));
-  const pageW = contentW + M * 2;
-  const bodyH = (t.groups ? GH : 0) + HH + t.rows.length * RH;
-  const pageH = Math.ceil(M + CAP + bodyH + (t.foot ? 16 : 6) + M);
+// One page holding one or more report tables, one under another.
+//   opt.mono   black and white, hairlines only (Light)
+// Tables sharing a page and laid out on the same columns (the Power Sector
+// report and its group totals) take the same column widths, so they line up.
+function rpPdfPage(tt, opt) {
+  opt = opt || {};
+  const list = Array.isArray(tt) ? tt : [tt];
+  const C = opt.mono ? RP_PDF_MONO : RP_PDF_C;
+  const { M, GH, HH, RH, CAP, GAP } = RP_PDF_GEO;
+  const widths = list.map(t => rpPdfColWidths(t, C));
+  if (list.length > 1 && widths.every(w => w.length === widths[0].length)) {
+    const W0 = widths[0].map((_, i) => Math.max(...widths.map(w => w[i])));
+    widths.forEach((w, k) => { widths[k] = W0.slice(); });
+  }
+  const lay = list.map((t, k) => {
+    const W = widths[k], X = [0];
+    W.forEach((w, i) => X.push(X[i] + w));
+    const TW = X[W.length];
+    const title = String(t.title).toUpperCase();
+    const contentW = Math.ceil(Math.max(TW, rpPdfWidth(title, 'HB', 10.5, 1), rpPdfWidth(t.meta || '', 'C', 6.6)));
+    const bodyH = (t.groups ? GH : 0) + HH + t.rows.length * RH;
+    return { W, X, TW, title, contentW, h: CAP + bodyH + (t.foot ? 16 : 6) };
+  });
+  const pageW = Math.max(...lay.map(l => l.contentW)) + M * 2;
+  const pageH = Math.ceil(M + lay.reduce((a, l) => a + l.h, 0) + GAP * (list.length - 1) + M);
   const g = rpPdfCtx(pageH, M);
+  if (C.paper) g.ops.push(`${C.paper} rg 0 0 ${pageW} ${pageH} re f`);
+  let top = M;
+  list.forEach((t, k) => { rpPdfDrawTable(g, t, lay[k], top, opt, C); top += lay[k].h + GAP; });
+  return { w: pageW, h: pageH, content: g.ops.join('\n') + '\n' };
+}
+
+// one table drawn with its caption from y0 down
+function rpPdfDrawTable(g, t, L, y0, opt, C) {
+  const { PAD, GH, HH, RH, CAP } = RP_PDF_GEO;
+  const { W, X, TW, title } = L;
+  const ncol = t.head.length;
+  const isZero = rpPdfZero;
   const box = (x, y, w, h) => { if (!opt.mono) g.rect(x, y, w, h, C.ash, 0.5); };
 
   // ── caption ──
-  if (C.paper) g.ops.push(`${C.paper} rg 0 0 ${pageW} ${pageH} re f`);
-  g.text(title, 0, M + 12, 'HB', 10.5, C.ink, 1);
-  g.text(t.meta || '', 0, M + 24, 'C', 6.6, C.mute);
-  const tableTop = M + CAP;
+  g.text(title, 0, y0 + 12, 'HB', 10.5, C.ink, 1);
+  g.text(t.meta || '', 0, y0 + 24, 'C', 6.6, C.mute);
+  const tableTop = y0 + CAP;
   let y = tableTop;
   g.line(0, y - 1, TW, y - 1, C.ink, C.capRule);
 
@@ -6404,8 +6444,6 @@ function rpPdfPage(t, opt) {
     if (h.k === 'sub') g.line(X[i], tableTop, X[i], tableEnd, C.mute, 0.7, true);
   });
   if (t.foot) g.text(t.foot, 0, tableEnd + 12, 'C', 6.4, C.mute);
-
-  return { w: pageW, h: pageH, content: g.ops.join('\n') + '\n' };
 }
 
 
@@ -6530,7 +6568,7 @@ async function rpBuildReportPdf(tables, level) {
   const opt = { mono: level === 'light' };
   const md = rpMonthData();
   const asOf = md ? `${md.monLabel} · as on ${rpOnLabel(md)}` : '';
-  const pages = tables.map(t => rpPdfPage(t, opt));
+  const pages = rpPdfGroups(tables, t => t.sheet).map(g => rpPdfPage(g, opt));
   return rpWritePdf(pages, { title: 'Road Power Report', subject: asOf });
 }
 
@@ -6553,6 +6591,21 @@ async function rpExportPdf() {
   }
 }
 
+// Which tables share a PDF page. Each table gets its own page, except that
+// with powerReport.pdfPowerOnePage the Power Sector report and its table of
+// group totals go on one page together.
+function rpPdfPowerOnePage(pr) { return !!(pr || appSettings.powerReport || {}).pdfPowerOnePage; }
+function rpPdfGroups(items, sheetOf) {
+  const one = rpPdfPowerOnePage(), out = [];
+  items.forEach(it => {
+    const last = out[out.length - 1];
+    if (one && last && sheetOf(it) === 'Power sector' && sheetOf(last[0]) === 'Power sector') last.push(it);
+    else out.push([it]);
+  });
+  return out;
+}
+const rpCardSheet = c => (c._rpT || {}).sheet;
+
 // every report card the exports include, in export order
 function rpExportCards() {
   const cards = [];
@@ -6564,20 +6617,41 @@ function rpExportCards() {
   return cards;
 }
 
-// a light-palette copy of one card, laid out full width off-screen — what the
-// image PDF photographs and the high PDF traces
+// a light-palette copy of one card — or of several, one under another, for a
+// shared page — laid out full width off-screen: what the image PDF
+// photographs and the high PDF traces
 function rpSnapHolder(card) {
   const holder = document.createElement('div');
   holder.className = 'rp-light';
   holder.style.cssText = 'position:fixed;left:-10000px;top:0;background:#f5f7f9;padding:20px;display:inline-block;';
-  const c = card.cloneNode(true);
-  c.querySelectorAll('.rp-lead').forEach(el => { el.style.position = 'static'; });
-  c.querySelectorAll('.rp-nm').forEach(el => { el.style.maxWidth = 'none'; });
-  const sx = c.querySelector('.rp-scrollx');
-  if (sx) sx.style.overflow = 'visible';
-  holder.appendChild(c);
+  (Array.isArray(card) ? card : [card]).forEach(one => {
+    const c = one.cloneNode(true);
+    c.querySelectorAll('.rp-lead').forEach(el => { el.style.position = 'static'; });
+    c.querySelectorAll('.rp-nm').forEach(el => { el.style.maxWidth = 'none'; });
+    const sx = c.querySelector('.rp-scrollx');
+    if (sx) sx.style.overflow = 'visible';
+    holder.appendChild(c);
+  });
   document.body.appendChild(holder);
+  if (Array.isArray(card) && card.length > 1) rpAlignSnapColumns(holder);
   return holder;
+}
+// Tables sharing a page on the same columns (the Power Sector report and its
+// group totals) are set to the same column widths, so they line up.
+function rpAlignSnapColumns(holder) {
+  const tables = [...holder.querySelectorAll('table.rp-t')];
+  const lastHead = t => { const rows = t.tHead ? t.tHead.rows : []; return rows.length ? [...rows[rows.length - 1].cells] : []; };
+  const heads = tables.map(lastHead);
+  if (tables.length < 2 || heads.some(h => !h.length || h.length !== heads[0].length || h.some(c => c.colSpan > 1))) return;
+  tables.forEach(t => { t.style.minWidth = '0'; });          // each at its own width, to measure
+  const W = heads[0].map((_, i) => Math.ceil(Math.max(...heads.map(h => h[i].getBoundingClientRect().width))));
+  const total = W.reduce((a, b) => a + b, 0);
+  tables.forEach(t => {
+    const cg = document.createElement('colgroup');
+    W.forEach(w => { const c = document.createElement('col'); c.style.width = w + 'px'; cg.appendChild(c); });
+    t.insertBefore(cg, t.firstChild);
+    t.style.tableLayout = 'fixed'; t.style.width = total + 'px';
+  });
 }
 
 // a page of W×H CSS px at ¾ pt per px, scaled down to fit 1500 × 2000 pt
@@ -6590,7 +6664,7 @@ function rpPageScale(w, h) {
 
 // ── Image PDF ──────────────────────────────────────────────────────────
 async function rpSnapCards(onProgress) {
-  const cards = rpExportCards();
+  const cards = rpPdfGroups(rpExportCards(), rpCardSheet);
   const shots = [];
   for (let i = 0; i < cards.length; i++) {
     if (onProgress) onProgress(i + 1, cards.length);
@@ -6689,7 +6763,7 @@ function rpWriteImagePdf(pages, title) {
 const RP_IMG_BPP = 0.16;
 function rpImageEstimate() {
   let px = 0;
-  rpExportCards().forEach(c => {
+  rpPdfGroups(rpExportCards(), rpCardSheet).forEach(c => {
     const h = rpSnapHolder(c);
     const r = h.getBoundingClientRect();
     px += r.width * r.height * 4;
@@ -7064,11 +7138,12 @@ function rpFetchPlex(fam, w) {
 }
 
 async function rpBuildHighPdf() {
-  const cards = rpExportCards();
+  const cards = rpPdfGroups(rpExportCards(), rpCardSheet);
   if (!cards.length) return null;
   const traced = [];
-  for (const card of cards) {
-    const holder = rpSnapHolder(card);
+  for (const group of cards) {
+    const card = group[0];
+    const holder = rpSnapHolder(group);
     try {
       rpMaterializePseudo(holder);
       void holder.offsetWidth;
