@@ -1004,19 +1004,6 @@ body.dark .rp-card {
   color: var(--mute); white-space: nowrap;
 }
 .rp-cap-meta b { color: var(--live); font-weight: 600; }
-/* the corner download icon — on screen only; snapshots (PDF, image) leave it and its room out */
-.rp-dlcard { position: relative; }
-.rp-dlcard > .rp-cap { padding-right: 46px; }
-.rp-dl {
-  position: absolute; top: 7px; right: 7px; width: 30px; height: 30px; padding: 0; z-index: 2;
-  display: inline-flex; align-items: center; justify-content: center;
-  border: 1px solid var(--ash); border-radius: 3px; background: var(--paper); color: var(--mute); cursor: pointer;
-}
-.rp-dl:hover { color: var(--ink); border-color: var(--mute); }
-.rp-dl:focus-visible { outline: 2px solid var(--live); outline-offset: 1px; }
-.rp-dl:disabled { opacity: .45; cursor: default; }
-.rp-light .rp-dl { display: none !important; }
-.rp-light .rp-dlcard > .rp-cap { padding-right: 15px; }
 
 /* ── grid ── */
 .rp-scrollx { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -1371,6 +1358,8 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 }
 
 /* html export settings */
+.rp-modes3 { flex-wrap:nowrap; }
+.rp-modes3 .rp-mode { flex:1 1 0; min-width:0; padding:8px 9px; }
 .rp-modes { display:flex; gap:8px; flex-wrap:wrap; }
 .rp-mode {
   flex:1 1 190px; text-align:left; cursor:pointer; padding:9px 11px;
@@ -1628,7 +1617,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B45-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B46-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1752,8 +1741,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <button class="rp-mini-btn" onclick="loadRpHistory(true).then(renderRpReports)">↻ Reload</button>
     <button class="rp-mini-btn" onclick="openRpDays()">Saved days</button>
     <button class="rp-mini-btn" id="rpShareBtn" onclick="shareRpReport()">Share</button>
-    <button class="rp-mini-btn" id="rpPdfBtn" onclick="rpExportPdf()">PDF</button>
-    <button class="rp-mini-btn" id="rpXlsBtn" onclick="_rpTab === 5 ? rpDbExport() : rpExportXlsx()">Excel</button>
+    <button class="rp-mini-btn" id="rpDlBtn" onclick="rpDownload()">⤓ Download</button>
     <button class="rp-mini-btn" id="rpHtmlBtn" onclick="rpExportHtml()">HTML</button>
     <button class="rp-mini-btn" id="rpGsBtn" onclick="openRpGs()" style="display:none" title="Send the figures to Google Sheets">Sheet</button>
   </div>
@@ -1797,14 +1785,9 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
         </div>
         <div class="rp-rsub">In the app</div>
         <div class="rp-rlist" id="rpReportListApp"></div>
-        <div class="rp-rsub">
-          <span>In exports — PDF, Excel &amp; HTML</span>
-          <button class="rp-mini-btn" onclick="rpExportsMatchApp()">Same as app</button>
-        </div>
-        <div class="rp-rlist" id="rpReportListExp"></div>
         <div class="stt-hint" style="margin-top:6px;">
-          Tick the reports to show and use the arrows to set their order — separately for the tabs
-          in the app and for the exported files. Share sends a picture of the tab that's open, so it follows the app.
+          Tick the reports to show and use the arrows to set their order. The reports in the
+          downloaded files are chosen on the Exports tab. Share sends a picture of the tab that's open, so it follows the app.
         </div>
       </div>
 
@@ -1891,6 +1874,26 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
       </div>
 
       <div class="rp-stab" data-tab="exports" role="tabpanel">
+      <div class="stt-section">
+        <div class="stt-section-hdr">
+          <label class="stt-label">Download button</label>
+        </div>
+        <div class="rp-rsub">
+          <span>Reports — also used by HTML</span>
+          <button class="rp-mini-btn" onclick="rpExportsMatchApp()">Same as app</button>
+        </div>
+        <div class="rp-rlist" id="rpReportListExp"></div>
+        <div class="stt-hint" style="margin:6px 0 10px;">Tick the reports to download and use the arrows to set their order. Each report comes whole — Power Sector with its group totals table.</div>
+        <div class="stt-hint" style="margin:0 0 6px;">Download as</div>
+        <div class="rp-modes rp-modes3">
+          <button class="rp-mode" id="rpDl_pdf" onclick="rpSetDlFormat('pdf')"><b>PDF</b><span>One file, set up under PDF.</span></button>
+          <button class="rp-mode" id="rpDl_xlsx" onclick="rpSetDlFormat('xlsx')"><b>Excel</b><span>One workbook, a sheet per report.</span></button>
+          <button class="rp-mode" id="rpDl_both" onclick="rpSetDlFormat('both')"><b>PDF + Excel</b><span>Both files, one tap.</span></button>
+        </div>
+        <label class="rp-lkcheck" style="margin-top:10px;"><input type="checkbox" id="rpDlShare" onchange="_rpDraft.dlShare = this.checked">On a phone, open the share sheet for the PDF instead of saving it</label>
+        <div class="stt-hint" style="margin-top:4px;">For two files Chrome asks once to allow several downloads. Excel can't go through a phone's share sheet, so it's always saved. On the DO Database tab, Download saves the DOs that match the search and filters.</div>
+      </div>
+
       <div class="stt-section">
         <div class="stt-section-hdr">
           <label class="stt-label">PDF</label>
@@ -2770,7 +2773,7 @@ function rpOpenSettingsNow() {
   }));
   _rpDraft = { historyPath: pr.historyPath || 'roadpower-history-test.json', sel: {},
                show: shDef, reports: rpReportList(pr.reports), exportReports: rpExportList(pr),
-               pdfLevel: rpPdfLevel(pr), pdfMode: rpPdfMode(pr), pdfOnePage: rpPdfPowerOnePage(pr), lock: rpLockDraft(pr), gs: rpGsCfg(pr.gsheet),
+               pdfLevel: rpPdfLevel(pr), pdfMode: rpPdfMode(pr), pdfOnePage: rpPdfPowerOnePage(pr), dlFormat: rpDlFormat(pr), dlShare: rpDlShare(pr), lock: rpLockDraft(pr), gs: rpGsCfg(pr.gsheet),
                groups: rpDraftGroups(pr), groupTable: !!pr.groupTable,
                groupSub: pr.groupSubtotals !== false, groupColors: !!pr.groupColors };
   _rpGrpPick = null;
@@ -3815,7 +3818,7 @@ async function rpGsSend() {
 // key / value rows and tables with drop-downs where there's a fixed choice.
 // Export takes what's on screen; import fills the settings screen from the
 // file, and nothing reaches the shared settings until Save.
-const RP_BUILD = 'rp-B45-test';
+const RP_BUILD = 'rp-B46-test';
 const RP_SF_FORMAT = 'RoadPowerSettings 1';
 const RP_SF_YN = ['Yes', 'No'];
 
@@ -3916,6 +3919,8 @@ function rpSfSheets() {
       ['PDF type', d.pdfMode === 'image' ? 'Image' : 'Rendered', { list: ['Image', 'Rendered'], note: 'Image: a picture of each report. Rendered: drawn as text and lines — far smaller.' }],
       ['Rendered detail', d.pdfLevel.charAt(0).toUpperCase() + d.pdfLevel.slice(1), { list: ['Light', 'Standard', 'High'], note: 'Used when the PDF type is Rendered.' }],
       ['Power Sector on one page', yn(d.pdfOnePage), { list: RP_SF_YN, note: 'Yes: the Power Sector report and its group totals table share one PDF page.' }],
+      ['Download as', RP_DL_FMT[rpDlFormat(d)], { list: Object.values(RP_DL_FMT), note: 'What the Download button saves for the reports above.' }],
+      ['Share the PDF', yn(rpDlShare(d)), { list: RP_SF_YN, note: 'Yes: on a phone the PDF opens the share sheet instead of going to Downloads.' }],
     ] },
   ] };
 
@@ -4462,6 +4467,19 @@ function rpSfApply(book, fileName) {
       if (v === null) w('Exports', op.r, 'Power Sector on one page must be Yes or No — kept as it was.');
       else { d.pdfOnePage = v; if (v) parts.push('Power Sector on one page'); }
     }
+    const da = R.kv('download as');
+    if (da) {
+      const k = Object.keys(RP_DL_FMT).find(x => RP_DL_FMT[x].toLowerCase().replace(/\s+/g, '') === rpSfTxt(da.v).toLowerCase().replace(/\s+/g, '')
+                                                  || (x === 'both' && /^(both|pdf\s*(\+|and|&)\s*excel)$/i.test(rpSfTxt(da.v))));
+      if (!k) w('Exports', da.r, `Download as must be PDF, Excel or PDF + Excel — kept as it was.`);
+      else { d.dlFormat = k; parts.push('download ' + RP_DL_FMT[k]); }
+    }
+    const ds = R.kv('share the pdf');
+    if (ds) {
+      const v = rpSfYN(ds.v);
+      if (v === null) w('Exports', ds.r, 'Share the PDF must be Yes or No — kept as it was.');
+      else d.dlShare = v;
+    }
     if (parts.length) done.push('Exports — ' + parts.join(', '));
   }
 
@@ -4816,7 +4834,14 @@ function renderRpGsGcol() {
   };
 }
 
+function rpSetDlFormat(f) {
+  _rpDraft.dlFormat = RP_DL_FMT[f] ? f : 'both';
+  Object.keys(RP_DL_FMT).forEach(k => { const b = document.getElementById('rpDl_' + k); if (b) b.classList.toggle('on', _rpDraft.dlFormat === k); });
+  const sh = document.getElementById('rpDlShare');
+  if (sh) { sh.checked = !!_rpDraft.dlShare; sh.disabled = _rpDraft.dlFormat === 'xlsx'; }
+}
 function rpSetPdfMode(mode) {
+  rpSetDlFormat(_rpDraft.dlFormat);
   const one = document.getElementById('rpPdfOnePage');
   if (one) one.checked = !!_rpDraft.pdfOnePage;
   _rpDraft.pdfMode = mode === 'image' ? 'image' : 'render';
@@ -5037,6 +5062,8 @@ async function saveRpSettings() {
     pdfMode:       _rpDraft.pdfMode,
     pdfLevel:      _rpDraft.pdfLevel,
     pdfPowerOnePage: !!_rpDraft.pdfOnePage,
+    dlFormat:      rpDlFormat(_rpDraft),
+    dlShare:       !!_rpDraft.dlShare,
     lock,
     gsheet,
     groups,
@@ -5798,13 +5825,9 @@ function rpTableHTML(t) {
 
 function rpCard(t) {
   const card = document.createElement('div');
-  card.className = 'rp-card rp-dlcard';
+  card.className = 'rp-card';
   card._rpT = t;
-  const rid = Object.keys(RP_REPORTS).find(id => RP_REPORTS[id].sheet === t.sheet);
-  const rname = rpEsc(rid ? RP_REPORTS[rid].name : t.sheet);
   card.innerHTML =
-    `<button class="rp-dl" onclick="rpReportXlsx('${rpEsc(t.sheet)}', this)" title="Download the ${rname} report as Excel" aria-label="Download the ${rname} report as Excel">` +
-      `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg></button>` +
     `<div class="rp-cap"><h3>${rpEsc(t.title)}</h3><div class="rp-cap-meta">${t.metaHtml || rpEsc(t.meta || '')}</div></div>
      <div class="rp-scrollx"><table class="rp-t">${rpTableHTML(t)}</table></div>
      ${t.foot ? `<div class="rp-foot">${rpEsc(t.foot)}</div>` : ''}`;
@@ -5838,15 +5861,15 @@ function rpSyncExportBtns() {
   const on = _rpTables.some(t => sheets.indexOf(t.sheet) >= 0);
   // on the DO Database tab only Excel stays — and it saves the DOs that match
   const db = _rpTab === 5;
-  ['rpShareBtn','rpPdfBtn','rpXlsBtn','rpHtmlBtn'].forEach(id => {
+  ['rpShareBtn','rpDlBtn','rpHtmlBtn'].forEach(id => {
     const b = document.getElementById(id);
     if (!b) return;
-    const ok = db ? (id === 'rpXlsBtn' && mclhoCount > 0) : on;
+    const ok = db ? (id === 'rpDlBtn' && mclhoCount > 0) : on;
     b.disabled = !ok; b.style.opacity = ok ? '1' : '.4';
-    b.style.display = db && id !== 'rpXlsBtn' ? 'none' : '';
+    b.style.display = db && id !== 'rpDlBtn' ? 'none' : '';
   });
-  const xb = document.getElementById('rpXlsBtn');
-  if (xb) xb.title = db ? 'The DOs that match the search and filters, as an Excel file' : '';
+  const dl = document.getElementById('rpDlBtn');
+  if (dl) dl.title = db ? 'The DOs that match the search and filters, as an Excel file' : rpDlSummary();
   const gsb = document.getElementById('rpGsBtn');
   if (gsb) {
     gsb.style.display = !db && rpGsReady() ? '' : 'none';
@@ -6940,7 +6963,7 @@ function rpSaveBlob(blob, fname) {
 // the same message. One operation at a time, every button locked for its
 // duration.
 let _rpBusy = false;
-const RP_BTNS = ['rpShareBtn','rpPdfBtn','rpXlsBtn','rpHtmlBtn','rpSaveDayBtn'];
+const RP_BTNS = ['rpShareBtn','rpDlBtn','rpHtmlBtn','rpSaveDayBtn'];
 function rpLockBtns(on, activeId, activeText) {
   _rpBusy = on;
   RP_BTNS.forEach(id => {
@@ -7399,9 +7422,9 @@ async function rpExportPdf() {
   const tables = rpExportTables();
   if (!tables.length) { alert('Nothing to export yet — the reports are empty.'); return; }
   const image = rpPdfMode() === 'image';
-  rpLockBtns(true, 'rpPdfBtn', image ? 'Rendering…' : 'Building…');
+  rpLockBtns(true, 'rpDlBtn', image ? 'Rendering…' : 'Building…');
   try {
-    const blob = image ? await rpBuildImagePdf((i, n) => rpProgress('rpPdfBtn', `Page ${i}/${n}…`))
+    const blob = image ? await rpBuildImagePdf((i, n) => rpProgress('rpDlBtn', `Page ${i}/${n}…`))
                        : await rpBuildReportPdf(tables, rpPdfLevel());
     if (!blob) { alert('Nothing to export yet — the reports are empty.'); return; }
     await rpShareOrSave(blob, `Road_Power_Report_${rpStamp()}.pdf`, 'application/pdf', 'Road Power Report');
@@ -7514,7 +7537,7 @@ async function rpBuildImagePdf(onProgress) {
     const s = rpPageScale(cv.width / 2, cv.height / 2);
     return { w: Math.round(cv.width / 2 * s), h: Math.round(cv.height / 2 * s), pw: cv.width, ph: cv.height, jpeg: rpJpegBytes(cv) };
   });
-  if (onProgress) rpProgress('rpPdfBtn', 'Building…');
+  if (onProgress) rpProgress('rpDlBtn', 'Building…');
   return rpWriteImagePdf(pages, 'Road Power Report');
 }
 
@@ -8543,30 +8566,74 @@ function rpStylesXml(xt) {
   '</styleSheet>';
 }
 
-// one report's own workbook, from the icon in its corner
-async function rpReportXlsx(sheet, btn) {
+// ── the Download button ──────────────────────────────────────────────
+// One button for the files. Settings → Exports say which reports it takes
+// (the export list, in its order) and what it makes:
+//   powerReport.dlFormat  'pdf' | 'xlsx' | 'both'  (default both)
+//   powerReport.dlShare   true: on a phone the PDF goes to the share sheet
+//                         instead of Downloads (Excel can't be shared there)
+// With both, the two files are saved one after the other — the browser asks
+// once whether the site may save several files. On the DO Database tab it
+// saves the DOs that match, as that report's own Excel button does.
+const RP_DL_FMT = { pdf: 'PDF', xlsx: 'Excel', both: 'PDF + Excel' };
+function rpDlFormat(pr) { const f = (pr || appSettings.powerReport || {}).dlFormat; return RP_DL_FMT[f] ? f : 'both'; }
+function rpDlShare(pr) { return !!(pr || appSettings.powerReport || {}).dlShare; }
+function rpDlSummary() {
+  const names = rpExportReports().map(id => RP_REPORTS[id].name);
+  return `Download ${names.join(', ') || 'no report'} — ${RP_DL_FMT[rpDlFormat()]}`;
+}
+const rpPause = ms => new Promise(r => setTimeout(r, ms));
+async function rpDownload() {
   if (_rpBusy) return;
-  const id = Object.keys(RP_REPORTS).find(k => RP_REPORTS[k].sheet === sheet);
-  const tables = _rpTables.filter(t => t.sheet === sheet);
-  if (!id || !tables.length) return;
-  const name = RP_REPORTS[id].name;
-  if (btn) btn.disabled = true;
+  if (_rpTab === 5) return rpDbExport();
+  const fmt = rpDlFormat();
+  const tables = rpExportTables();
+  if (!tables.length) { alert('Nothing to download yet — the reports are empty.'); return; }
+  const stamp = rpStamp();
+  rpLockBtns(true, 'rpDlBtn', 'Building…');
+  const saved = [];
   try {
-    const blob = rpBuildXlsx([{ name, tables }]);
-    const fname = `${name.replace(/[^A-Za-z0-9]+/g, '_')}_${rpStamp()}.xlsx`;
-    await rpShareOrSave(blob, fname, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', name + ' report',
-      () => rpSetStatus(`${fname} is in Downloads.`, true));
+    let pdf = null, xls = null;
+    if (fmt !== 'xlsx') {
+      const image = rpPdfMode() === 'image';
+      rpProgress('rpDlBtn', image ? 'Rendering…' : 'Building PDF…');
+      const blob = image ? await rpBuildImagePdf((i, n) => rpProgress('rpDlBtn', `Page ${i}/${n}…`))
+                         : await rpBuildReportPdf(tables, rpPdfLevel());
+      if (blob) pdf = { blob, fname: `Road_Power_Report_${stamp}.pdf` };
+    }
+    if (fmt !== 'pdf') {
+      rpProgress('rpDlBtn', 'Building Excel…');
+      const sheets = rpExportReports()
+        .map(id => ({ name: RP_REPORTS[id].name, tables: _rpTables.filter(t => t.sheet === RP_REPORTS[id].sheet) }))
+        .filter(sh => sh.tables.length);
+      if (sheets.length) xls = { blob: rpBuildXlsx(sheets), fname: `Road_Power_Report_${stamp}.xlsx` };
+    }
+    if (!pdf && !xls) { alert('Nothing to download yet — the reports are empty.'); return; }
+    let shared = '';
+    if (pdf) {
+      if (rpDlShare()) {
+        await rpShareOrSave(pdf.blob, pdf.fname, 'application/pdf', 'Road Power Report');
+        shared = ((document.getElementById('rpStatus') || {}).textContent || '').trim().replace(/([^.!?…])$/, '$1.');
+      } else { rpSaveBlob(pdf.blob, pdf.fname); saved.push(pdf.fname); }
+    }
+    if (xls) {
+      if (pdf) await rpPause(700);              // a moment between two downloads
+      rpSaveBlob(xls.blob, xls.fname); saved.push(xls.fname);
+    }
+    const msg = [shared, saved.length ? `Saved ${saved.join(' and ')} to Downloads.` : ''].filter(Boolean).join(' ');
+    rpSetStatus(msg, false);
   } catch (e) {
-    alert('Could not build the workbook: ' + e.message);
+    rpSetStatus('Could not build the download: ' + e.message, true);
+    alert('Could not build the download: ' + e.message);
   } finally {
-    if (btn) btn.disabled = false;
+    rpLockBtns(false);
   }
 }
 
 async function rpExportXlsx() {
   if (_rpBusy) return;
   if (!_rpTables.length) { alert('Nothing to export yet — the reports are empty.'); return; }
-  rpLockBtns(true, 'rpXlsBtn', 'Building…');
+  rpLockBtns(true, 'rpDlBtn', 'Building…');
   try {
     const sheets = rpExportReports()
       .map(id => ({ name: RP_REPORTS[id].name, tables: _rpTables.filter(t => t.sheet === RP_REPORTS[id].sheet) }))
