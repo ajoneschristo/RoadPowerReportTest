@@ -1169,7 +1169,16 @@ body.dark .rp-db { --zebra: #171e26; }
 .rp-dbchip { display:inline-flex; align-items:center; gap:6px; padding:3px 4px 3px 9px; border:1px solid var(--live); color:var(--live);
   font-family:var(--mono); font-size:11px; max-width:100%; }
 .rp-dbchip button { border:0; background:transparent; color:inherit; cursor:pointer; font-size:12px; padding:2px 5px; }
-.rp-dbsum { padding:8px 12px; font-family:var(--mono); font-size:11px; color:var(--mute); border-bottom:1px solid var(--ash); }
+.rp-dbsum { padding:8px 12px; font-family:var(--mono); font-size:11px; color:var(--mute); border-bottom:1px solid var(--ash);
+  display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; }
+.rp-dblift { margin-left:auto; text-align:right; color:var(--mute); }
+.rp-dblift.ok { color:var(--green); }
+.rp-dblift.bad { color:var(--live); font-weight:600; }
+.rp-dblift.tap { cursor:pointer; }
+.rp-dblift.tap:hover { text-decoration:underline; }
+.rp-dbliftmore { padding:8px 12px; font-family:'IBM Plex Sans', sans-serif; font-size:12px; line-height:1.5; color:var(--ink);
+  background:var(--live-bar, rgba(217,122,6,.12)); border-bottom:1px solid var(--ash); }
+.rp-dbliftmore b { font-weight:600; }
 .rp-dbsum b { color:var(--ink); font-weight:600; }
 .rp-dbscroll { overflow:auto; max-height:calc(100vh - 200px); max-height:calc(100dvh - 200px); -webkit-overflow-scrolling:touch; }
 .rp-dbt { border-collapse:separate; border-spacing:0; min-width:100%; font-family:var(--mono); font-size:12px; color:var(--ink); background:var(--paper); }
@@ -1627,7 +1636,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B48-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B49-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -3831,7 +3840,7 @@ async function rpGsSend() {
 // key / value rows and tables with drop-downs where there's a fixed choice.
 // Export takes what's on screen; import fills the settings screen from the
 // file, and nothing reaches the shared settings until Save.
-const RP_BUILD = 'rp-B48-test';
+const RP_BUILD = 'rp-B49-test';
 const RP_SF_FORMAT = 'RoadPowerSettings 1';
 const RP_SF_YN = ['Yes', 'No'];
 
@@ -6459,21 +6468,310 @@ function renderRp2(md) {
 // search of its own. A filter is { q: text the value must contain,
 // only: Set of values ticked, or null for all }. The list is built once per
 // change of the database (_dbVer), and only a page of rows is drawn at a time.
+// ═══════════════════════════════════════════════════════
+//  SO-WISE LIFTING — read from the ePass files opened here
+// ═══════════════════════════════════════════════════════
+// Kept in epass-db/do-lifted-test.json, a file of its own. mclho.json, which
+// ePass Viewer reads and writes, is never touched by this.
+//   { v: 1, updated,
+//     days: { 'YYYY-MM-DD': { cut, full, trips, t, at } },   what each date has in
+//     so:   { doNumber: { d: { 'YYYY-MM-DD': tonnes }, b, e } } }
+// d is a DO's lifting day by day. Once every day of its validity is in as a
+// full day, those figures are folded into b (its lifting up to and including
+// e), so the file stays about the size of the DOs still running.
+// A date comes in from a file when the store hasn't got it, or has it only in
+// part and the file has it whole, or has it the same way with no more trips;
+// so opening a date again replaces it, and a shorter file never overwrites a
+// fuller one.
+const RP_LIFT = {
+  get path() { return (appSettings.powerReport && appSettings.powerReport.liftPath) || 'do-lifted-test.json'; },
+};
+let rpLift = null;        // the store as last read or written
+let _liftSha = null;
+let _liftVer = 0;         // moves on whenever rpLift changes
+let _liftState = '';      // '' (not read yet) | loading | ok | err
+let _liftErr = '';
+let _liftSeq = 0;         // bumped by each read and each save, so an older read can't undo a save
+let _liftSaving = null;   // the save under way, if any
+let _liftNoteOpen = false;
+
+// day numbers (days since 1 Jan 1970), so dates can be counted between
+function rpDayNo(k) {                                   // 20261112 or '2026-11-12' → day number
+  if (k == null || k === '') return null;
+  if (typeof k === 'string') { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(k); if (!m) return null; return Date.UTC(+m[1], +m[2] - 1, +m[3]) / 864e5; }
+  return Date.UTC(Math.floor(k / 10000), Math.floor(k / 100) % 100 - 1, k % 100) / 864e5;
+}
+function rpDayKey(n) { const d = new Date(n * 864e5); return d.getUTCFullYear() + '-' + rp2(d.getUTCMonth() + 1) + '-' + rp2(d.getUTCDate()); }
+function rpTodayNo() { const t = new Date(); return Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()) / 864e5; }
+function rpDayLabel(n, year) { const d = new Date(n * 864e5); return d.getUTCDate() + ' ' + RP_MON[d.getUTCMonth()] + (year ? ' ' + d.getUTCFullYear() : ''); }
+function rp3(x) { return Math.round(x * 1000) / 1000; }
+
+function rpLiftEmpty() { return { v: 1, updated: '', days: {}, so: {} }; }
+function rpLiftClean(j) {
+  const s = rpLiftEmpty();
+  if (j && typeof j === 'object') {
+    s.updated = j.updated || '';
+    if (j.days && typeof j.days === 'object') s.days = j.days;
+    if (j.so && typeof j.so === 'object') s.so = j.so;
+  }
+  return s;
+}
+
+// GitHub reads and writes of a JSON file in epass-db
+async function rpGhRead(path) {
+  const headers = { Authorization: `token ${GH.token}`, Accept: 'application/vnd.github.v3+json' };
+  const meta = await fetch(`${GH.api}/repos/${GH.owner}/${GH.repo}/contents/${path}?ref=${GH.branch}&t=${Date.now()}`, { headers });
+  if (meta.status === 404) return null;
+  if (!meta.ok) { const e = new Error('GitHub ' + meta.status); e.status = meta.status; throw e; }
+  const m = await meta.json();
+  const blob = await fetch(`${GH.api}/repos/${GH.owner}/${GH.repo}/git/blobs/${m.sha}`, { headers: { ...headers, Accept: 'application/vnd.github.v3.raw' } });
+  if (!blob.ok) { const e = new Error('GitHub ' + blob.status); e.status = blob.status; throw e; }
+  return { sha: m.sha, json: await blob.json() };
+}
+async function rpGhWrite(path, obj, sha, message) {
+  const body = { message, content: btoa(unescape(encodeURIComponent(JSON.stringify(obj)))), branch: GH.branch };
+  if (sha) body.sha = sha;
+  const res = await fetch(`${GH.api}/repos/${GH.owner}/${GH.repo}/contents/${path}`,
+    { method: 'PUT', headers: { Authorization: `token ${GH.token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok) { const e = new Error('GitHub ' + res.status); e.status = res.status; throw e; }
+  return (await res.json()).content.sha;
+}
+
+async function rpLiftLoad() {
+  const seq = ++_liftSeq;
+  _liftState = 'loading'; rpLiftRefresh();
+  try {
+    const got = await rpGhRead(RP_LIFT.path);
+    if (seq !== _liftSeq) return;                       // a save has put in a newer copy meanwhile
+    rpLift = rpLiftClean(got && got.json); _liftSha = got ? got.sha : null;
+    _liftState = 'ok'; _liftErr = '';
+  } catch (e) {
+    if (seq !== _liftSeq) return;
+    console.warn('SO-wise lifting load failed:', e);
+    _liftState = rpLift ? 'ok' : 'err'; _liftErr = e.message;
+  }
+  _liftVer++; rpLiftRefresh();
+}
+function rpLiftEnsure() { if (!_liftState) rpLiftLoad(); }
+function rpLiftRefresh() {
+  const pane = document.getElementById('rpPane5');
+  if (pane && pane.querySelector('.rp-db') && _rpTab === 5) renderRpDb();
+}
+
+// The loaded ePass file, date by date:
+//   { 'YYYY-MM-DD': { cut, first, last, trips, t, full, so: { doNumber: tonnes } } }
+// A date is whole when it is before today, its first trip is in the first
+// hour, and the file either goes on to a later date or has trips after 11 pm.
+function rpLiftFromFile() {
+  const out = {};
+  for (let i = 0; i < rowGross.length; i++) {
+    const k = rpKeyFromDMY(rowGWDate[i]);
+    if (!k) continue;
+    const e = out[k] || (out[k] = { cut: '', first: 1e9, last: -1, trips: 0, t: 0, full: false, so: {} });
+    const m = rowMins[i];
+    if (m < e.first) e.first = m;
+    if (m > e.last) { e.last = m; e.cut = (idxGWTime >= 0 && allRows[i][idxGWTime]) ? String(allRows[i][idxGWTime]).trim() : ''; }
+    const net = rowGross[i] - rowTar[i];
+    e.trips++; e.t += net;
+    const d = rowDO[i];
+    if (d) e.so[d] = (e.so[d] || 0) + net;
+  }
+  const keys = Object.keys(out).sort(), today = rpDayKey(rpTodayNo());
+  keys.forEach((k, i) => {
+    const e = out[k];
+    e.full = k < today && e.first <= 60 && (i < keys.length - 1 || e.last >= 23 * 60);
+    e.t = rp3(e.t);
+    for (const d in e.so) e.so[d] = rp3(e.so[d]);
+  });
+  return out;
+}
+
+// Lay a file's dates over the store (see the rule above).
+//   → { saved: dates put in, same: dates already in as they are, kept: dates the store has fuller }
+function rpLiftMerge(store, fileDays, now) {
+  const saved = [], kept = [], same = [];
+  Object.keys(fileDays).sort().forEach(k => {
+    const n = fileDays[k], o = store.days[k];
+    const take = !o || (n.full && !o.full) || (!!n.full === !!o.full && n.trips >= (o.trips || 0));
+    if (!take) { kept.push(k); return; }
+    if (o && !!o.full === !!n.full && o.trips === n.trips && Math.abs((o.t || 0) - n.t) < 0.0005) { same.push(k); return; }
+    for (const d in store.so) {                         // the date's old figures out …
+      const s = store.so[d];
+      if (s.d && s.d[k] != null && !(s.e && k <= s.e)) delete s.d[k];
+    }
+    for (const d in n.so) {                             // … and this file's in
+      const s = store.so[d] || (store.so[d] = {});
+      if (s.e && k <= s.e) continue;                    // folded already: the date is inside b
+      (s.d || (s.d = {}))[k] = n.so[d];
+    }
+    store.days[k] = { cut: n.cut, full: !!n.full, trips: n.trips, t: n.t, at: now || new Date().toISOString() };
+    saved.push(k);
+  });
+  for (const d in store.so) {
+    const s = store.so[d];
+    if (s.d && !Object.keys(s.d).length) delete s.d;
+    if (!s.d && !s.b && !s.e) delete store.so[d];
+  }
+  return { saved, kept, same };
+}
+
+// Fold the days of each DO whose validity is over and whose every day, from
+// its start (or the day after what is folded already) to its end, is in as a
+// full day. → how many DOs were folded
+function rpLiftFold(store, db, todayNo) {
+  let n = 0;
+  for (const d in store.so) {
+    const s = store.so[d], r = db[d];
+    if (!s.d || !r) continue;
+    const S = rpDayNo(rpDbDateKey(rpDecode(r.doStartDate))), E = rpDayNo(rpDbDateKey(rpDecode(r.doEndDate)));
+    if (S == null || E == null || E >= todayNo || S > E) continue;
+    const from = s.e ? rpDayNo(s.e) + 1 : S;
+    if (from > E) continue;
+    let ok = true;
+    for (let x = from; x <= E; x++) { const day = store.days[rpDayKey(x)]; if (!day || !day.full) { ok = false; break; } }
+    if (!ok) continue;
+    const ek = rpDayKey(E);
+    let b = s.b || 0;
+    for (const k in s.d) if (k <= ek) { b += s.d[k]; delete s.d[k]; }
+    s.b = rp3(b); s.e = ek;
+    if (!Object.keys(s.d).length) delete s.d;
+    n++;
+  }
+  return n;
+}
+
+// lifted so far, DO by DO
+let _liftTot = null;
+function rpLiftTotals() {
+  if (_liftTot && _liftTot.ver === _liftVer) return _liftTot.map;
+  const m = new Map();
+  if (rpLift) for (const d in rpLift.so) {
+    const s = rpLift.so[d];
+    let t = s.b || 0;
+    if (s.d) for (const k in s.d) t += s.d[k];
+    m.set(d, t);
+  }
+  _liftTot = { ver: _liftVer, map: m };
+  return m;
+}
+
+// '11 Nov', '1–11 Nov', '28 Oct – 11 Nov', '28 Dec 2025 – 3 Jan 2026'
+function rpDaySpan(a, b) {
+  if (a === b) return rpDayLabel(a);
+  const x = new Date(a * 864e5), y = new Date(b * 864e5);
+  if (x.getUTCFullYear() !== y.getUTCFullYear()) return rpDayLabel(a, true) + ' – ' + rpDayLabel(b, true);
+  if (x.getUTCMonth() === y.getUTCMonth()) return x.getUTCDate() + '–' + rpDayLabel(b);
+  return rpDayLabel(a) + ' – ' + rpDayLabel(b);
+}
+// consecutive day numbers → [[from, to], …]
+function rpDayRuns(list) {
+  const runs = [];
+  list.forEach(n => { const r = runs[runs.length - 1]; if (r && n === r[1] + 1) r[1] = n; else runs.push([n, n]); });
+  return runs;
+}
+
+// Save the SO-wise lifting of the loaded file, right after it is opened.
+async function rpLiftSave() {
+  if (!allRows.length) return;
+  if (_liftSaving) { try { await _liftSaving; } catch (e) {} }
+  const fileDays = rpLiftFromFile();
+  const keys = Object.keys(fileDays).sort();
+  if (!keys.length) return;
+  const run = (async () => {
+    rpSetStatus('Saving SO-wise lifting…', false);
+    let res = null, folded = 0, store = null, sha = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const got = await rpGhRead(RP_LIFT.path);
+      store = rpLiftClean(got && got.json); sha = got ? got.sha : null;
+      res = rpLiftMerge(store, fileDays);
+      folded = mclhoCount ? rpLiftFold(store, mclhoDB, rpTodayNo()) : 0;
+      if (!res.saved.length && !folded) break;
+      store.updated = new Date().toISOString();
+      const span = res.saved.length ? res.saved[0] + (res.saved.length > 1 ? '…' + res.saved[res.saved.length - 1] : '') : 'fold';
+      try { sha = await rpGhWrite(RP_LIFT.path, store, sha, `SO-wise lifting — ${span}`); break; }
+      catch (e) {
+        if ((e.status === 409 || e.status === 422) && attempt < 3) continue;   // written meanwhile: read it again
+        throw e;
+      }
+    }
+    // what was just read (and written) is the newest copy; a read still under way is now out of date
+    rpLift = store; _liftSha = sha; _liftState = 'ok'; _liftErr = ''; _liftVer++; _liftSeq++;
+    const lab = ks => { const runs = rpDayRuns(ks.map(rpDayNo)); return runs.slice(0, 3).map(r => rpDaySpan(r[0], r[1])).join(', ') + (runs.length > 3 ? '…' : ''); };
+    const msg = [res.saved.length ? '✓ SO-wise lifting saved · ' + lab(res.saved)
+               : res.same.length ? 'SO-wise lifting already saved · ' + lab(res.same) : 'SO-wise lifting not changed'];
+    if (res.kept.length) msg.push(`${lab(res.kept)} kept — the saved copy is fuller`);
+    rpSetStatus(msg.join(' · '), false);
+    rpLiftRefresh();
+  })();
+  _liftSaving = run;
+  try { await run; }
+  catch (e) {
+    console.warn('SO-wise lifting save failed:', e);
+    rpSetStatus(`⚠ SO-wise lifting not saved (${e.message}). Open the file again to retry.`, true);
+  } finally { if (_liftSaving === run) _liftSaving = null; }
+}
+
+// The ePass dates missing for a set of DO rows: every date from a DO's start
+// to its end — or to yesterday, while it runs — should be in as a full day.
+//   → { miss: [day numbers], part: [those of them in only in part], sos, last }
+function rpLiftGaps(list) {
+  if (!rpLift) return null;
+  const D1 = rpTodayNo() - 1, floor = D1 - 3660;
+  let lo = Infinity;
+  const spans = [];
+  for (const r of list) {
+    if (r.p0 == null || r.p1 == null) continue;
+    const a = Math.max(r.p0, floor), z = Math.min(r.p1, D1);
+    if (a > z) continue;
+    spans.push(a, z);
+    if (a < lo) lo = a;
+  }
+  const lastFull = Object.keys(rpLift.days).filter(k => rpLift.days[k].full).sort().pop() || '';
+  if (!spans.length) return { miss: [], part: [], sos: 0, lastFull };
+  const n = D1 - lo + 1, gap = new Uint8Array(n), pre = new Int32Array(n + 1), cov = new Int32Array(n + 1);
+  for (let i = 0; i < n; i++) { const d = rpLift.days[rpDayKey(lo + i)]; gap[i] = !d ? 1 : d.full ? 0 : 2; pre[i + 1] = pre[i] + (gap[i] ? 1 : 0); }
+  let sos = 0;
+  for (let j = 0; j < spans.length; j += 2) {
+    const a = spans[j] - lo, z = spans[j + 1] - lo;
+    cov[a]++; cov[z + 1]--;
+    if (pre[z + 1] - pre[a] > 0) sos++;
+  }
+  const miss = [], part = [];
+  for (let i = 0, c = 0; i < n; i++) { c += cov[i]; if (c > 0 && gap[i]) { miss.push(lo + i); if (gap[i] === 2) part.push(lo + i); } }
+  return { miss, part, sos, lastFull };
+}
+
 const RP_DB_COLS = [
   { k: 'doNum',        t: 'DO Number',     type: 'code' },
   { k: 'doDate',       t: 'DO Date',       type: 'date' },
   { k: 'doQty',        t: 'DO Qty',        type: 'num'  },
   { k: 'partyCode',    t: 'Party Code',    type: 'code' },
   { k: 'partyName',    t: 'Party Name',    type: 'text', wide: true },
+  { k: 'sector',       t: 'Sector',        type: 'text', calc: true,
+    tip: 'Power when the party is ticked as a power customer in Settings → Customers' },
   { k: 'collieryCode', t: 'Colliery Code', type: 'code' },
   { k: 'collieryName', t: 'Colliery Name', type: 'text', wide: true },
   { k: 'grade',        t: 'Grade',         type: 'text' },
   { k: 'size',         t: 'Size',          type: 'text' },
   { k: 'doStartDate',  t: 'DO Start Date', type: 'date' },
   { k: 'doEndDate',    t: 'DO End Date',   type: 'date' },
+  { k: 'status',       t: 'Status',        type: 'text', calc: true,
+    tip: 'Upcoming before the start date, Live from it to the end date, Expired after' },
+  { k: 'lifted',       t: 'Lifted Qty',    type: 'num',  calc: true,
+    tip: 'From the ePass files opened in this app. Blank when no ePass of the DO’s period is in yet' },
+  { k: 'balance',      t: 'Balance Unlifted Qty', type: 'num', calc: true,
+    tip: 'DO Qty less Lifted Qty, for live and upcoming DOs' },
+  { k: 'lapsed',       t: 'Lapsed Qty',    type: 'num',  calc: true,
+    tip: 'DO Qty less Lifted Qty, for expired DOs' },
+  { k: 'daysLeft',     t: 'Days to Expiry', type: 'num', calc: true, int: true,
+    tip: 'Days from today to the end date, both counted' },
+  { k: 'asking',       t: 'Asking Rate / Day', type: 'num', calc: true,
+    tip: 'Balance Unlifted Qty over the days left to lift it (today, or the start date if later, to the end date)' },
 ];
+const RP_DB_IX = {};
+RP_DB_COLS.forEach((c, i) => { RP_DB_IX[c.k] = i; });
 const RP_DB_PAGE = 200;
-const _rpDb = { ver: -1, rows: [], cols: [], q: '', filt: {}, sort: { c: 1, dir: -1 }, page: 0, fv: 0, cache: null, pop: null, tok: 0 };
+const _rpDb = { ver: 0, sig: '', rows: [], cols: [], q: '', filt: {}, sort: { c: 1, dir: -1 }, page: 0, fv: 0, cache: null, pop: null, tok: 0, gaps: null };
 // rows per page and View all, kept in the settings (powerReport.dbPageSize / dbPageAll)
 function rpDbSize() { const n = +((appSettings.powerReport || {}).dbPageSize); return n >= 10 && n <= 100000 ? Math.round(n) : RP_DB_PAGE; }
 function rpDbAll() { return !!(appSettings.powerReport || {}).dbPageAll; }
@@ -6498,27 +6796,68 @@ function rpDbQty(x) {
   const n = parseFloat(String(x == null ? '' : x).replace(/,/g, ''));
   return isFinite(n) ? n : null;
 }
+// what the rows are built from: the database, the lifting, the date and the power list
+function rpDbSig() {
+  const pr = appSettings.powerReport || {};
+  return [_dbVer, _liftVer, rpTodayNo(), (pr.parties || []).filter(p => p.power).map(p => rpCodesOf(p).join(',')).join(';')].join('|');
+}
 function rpDbBuild() {
-  if (_rpDb.ver === _dbVer) return;
+  const sig = rpDbSig();
+  if (_rpDb.sig === sig) return;
   const db = mclhoDB || {};
+  const pr = appSettings.powerReport || {};
+  const power = new Set();
+  (pr.parties || []).filter(p => p.power).forEach(p => rpCodesOf(p).forEach(c => power.add(String(c).trim())));
+  const T = rpTodayNo(), D1 = T - 1;
+  const lift = rpLift ? rpLiftTotals() : null;
+  // the dates with any ePass in, to tell "nothing lifted" from "nothing uploaded"
+  const have = rpLift ? Object.keys(rpLift.days).map(rpDayNo).filter(n => n != null).sort((a, b) => a - b) : [];
+  const anyIn = (a, z) => {
+    let lo = 0, hi = have.length;
+    while (lo < hi) { const m = (lo + hi) >> 1; if (have[m] < a) lo = m + 1; else hi = m; }
+    return lo < have.length && have[lo] <= z;
+  };
+  const nf = rpDbBuild.nf || (rpDbBuild.nf = [new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 }), new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 })]);
+  const fmt = (n, int) => nf[int ? 1 : 0].format(n);
   _rpDb.rows = Object.keys(db).map(doNum => {
     const r = db[doNum] || {};
-    let qty = null;
+    const qty = rpDbQty(r.doQty);
+    const S = rpDayNo(rpDbDateKey(rpDecode(r.doStartDate))), E = rpDayNo(rpDbDateKey(rpDecode(r.doEndDate)));
+    const pc = String(r.partyCode || '').trim();
+    const x = { sector: pc ? (power.has(pc) ? 'Power' : 'Non-Power') : '' };
+    x.status = E == null ? '' : E < T ? 'Expired' : S != null && S > T ? 'Upcoming' : 'Live';
+    if (lift) {
+      const t = lift.get(doNum) || 0;
+      const a = S != null ? S : E, z = E != null ? Math.min(E, D1) : D1;
+      if (t > 0 || a == null || a > z || anyIn(a, z)) x.lifted = rp3(t);
+    }
+    if (qty != null && x.lifted != null) {
+      const bal = rp3(Math.max(0, qty - x.lifted));
+      if (x.status === 'Expired') x.lapsed = bal; else if (x.status) x.balance = bal;
+    }
+    if (x.status === 'Live' || x.status === 'Upcoming') {
+      x.daysLeft = E - T + 1;
+      const days = E - Math.max(T, S != null ? S : T) + 1;
+      if (x.balance != null && days > 0) x.asking = Math.round(x.balance / days * 100) / 100;
+    }
     const v = RP_DB_COLS.map(c => {
       if (c.k === 'doNum') return doNum;
-      if (c.type === 'num') { qty = rpDbQty(r[c.k]); return qty == null ? String(r[c.k] == null ? '' : r[c.k]).trim() : qty.toLocaleString('en-IN', { maximumFractionDigits: 2 }); }
+      if (c.calc) { const n = x[c.k]; return n == null ? '' : c.type === 'num' ? fmt(n, c.int) : n; }
+      if (c.type === 'num') { const n = rpDbQty(r[c.k]); return n == null ? String(r[c.k] == null ? '' : r[c.k]).trim() : fmt(n); }
       if (c.k === 'grade') return rpGradeOf(rpDecode(r[c.k]));
       return rpDecode(r[c.k]);
     });
     const s = RP_DB_COLS.map((c, i) => !v[i] ? null : c.type === 'date' ? rpDbDateKey(v[i])
-                              : c.type === 'num' ? qty : c.type === 'code' && /^\d+$/.test(v[i]) ? v[i].padStart(20, '0') : v[i].toLowerCase());
-    return { v, s, qty, h: v.join('\u0001').toLowerCase() };
+                              : c.type === 'num' ? (c.calc ? x[c.k] : rpDbQty(r[c.k]))
+                              : c.type === 'code' && /^\d+$/.test(v[i]) ? v[i].padStart(20, '0') : v[i].toLowerCase());
+    return { v, s, qty, p0: S, p1: E, h: v.join('\u0001').toLowerCase() };
   });
-  // columns no record fills (older saves kept fewer fields) are left out
-  _rpDb.cols = RP_DB_COLS.map((c, i) => i).filter(i => i === 0 || _rpDb.rows.some(r => r.v[i] !== ''));
+  // columns no record fills (older saves kept fewer fields) are left out;
+  // the worked-out ones always stay, so they don't come and go as the lifting loads
+  _rpDb.cols = RP_DB_COLS.map((c, i) => i).filter(i => i === 0 || RP_DB_COLS[i].calc || _rpDb.rows.some(r => r.v[i] !== ''));
   Object.keys(_rpDb.filt).forEach(c => { if (_rpDb.cols.indexOf(+c) < 0) delete _rpDb.filt[c]; });
   if (_rpDb.sort && _rpDb.cols.indexOf(_rpDb.sort.c) < 0) _rpDb.sort = null;
-  _rpDb.ver = _dbVer; _rpDb.cache = null;
+  _rpDb.sig = sig; _rpDb.ver++; _rpDb.cache = null; _rpDb.gaps = null;
 }
 function rpDbWords(q) { return String(q || '').toLowerCase().split(/\s+/).filter(Boolean); }
 // does a row pass the search and every column filter but one (skip)?
@@ -6559,6 +6898,7 @@ function renderRpDb() {
       : 'The DO database is empty.') + '</div></div>';
     return;
   }
+  rpLiftEnsure();
   rpDbBuild();
   if (!pane.querySelector('.rp-db')) {
     pane.innerHTML =
@@ -6571,7 +6911,8 @@ function renderRpDb() {
            <button class="rp-dbbtn" id="rpDbXls" onclick="rpDbExport()" title="The DOs that match, as an Excel file">Excel</button>
          </div>
          <div class="rp-dbchips" id="rpDbChips"></div>
-         <div class="rp-dbsum" id="rpDbSum"></div>
+         <div class="rp-dbsum"><span id="rpDbSum"></span><span class="rp-dblift" id="rpDbLift"></span></div>
+         <div class="rp-dbliftmore" id="rpDbLiftMore"></div>
          <div class="rp-dbscroll" id="rpDbScroll"><table class="rp-dbt" id="rpDbTable"></table></div>
          <div class="rp-dbmore" id="rpDbMore"></div>
        </div>`;
@@ -6591,13 +6932,17 @@ function rpDbDraw() {
   const from = all ? 0 : _rpDb.page * size, to = all ? list.length : Math.min(list.length, from + size);
   const fmtN = x => x.toLocaleString('en-IN');
   const qty = list.reduce((a, r) => a + (r.qty || 0), 0);
+  const tot = k => { const c = RP_DB_IX[k]; let t = 0, n = 0; list.forEach(r => { if (r.s[c] != null) { t += r.s[c]; n++; } }); return n ? t : null; };
+  const figs = [['lifted', 'Lifted'], ['balance', 'Balance'], ['lapsed', 'Lapsed']]
+    .map(([k, t]) => { const v = tot(k); return v == null ? '' : ` · ${t} <b>${v.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</b>`; }).join('');
   const any = _rpDb.q || Object.keys(_rpDb.filt).length;
   const when = rpDbWhen(_dbUpdated);
   document.getElementById('rpDbMeta').textContent = `${fmtN(total)} DOs${when ? ' · saved ' + when : ''}`;
   document.getElementById('rpDbSum').innerHTML =
     (any ? `<b>${fmtN(list.length)}</b> of ${fmtN(total)} DOs match` : `<b>${fmtN(total)}</b> DOs`) +
-    (cols.indexOf(2) >= 0 ? ` · DO Qty <b>${qty.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</b>` : '') +
+    (cols.indexOf(2) >= 0 ? ` · DO Qty <b>${qty.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</b>` : '') + figs +
     (list.length > to - from ? ` · showing ${fmtN(from + 1)}–${fmtN(to)}` : '');
+  rpDbLiftNote(list);
   document.getElementById('rpDbClear').style.display = any ? '' : 'none';
   const xl = document.getElementById('rpDbXls');
   xl.textContent = any ? `Excel · ${fmtN(list.length)} DOs` : 'Excel · all';
@@ -6619,7 +6964,7 @@ function rpDbDraw() {
   let h = '<thead><tr>' + cols.map(c => {
     const col = RP_DB_COLS[c], f = !!_rpDb.filt[c], so = sortOf(c);
     return `<th class="${col.type === 'num' ? 'n' : ''}${f ? ' f' : ''}"><button class="rp-dbh" data-c="${c}" onclick="rpDbOpen(${c}, this)" aria-haspopup="dialog" ` +
-      `title="Sort and filter ${rpEsc(col.t)}">${rpEsc(col.t)}<span class="rp-dbi">${so}${f ? RP_DB_FUNNEL : so ? '' : '<span class="rp-dbcar">▾</span>'}</span></button></th>`;
+      `title="${col.tip ? rpEsc(col.tip) + ' — tap to sort and filter' : 'Sort and filter ' + rpEsc(col.t)}">${rpEsc(col.t)}<span class="rp-dbi">${so}${f ? RP_DB_FUNNEL : so ? '' : '<span class="rp-dbcar">▾</span>'}</span></button></th>`;
   }).join('') + '</tr></thead><tbody>';
   const table = document.getElementById('rpDbTable');
   const sc = document.getElementById('rpDbScroll');
@@ -6646,6 +6991,54 @@ function rpDbDraw() {
   sc.onscroll = _rpDb.view.virt ? () => { if (!_rpDb.raf) _rpDb.raf = requestAnimationFrame(() => { _rpDb.raf = 0; rpDbWindow(false); }); } : null;
   rpDbPager(list.length, pages, all, size);
 }
+// The corner note: is the ePass in for every date of the DOs shown, up to
+// yesterday? Tapping it lists the dates that aren't.
+function rpDbLiftGaps(list) {
+  const key = _rpDb.ver + '|' + (_rpDb.cache ? _rpDb.cache.sig : '');
+  if (_rpDb.gaps && _rpDb.gaps.key === key) return _rpDb.gaps.g;
+  const g = rpLiftGaps(list);
+  _rpDb.gaps = { key, g };
+  return g;
+}
+function rpDbLiftNote(list) {
+  const el = document.getElementById('rpDbLift'), more = document.getElementById('rpDbLiftMore');
+  if (!el || !more) return;
+  const fmtN = x => x.toLocaleString('en-IN');
+  let html = '', cls = '', detail = '', tap = null;
+  if (_liftState === 'loading' && !rpLift) { html = 'Loading SO-wise lifting…'; }
+  else if (_liftState === 'err' && !rpLift) {
+    html = '⚠ SO-wise lifting didn’t load — tap to retry'; cls = 'bad'; tap = () => rpLiftLoad();
+  } else if (rpLift) {
+    const g = rpDbLiftGaps(list), D1 = rpTodayNo() - 1;
+    const today = rpLift.days[rpDayKey(D1 + 1)];
+    const todayTxt = today ? ` · ${rpDayLabel(D1 + 1)} to ${rpEsc(today.cut || '—')}` : '';
+    if (g && g.miss.length) {
+      cls = 'bad'; tap = () => { _liftNoteOpen = !_liftNoteOpen; rpDbLiftNote(list); };
+      html = `⚠ ePass missing · ${fmtN(g.miss.length)} day${g.miss.length === 1 ? '' : 's'} to ${rpDayLabel(D1)} · ${fmtN(g.sos)} SO${g.sos === 1 ? '' : 's'} ${_liftNoteOpen ? '▴' : '▾'}`;
+      if (_liftNoteOpen) {
+        const runs = rpDayRuns(g.miss), part = new Set(g.part);
+        const shown = runs.slice(0, 12).map(r => {
+          const p = r[0] === r[1] && part.has(r[0]);
+          return rpDaySpan(r[0], r[1]) + (p ? ' (part)' : '');
+        });
+        detail = `<b>ePass not uploaded${g.part.length ? ' or only in part' : ''}</b> for these dates in the periods of the SOs shown: ` +
+          shown.join(', ') + (runs.length > 12 ? `, and ${fmtN(runs.length - 12)} more stretch${runs.length - 12 === 1 ? '' : 'es'}` : '') +
+          `. Lifted, Balance, Lapsed and Asking Rate count only the ePass files opened in this app — open the ePass of those dates to complete them.`;
+      }
+    } else {
+      cls = 'ok';
+      html = g && g.lastFull ? `✓ ePass in to ${rpDayLabel(rpDayNo(g.lastFull))}${todayTxt}` : `✓ ePass in${todayTxt}`;
+    }
+  }
+  el.innerHTML = html;
+  el.className = 'rp-dblift' + (cls ? ' ' + cls : '') + (tap ? ' tap' : '');
+  el.onclick = tap;
+  el.setAttribute('role', tap ? 'button' : 'status');
+  if (tap) el.setAttribute('aria-expanded', String(!!detail)); else el.removeAttribute('aria-expanded');
+  more.innerHTML = detail;
+  more.style.display = detail ? '' : 'none';
+}
+
 const RP_DB_VIRT = 400;        // past this many rows on one page, draw only what is in view
 function rpDbRowHtml(r, cols, i) {
   return `<tr${i % 2 ? ' class="z"' : ''}>` + cols.map(c => {
@@ -6918,31 +7311,40 @@ function rpDbClose() {
   _rpDb.pop = null;
 }
 
+// the lifting's state, for the Excel note
+function rpDbLiftLine(list) {
+  if (!rpLift) return ' · Lifted Qty not loaded';
+  const g = rpDbLiftGaps(list), D1 = rpTodayNo() - 1;
+  if (g && g.miss.length) return ` · ePass missing for ${g.miss.length.toLocaleString('en-IN')} day${g.miss.length === 1 ? '' : 's'} up to ${rpDayLabel(D1, true)} in these SOs’ periods, so Lifted Qty may be short for ${g.sos.toLocaleString('en-IN')} SO${g.sos === 1 ? '' : 's'}`;
+  return g && g.lastFull ? ` · Lifted Qty from the ePass up to ${rpDayLabel(rpDayNo(g.lastFull), true)}` : '';
+}
+
 // the rows that match, as an Excel file with Excel's own filter buttons on
 async function rpDbExport() {
   const list = rpDbFiltered(), cols = _rpDb.cols;
   if (!list.length) { alert('No DO matches the search and filters.'); return; }
-  const frac = list.some(r => r.qty != null && Math.round(r.qty) !== r.qty);
+  const fracOf = c => list.some(r => r.s[c] != null && Math.round(r.s[c]) !== r.s[c]);
   const serial = k => k ? (Date.UTC(Math.floor(k / 10000), Math.floor(k / 100) % 100 - 1, k % 100) - Date.UTC(1899, 11, 30)) / 864e5 : '';
   const head = cols.map(c => {
     const col = RP_DB_COLS[c];
-    return { v: col.t, style: col.type === 'date' ? 9 : col.type === 'num' ? (frac ? 11 : 10) : 5 };
+    return { v: col.t, style: col.type === 'date' ? 9 : col.type === 'num' ? (!col.int && fracOf(c) ? 11 : 10) : 5 };
   });
   const rows = list.map(r => cols.map(c => {
     const col = RP_DB_COLS[c];
     if (col.type === 'date') return r.s[c] ? serial(r.s[c]) : r.v[c];
-    if (col.type === 'num') return r.qty != null ? r.qty : r.v[c];
+    if (col.type === 'num') return r.s[c] != null ? r.s[c] : r.v[c];
     return r.v[c];
   }));
   const parts = [];
   if (_rpDb.q) parts.push(`search “${_rpDb.q}”`);
   Object.keys(_rpDb.filt).forEach(c => parts.push(RP_DB_COLS[c].t + ' filtered'));
   const sh = { name: 'DO Database', freeze: true, filter: true,
-    cols: cols.map(c => ({ doNum: 14, doDate: 13, doQty: 11, partyCode: 13, partyName: 44, collieryCode: 12, collieryName: 30 }[RP_DB_COLS[c].k] || 13)),
+    cols: cols.map(c => ({ doNum: 14, doDate: 13, doQty: 11, partyCode: 13, partyName: 44, sector: 11, collieryCode: 12, collieryName: 30,
+                           status: 9, lifted: 12, balance: 14, lapsed: 12, daysLeft: 10, asking: 13 }[RP_DB_COLS[c].k] || 13)),
     blocks: [
       { t: 'title', v: 'i3MS DO Database' },
       { t: 'note', v: `${list.length.toLocaleString('en-IN')} of ${_rpDb.rows.length.toLocaleString('en-IN')} DOs` + (parts.length ? ' · ' + parts.join(' · ') : '') +
-                      (_dbUpdated ? ` · database saved ${rpDbWhen(_dbUpdated)}` : '') },
+                      (_dbUpdated ? ` · database saved ${rpDbWhen(_dbUpdated)}` : '') + rpDbLiftLine(list) },
       { t: 'table', head, rows },
     ] };
   const t = new Date();
@@ -8957,6 +9359,7 @@ function finishLoad() {
   }
 
   updateStats();
+  rpLiftSave();
 }
 
 const RP_ALL_TAB = 'All days';
