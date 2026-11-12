@@ -1205,10 +1205,7 @@ body.dark .rp-db.edh .rp-dbt tbody td.ed { color:var(--ink); }
   font-family:'IBM Plex Sans Condensed', sans-serif; font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--mute); white-space:normal; text-align:center; line-height:1.3; }
 .rp-dbht { min-width:0; text-wrap:balance; }
 .rp-dbi:empty { display:none; }
-/* the status bar's column, and the tab's ticks and ✎ */
-.rp-dbt thead th.st { box-shadow:inset 0 3px 0 #d97a06; }
-.rp-dbt thead th.st:first-child { box-shadow:inset 0 3px 0 #d97a06, 1px 0 0 var(--ash); }
-.rp-dbt tbody td.st { background-image:linear-gradient(rgba(217,122,6,.07), rgba(217,122,6,.07)); }
+/* the tab's ticks and ✎ */
 .rp-dbt tbody tr.sel td { background-image:linear-gradient(rgba(217,122,6,.16), rgba(217,122,6,.16)); }
 .rp-dbsel { width:16px; height:16px; margin:0 8px 0 0; vertical-align:-3px; accent-color:#d97a06; cursor:pointer; }
 .rp-dbedb { border:0; background:transparent; color:var(--mute); cursor:pointer; padding:0 7px 0 0; font-size:13px; line-height:1; vertical-align:-1px; }
@@ -1220,12 +1217,6 @@ body.dark .rp-db.edh .rp-dbt tbody td.ed { color:var(--ink); }
 .rp-dbseln { flex:1; min-width:120px; }
 .rp-dbseln.ok { color:var(--green); } .rp-dbseln.bad { color:var(--red); }
 .rp-dbbtn.rp-dbdel { border-color:var(--red); color:var(--red); }
-.rp-dbstat { display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:4px 14px; padding:6px 12px; border-top:1px solid var(--ash);
-  background:var(--ash-soft); font-family:var(--mono); font-size:11px; color:var(--mute); }
-.rp-dbstat i { font-style:normal; font-family:'IBM Plex Sans Condensed', sans-serif; font-size:10px; letter-spacing:.08em; text-transform:uppercase; }
-.rp-dbstat b { color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
-.rp-dbstcol { border:1px solid var(--ash); background:var(--paper); color:var(--ink); cursor:pointer; padding:3px 8px; font-family:'IBM Plex Sans Condensed', sans-serif;
-  font-size:10px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 /* smart filter */
 .rp-dbp-mode { display:flex; margin:0 12px 8px; border:1px solid var(--edge); }
 .rp-dbp-mode button { flex:1; padding:7px 6px; border:0; background:transparent; color:var(--dim); cursor:pointer; font-size:12px; font-weight:600; }
@@ -1236,10 +1227,6 @@ body.dark .rp-db.edh .rp-dbt tbody td.ed { color:var(--ink); }
 .rp-dbcj { display:flex; gap:18px; font-size:12px; padding-left:2px; }
 .rp-dbcj label { display:inline-flex; align-items:center; gap:6px; cursor:pointer; }
 .rp-dbcj input { accent-color:#d97a06; margin:0; }
-.rp-dbstshow { flex:0 0 auto; min-height:0; display:flex; flex-wrap:wrap; padding:0 4px; }
-.rp-dbp-list.rp-dbstshow label { flex:0 0 auto; padding:6px 8px; gap:6px; }
-#rpDbStCols { max-height:300px; }
-.rp-dbp-sub { padding:8px 12px 2px; font-family:'IBM Plex Sans Condensed', sans-serif; font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); }
 /* ✎ on the tab */
 .rp-dbedsub { font-size:12px; font-weight:400; color:var(--dim); margin-top:1px; }
 .rp-dbedbody { flex:1; min-height:0; overflow:auto; }
@@ -1536,6 +1523,8 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 
 /* html export settings */
 .rp-modes3 { flex-wrap:nowrap; }
+.rp-tsub { font-size:11px; font-weight:600; color:var(--mid); margin:14px 0 6px; }
+.rp-modes > .rp-mode { flex:1 1 0; min-width:0; }
 .rp-modes3 .rp-mode { flex:1 1 0; min-width:0; padding:8px 9px; }
 .rp-modes { display:flex; gap:8px; flex-wrap:wrap; }
 .rp-mode {
@@ -1782,6 +1771,68 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 .rp-asof span:last-child { font-family:var(--mono); letter-spacing:.03em; text-transform:none; color:var(--mid); }
 .multiday-tabs-wrap { margin-bottom:10px; }
 
+/* ── the top of the screen ──
+   Full: as it always was. Compact: one slim bar (report date and time, the DO list's
+   mark, theme, ⚙, New File); the DO list's card opens under it from the mark.
+   rp-sticky pins the lot to the top; .tuck slides it away while scrolling down. */
+.rp-tabset { display:contents; }
+.rp-top, .rp-tlast { display:none; }
+#dashboard.rp-compact .report-meta, #dashboard.rp-compact .rp-asof { display:none; }
+#dashboard.rp-compact .rp-topwrap { margin:-12px -12px 12px; padding:8px 12px 0; background:var(--bg); }
+#dashboard.rp-compact.rp-sticky .rp-topwrap { position:sticky; top:0; z-index:60; transition:transform .22s ease, box-shadow .22s ease; will-change:transform; }
+#dashboard.rp-compact.rp-sticky .rp-topwrap.lift { box-shadow:0 8px 16px -12px rgba(0,0,0,.45); border-bottom:1px solid var(--border); }
+#dashboard.rp-compact.rp-sticky .rp-topwrap.tuck { transform:translateY(calc(-100% - 4px)); box-shadow:none; }
+#dashboard.rp-compact .rp-top { display:flex; align-items:center; gap:6px; min-height:42px; padding:0 0 8px; border-bottom:1px solid var(--border); margin-bottom:8px; }
+.rp-twhen { display:flex; align-items:baseline; gap:7px; min-width:0; flex-wrap:wrap; row-gap:0; }
+.rp-twhen b { font-family:var(--mono); font-size:15px; font-weight:600; color:#d97a06; white-space:nowrap; }
+.rp-twhen span { font-family:var(--mono); font-size:12px; color:var(--mid); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rp-twhen b:empty { display:none; }
+.rp-tchip { display:inline-flex; align-items:center; gap:5px; flex-shrink:0; height:32px; padding:0 9px 0 7px; margin-left:4px; cursor:pointer;
+  border:1px solid var(--line); background:var(--raise); color:var(--mid); font-family:var(--sans); font-size:11.5px; font-weight:600;
+  -webkit-tap-highlight-color:transparent; }
+.rp-tchip .rp-tic { display:inline-flex; width:16px; height:16px; align-items:center; justify-content:center; }
+.rp-tchip .rp-tic svg { width:16px; height:16px; }
+.rp-tcar { font-size:9px; color:var(--dim); transition:transform .15s; }
+.rp-tchip[aria-expanded="true"] .rp-tcar { transform:rotate(180deg); }
+.rp-tchip.ok   { color:var(--text); }
+.rp-tchip.warn { border-color:var(--red); color:var(--red); background:rgba(192,57,43,.07); }
+.rp-tchip.none { border-color:var(--amber); color:var(--amber); }
+.rp-tchip.busy .rp-tic::before { content:''; width:10px; height:10px; border:2px solid var(--amber); border-right-color:transparent; border-radius:50%; animation:rpDbSpin .8s linear infinite; }
+.rp-tgap { flex:1; min-width:0; }
+.rp-tbtn { display:inline-flex; align-items:center; justify-content:center; gap:5px; flex-shrink:0; height:32px; min-width:34px; padding:0 8px; cursor:pointer;
+  border:1px solid var(--line); background:var(--raise); color:var(--mid); font-family:var(--sans); font-size:12px; -webkit-tap-highlight-color:transparent; }
+.rp-tbtn:active, .rp-tchip:active { border-color:var(--amber); }
+.rp-tbtn svg { width:15px; height:15px; flex-shrink:0; }
+.rp-tbtn .rp-tsun { color:var(--amber); }
+.rp-tbtn .rp-tmoon { display:none; }
+body.dark .rp-tbtn .rp-tsun { display:none; }
+body.dark .rp-tbtn .rp-tmoon { display:block; }
+@media (max-width: 420px) { .rp-tnew span { display:none; } }
+/* the DO list's card: a drawer under the bar */
+#dashboard.rp-compact .rp-topwrap:not(.open) > .db-card { display:none; }
+#dashboard.rp-compact .rp-topwrap > .db-card { margin:0 0 8px; padding:9px 12px; }
+#dashboard.rp-compact .rp-topwrap.open > .rp-tlast:not(:empty) { display:block; }
+.rp-tlast { font-size:11px; color:var(--dim); margin:-4px 2px 8px; line-height:1.5; }
+.rp-tlast b { font-weight:600; color:var(--mid); }
+.rp-tlast.warn b { color:var(--red); }
+#dashboard.rp-compact .multiday-tabs-wrap { margin-bottom:8px; }
+#dashboard.rp-compact .multiday-tabs-label { display:none; }
+#dashboard.rp-compact .unknown-banner { margin-bottom:8px; padding:6px 10px; }
+#dashboard.rp-compact .rp-tabs { margin-bottom:8px; gap:6px; }
+#dashboard.rp-compact #rpViewSub:not(.rp-empty) { display:none; }
+#dashboard.rp-compact #rpViewSub.rp-empty { margin:0 2px 8px; }
+#dashboard.rp-compact #rpStatus { margin:0 2px 8px; transition:opacity .4s; }
+#dashboard.rp-compact #rpStatus:empty, #dashboard.rp-compact #rpStatus.gone { display:none; }
+#dashboard.rp-compact #rpStatus.fading { opacity:0; }
+/* on a phone the five tabs share one row that scrolls sideways; the buttons go under them */
+@media (max-width: 640px) {
+  #dashboard.rp-compact .rp-tabset { display:flex; gap:6px; flex:1 1 100%; min-width:0; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch;
+    scroll-snap-type:x proximity; scroll-padding:0 12px; }
+  #dashboard.rp-compact .rp-tabset::-webkit-scrollbar { display:none; }
+  #dashboard.rp-compact .rp-tabset .rp-tab { flex-shrink:0; scroll-snap-align:start; padding:7px 11px; }
+}
+@media (prefers-reduced-motion: reduce) { #dashboard.rp-compact.rp-sticky .rp-topwrap { transition:none; } }
+
 </style>
 </head>
 <body>
@@ -1793,7 +1844,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B53-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B54-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1845,6 +1896,20 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 <!-- ══ DASHBOARD ══════════════════════════════════════ -->
 <div id="dashboard" style="display:none">
 
+  <!-- the top of the screen; with ⚙ → General → Top of the Screen set to Compact,
+       one slim bar stands for the report date, the DO list and the time -->
+  <div class="rp-topwrap" id="rpTopWrap">
+  <div class="rp-top" id="rpTop">
+    <div class="rp-twhen" id="rpTopWhen"><b id="rpTopTime">—</b><span id="rpTopDay">—</span></div>
+    <button class="rp-tchip" id="rpTopChip" onclick="rpTopOpen()" aria-expanded="false" aria-controls="rpDbCardMain" title="The DO list — tap for its details, Paste and Upload">
+      <span class="rp-tic" id="rpTopIc"></span><span class="rp-ttxt" id="rpTopTxt">DO list</span><span class="rp-tcar" aria-hidden="true">▾</span>
+    </button>
+    <span class="rp-tgap"></span>
+    <button class="rp-tbtn" onclick="toggleTheme()" title="Light or dark" aria-label="Light or dark"><svg class="rp-tsun" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><svg class="rp-tmoon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
+    <button class="rp-tbtn" onclick="openRpSettings()" title="Settings" aria-label="Settings"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
+    <button class="rp-tbtn rp-tnew" onclick="document.getElementById('fileInput').click()" title="Open another ePass file"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg><span>New File</span></button>
+  </div>
+
   <div class="report-meta">
     <div>
       <div class="meta-label">Report Date</div>
@@ -1874,7 +1939,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     </button>
   </div>
 
-  <div class="db-card">
+  <div class="db-card" id="rpDbCardMain">
     <div class="db-info">
       <div class="db-label">DO Database</div>
       <div class="db-line"><span class="db-tick" id="dbIndicator" style="display:none;"></span><div class="db-val none" id="dbStatus">Loading…</div><button class="db-more" id="dbMore" onclick="rpDbToggleStats()" style="display:none;" aria-expanded="false" aria-controls="dbStats">Stats ▾</button></div>
@@ -1885,6 +1950,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
       <button class="db-upload-btn" id="dbUpdateBtn" onclick="document.getElementById('mclhoInput').click()">Upload</button>
     </div>
   </div>
+  <div class="rp-tlast" id="rpTopLast"></div>
 
   <div id="multiDaySection" style="display:none">
     <div class="multiday-tabs-wrap">
@@ -1902,11 +1968,13 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
   </div>
 
   <div class="rp-tabs">
+    <div class="rp-tabset" id="rpTabset">
     <button class="rp-tab on" id="rpTab1" onclick="rpSwitch(1)">Power Sector</button>
     <button class="rp-tab"    id="rpTab3" onclick="rpSwitch(3)">Sourcewise</button>
     <button class="rp-tab"    id="rpTab4" onclick="rpSwitch(4)">MCL</button>
     <button class="rp-tab"    id="rpTab2" onclick="rpSwitch(2)">Customer</button>
     <button class="rp-tab"    id="rpTab5" onclick="rpSwitch(5)">DO Database</button>
+    </div>
     <label class="rp-sw" title="Show or hide the day-by-day breakdown for this report">
       <input type="checkbox" id="rpDaywiseTgl" onchange="rpToggleDaywise()">
       <span class="rp-sw-track"><span class="rp-sw-knob"></span></span>
@@ -1922,6 +1990,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 
   <div class="rp-note" id="rpViewSub">—</div>
   <div id="rpStatus" class="rp-note"></div>
+  </div><!-- /rpTopWrap -->
   <div class="rp-tblwrap" id="rpPane1"></div>
   <div class="rp-tblwrap" id="rpPane3" style="display:none;"></div>
   <div class="rp-tblwrap" id="rpPane4" style="display:none;"></div>
@@ -2295,6 +2364,26 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 
       <div class="rp-stab" data-tab="general" role="tabpanel">
       <div class="stt-section">
+        <div class="stt-section-hdr"><label class="stt-label">Top of the Screen</label></div>
+        <div class="stt-hint" style="margin:0 0 8px;">What sits above a report. Tap Save to keep the change.</div>
+        <div class="rp-modes">
+          <button class="rp-mode" id="rpTop_compact" onclick="rpTopPick('mode', 'compact')"><b>Compact</b><span>One slim bar: the report date and time, the DO list's ✓ and the buttons. Tap ✓ for the DO list's details, Paste and Upload.</span></button>
+          <button class="rp-mode" id="rpTop_full" onclick="rpTopPick('mode', 'full')"><b>Full</b><span>The report date, the DO list and the time each on a row of its own, as before.</span></button>
+        </div>
+        <div id="rpTopMore">
+          <div class="rp-tsub">While scrolling a report</div>
+          <div class="rp-modes rp-modes3">
+            <button class="rp-mode" id="rpTop_back" onclick="rpTopPick('scroll', 'back')"><b>Comes back</b><span>Slides away as you scroll down, back as you scroll up.</span></button>
+            <button class="rp-mode" id="rpTop_stay" onclick="rpTopPick('scroll', 'stay')"><b>Always stays</b><span>Pinned to the top.</span></button>
+            <button class="rp-mode" id="rpTop_away" onclick="rpTopPick('scroll', 'away')"><b>Scrolls away</b><span>Stays at the top of the page.</span></button>
+          </div>
+          <label class="rp-dbto" style="margin-top:8px;"><input type="checkbox" id="rpTop_warn" onchange="rpTopPick('warn', this.checked)">
+            <span><b>Open the DO list by itself when it needs attention</b><i>No list loaded, a failed save, or DOs in the file that aren't in the list. It closes again once that's sorted.</i></span></label>
+          <label class="rp-dbto"><input type="checkbox" id="rpTop_fade" onchange="rpTopPick('fade', this.checked)">
+            <span><b>Hide done messages after 5 seconds</b><i>Such as ✓ Saved. Warnings stay. Tap ✓ in the bar to see the last message.</i></span></label>
+        </div>
+      </div>
+      <div class="stt-section">
         <div class="stt-section-hdr">
           <label class="stt-label">Autosave</label>
           <label class="rp-sw" title="Save each ePass file as soon as it is opened">
@@ -2470,6 +2559,7 @@ function rpDbTick() {
     ind.setAttribute('role', 'img'); ind.setAttribute('aria-label', title);
   });
   rpDbStatsPaint();
+  rpTopPaint();
 }
 function rpDbButtons(busy) {
   document.querySelectorAll('.db-upload-btn').forEach(b => { b.disabled = busy; b.style.opacity = busy ? '.45' : ''; });
@@ -3092,7 +3182,7 @@ function rpOpenSettingsNow() {
                groups: rpDraftGroups(pr), groupTable: !!pr.groupTable,
                groupSub: pr.groupSubtotals !== false, groupColors: !!pr.groupColors, autoSave: rpAutoSaveOn(pr),
                doEdits: JSON.parse(JSON.stringify(rpDoEdits(pr))), doEditStyle: (({ mode, font, fill }) => ({ mode, font, fill }))(rpEdStyle(pr)),
-               dbHidden: [...rpDbHidden(pr)], dbColsInTab: rpDbColsInTab(pr), dbTab: rpDbTab(pr) };
+               dbHidden: [...rpDbHidden(pr)], dbColsInTab: rpDbColsInTab(pr), dbTab: rpDbTab(pr), top: rpTopCfg(pr) };
   _rpDeOpen = null;
   _rpGrpPick = null;
   (pr.parties || []).forEach(p => {
@@ -3135,11 +3225,23 @@ function rpOpenSettingsNow() {
   rpSettingsTab(_rpSttTab);
   rpSttDots();
 }
+function rpTopUi() {
+  if (!_rpDraft) return;
+  const t = _rpDraft.top = rpTopCfg({ top: _rpDraft.top });
+  ['compact', 'full'].forEach(m => { const b = document.getElementById('rpTop_' + m); if (b) b.classList.toggle('on', t.mode === m); });
+  ['back', 'stay', 'away'].forEach(m => { const b = document.getElementById('rpTop_' + m); if (b) b.classList.toggle('on', t.scroll === m); });
+  const w = document.getElementById('rpTop_warn'), f = document.getElementById('rpTop_fade'), more = document.getElementById('rpTopMore');
+  if (w) w.checked = t.warn;
+  if (f) f.checked = t.fade;
+  if (more) more.style.display = t.mode === 'compact' ? '' : 'none';
+}
+function rpTopPick(k, v) { _rpDraft.top = Object.assign(rpTopCfg({ top: _rpDraft.top }), { [k]: v }); rpTopUi(); rpSttDots(); }
 function rpAutoSaveUi() {
   const cb = document.getElementById('rpAutoSave');
   if (!cb) return;
   cb.checked = _rpDraft.autoSave !== false;
   document.getElementById('rpAutoSaveLbl').textContent = cb.checked ? 'On' : 'Off';
+  rpTopUi();
 }
 function closeRpSettings() {
   document.getElementById('rpSettingsOverlay').style.display = 'none';
@@ -4148,7 +4250,7 @@ async function rpGsSend() {
 // key / value rows and tables with drop-downs where there's a fixed choice.
 // Export takes what's on screen; import fills the settings screen from the
 // file, and nothing reaches the shared settings until Save.
-const RP_BUILD = 'rp-B53-test';
+const RP_BUILD = 'rp-B54-test';
 const RP_SF_FORMAT = 'RoadPowerSettings 1';
 const RP_SF_YN = ['Yes', 'No'];
 
@@ -4297,6 +4399,14 @@ function rpSfSheets() {
       ['New PIN', '', { text: true, note: 'Type 4 to 8 digits to set a new PIN; leave it empty to keep the stored one.' }],
       ['Stored PIN', lk.pin ? `${lk.pin.salt}:${lk.pin.hash}:${lk.pin.len}` : '', { ro: true, note: 'Scrambled — it can’t be read back. Leave it as it is to keep the PIN.' }],
     ] },
+    { t: 'blank' },
+    { t: 'head2', v: 'Top of the screen' },
+    { t: 'kv', rows: (tp => [
+      ['Top of the screen', tp.mode === 'full' ? 'Full' : 'Compact', { list: ['Compact', 'Full'], note: 'Compact: one slim bar above a report. Full: as before.' }],
+      ['While scrolling', RP_TOP_SCROLL.find(x => x[0] === tp.scroll)[1], { list: RP_TOP_SCROLL.map(x => x[1]), note: 'Compact only: what the bar does while a report is scrolled.' }],
+      ['Open the DO list on a warning', yn(tp.warn), { list: RP_SF_YN, note: 'Compact only: the DO list opens by itself when it needs attention.' }],
+      ['Hide done messages', yn(tp.fade), { list: RP_SF_YN, note: 'Compact only: messages such as ✓ Saved go after 5 seconds; warnings stay.' }],
+    ])(rpTopCfg({ top: d.top })) },
     { t: 'blank' },
     { t: 'head2', v: 'Saving' },
     { t: 'kv', rows: [['Autosave', yn(d.autoSave !== false), { list: RP_SF_YN, note: 'Yes: each ePass file is saved as soon as it is opened. No: only with Save Day.' }]] },
@@ -4964,6 +5074,21 @@ function rpSfApply(book, fileName) {
     const mode = RP_LOCK_MODES.find(x => x.id === lk.mode);
     if (lk.on && mode && mode.pin && !lk.pin) w('General', 0, 'the passcode type needs a PIN and none is set — type one under New PIN, or on the General tab.');
     parts.unshift(lk.on ? `passcode on (${mode ? mode.name : lk.mode})` : 'passcode off');
+    {
+      const tp = rpTopCfg({ top: d.top });
+      const lm = R.kv('top of the screen');
+      if (lm) { const v = rpSfTxt(lm.v).toLowerCase(); if (v === 'compact' || v === 'full') tp.mode = v; else w('General', lm.r, 'Top of the screen must be Compact or Full — kept as it was.'); }
+      const sc = R.kv('while scrolling');
+      if (sc) { const v = rpSfTxt(sc.v).toLowerCase(), m = RP_TOP_SCROLL.find(x => x[1].toLowerCase() === v); if (m) tp.scroll = m[0]; else w('General', sc.r, `While scrolling must be ${RP_TOP_SCROLL.map(x => x[1]).join(', ')} — kept as it was.`); }
+      [['open the do list on a warning', 'warn', 'Open the DO list on a warning'], ['hide done messages', 'fade', 'Hide done messages']].forEach(([key, k, label]) => {
+        const x = R.kv(key);
+        if (!x) return;
+        const v = rpSfYN(x.v);
+        if (v === null) w('General', x.r, `${label} must be Yes or No — kept as it was.`); else tp[k] = v;
+      });
+      d.top = tp;
+      parts.push(`top of the screen ${tp.mode}` + (tp.mode === 'compact' ? ` (${RP_TOP_SCROLL.find(x => x[0] === tp.scroll)[1].toLowerCase()})` : ''));
+    }
     const as = R.kv('autosave');
     if (as) { const v = rpSfYN(as.v); if (v === null) w('General', as.r, 'Autosave must be Yes or No — kept as it was.'); else { d.autoSave = v; parts.push('autosave ' + (v ? 'on' : 'off')); } }
     const hf = R.kv('history file');
@@ -5541,7 +5666,6 @@ async function saveRpSettings() {
     // owned by the DO Database report's page controls
     dbPageSize: pr0.dbPageSize,
     dbPageAll:  pr0.dbPageAll,
-    dbStat:     pr0.dbStat,
     show:      _rpDraft.show,
     reports:       _rpDraft.reports.map(r => ({ id: r.id, show: r.show })),
     exportReports: _rpDraft.exportReports.map(r => ({ id: r.id, show: r.show })),
@@ -5561,6 +5685,7 @@ async function saveRpSettings() {
     dbHidden: RP_DB_COLS.map(c => c.k).filter(k => k !== 'doNum' && (_rpDraft.dbHidden || []).indexOf(k) >= 0),
     dbColsInTab: _rpDraft.dbColsInTab !== false,
     dbTab: rpDbTab({ dbTab: _rpDraft.dbTab }),
+    top: rpTopCfg({ top: _rpDraft.top }),
     doEditStyle: (({ mode, font, fill }) => ({ mode, font, fill }))(rpEdStyle({ doEditStyle: _rpDraft.doEditStyle })),
     // set only in the settings file on GitHub
     ...(pr0.liftPath ? { liftPath: pr0.liftPath } : {}),
@@ -5933,10 +6058,131 @@ async function rpClearDays() {
   rpLiftRefresh();
 }
 
+// ═══════════════════════════════════════════════════════
+//  THE TOP OF THE SCREEN (⚙ → General → Top of the Screen)
+// ═══════════════════════════════════════════════════════
+//   powerReport.top = { mode: 'compact' | 'full', scroll: 'back' | 'stay' | 'away', warn, fade }
+//     compact  one slim bar for the report date and time, the DO list's mark and the buttons;
+//              the DO list's card opens under it from the mark
+//     scroll   back: slides away while scrolling down, back on the way up · stay: pinned · away: scrolls off
+//     warn     the DO list's card opens by itself when it needs attention, and closes once sorted
+//     fade     done messages (✓ Saved …) go after 5 seconds; warnings stay
+const RP_TOP_SCROLL = [['back', 'Comes back'], ['stay', 'Always stays'], ['away', 'Scrolls away']];
+function rpTopCfg(pr) {
+  const t = (pr || appSettings.powerReport || {}).top || {};
+  return { mode: t.mode === 'full' ? 'full' : 'compact',
+           scroll: RP_TOP_SCROLL.some(x => x[0] === t.scroll) ? t.scroll : 'back',
+           warn: t.warn !== false, fade: t.fade !== false };
+}
+var _rpTop = { auto: false, state: '', y: 0, raf: 0, last: null };
+function rpTopApply() {
+  const d = document.getElementById('dashboard'), w = document.getElementById('rpTopWrap');
+  if (!d || !w) return;
+  const c = rpTopCfg(), compact = c.mode === 'compact';
+  d.classList.toggle('rp-compact', compact);
+  d.classList.toggle('rp-sticky', compact && c.scroll !== 'away');
+  if (!compact || c.scroll !== 'back') w.classList.remove('tuck');
+  if (!compact || c.scroll === 'away') w.classList.remove('lift');
+  if (!compact || !c.fade) { const st = document.getElementById('rpStatus'); if (st) st.classList.remove('fading', 'gone'); }
+  rpTopPaint();
+}
+// the DO list's card, under the bar: rpTopOpen() flips it; auto = opened by a warning
+function rpTopOpen(want, auto) {
+  const w = document.getElementById('rpTopWrap');
+  if (!w) return;
+  const open = typeof want === 'boolean' ? want : !w.classList.contains('open');
+  w.classList.toggle('open', open);
+  _rpTop.auto = open && !!auto;
+  const chip = document.getElementById('rpTopChip');
+  if (chip) chip.setAttribute('aria-expanded', String(open));
+  if (open) { w.classList.remove('tuck'); rpTopLastPaint(); }
+}
+// what the DO list's mark says
+function rpTopState() {
+  if (_dbKind === 'err') return 'err';
+  if (_dbKind === '' || _dbKind === 'busy') return 'busy';
+  if (_dbKind === 'none' || !mclhoCount) return 'none';
+  if (_dbUnknown > 0 && allRows.length) return 'warn';
+  return 'ok';
+}
+const RP_TOP_TRI = c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>`;
+function rpTopPaint() {
+  const chip = document.getElementById('rpTopChip');
+  if (!chip) return;
+  const st = rpTopState(), n = _dbUnknown;
+  const said = ((document.getElementById('dbStatus') || {}).textContent || '').trim();
+  chip.className = 'rp-tchip ' + (st === 'err' ? 'warn' : st);
+  document.getElementById('rpTopIc').innerHTML =
+    st === 'ok' ? '<svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>'
+    : st === 'busy' ? '' : RP_TOP_TRI(st === 'none' ? 'var(--amber)' : 'var(--red)');
+  document.getElementById('rpTopTxt').textContent = st === 'warn' ? `${n.toLocaleString('en-IN')} unknown` : st === 'none' ? 'No DO list' : 'DO list';
+  chip.title = (st === 'warn' ? `${n.toLocaleString('en-IN')} DO${n === 1 ? '' : 's'} in this file aren’t in the DO list` : st === 'ok' ? 'DO list loaded' : said || 'The DO list') +
+               ' — tap for its details, Paste and Upload';
+  // a warning opens the card by itself; once sorted, a card it opened closes again
+  if (st !== _rpTop.state) {
+    _rpTop.state = st;
+    const cfg = rpTopCfg(), bad = st === 'warn' || st === 'err' || st === 'none';
+    if (bad && cfg.mode === 'compact' && cfg.warn) rpTopOpen(true, true);
+    else if (st === 'ok' && _rpTop.auto) rpTopOpen(false);
+  }
+}
+// the last message, in the card, once the line under the bar has gone
+function rpTopLastPaint() {
+  const el = document.getElementById('rpTopLast');
+  if (!el || !_rpTop) return;
+  const m = _rpTop.last, st = document.getElementById('rpStatus');
+  const showing = st && st.textContent && !st.classList.contains('gone');
+  el.className = 'rp-tlast' + (m && m.warn ? ' warn' : '');
+  el.innerHTML = m && !showing ? `Last message, ${m.at.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}: <b>${rpEsc(m.t)}</b>` : '';
+}
+// the report date and time, from the Full layout's own rows
+function rpTopWhenPaint() {
+  const tx = id => ((document.getElementById(id) || {}).textContent || '').trim();
+  const t = tx('asofTime'), dte = tx('asofDate'), per = tx('metaPeriod');
+  const has = t && t !== '—';
+  document.getElementById('rpTopTime').textContent = has ? t : '';
+  document.getElementById('rpTopDay').textContent = has && dte && dte !== '—' ? dte : per || '—';
+  document.getElementById('rpTopWhen').title = has ? `Road despatch as of ${t} ${dte}` + (per && per !== dte ? ` · report ${per}` : '') : per;
+}
+// scrolling: lift a shadow once pinned; tuck away going down, back going up
+function rpTopScroll() {
+  if (_rpTop.raf) return;
+  _rpTop.raf = requestAnimationFrame(() => {
+    _rpTop.raf = 0;
+    const w = document.getElementById('rpTopWrap'), d = document.getElementById('dashboard');
+    if (!w || !d || !d.classList.contains('rp-sticky') || d.style.display === 'none') return;
+    const y = window.scrollY || document.documentElement.scrollTop || 0, top = d.offsetTop;
+    w.classList.toggle('lift', y > top + 2);
+    if (rpTopCfg().scroll !== 'back') { _rpTop.y = y; return; }
+    const dy = y - _rpTop.y;
+    if (y <= top + w.offsetHeight) { w.classList.remove('tuck'); _rpTop.y = y; }
+    else if (dy > 24) {
+      w.classList.add('tuck');
+      if (w.classList.contains('open') && !_rpTop.auto) rpTopOpen(false);   // a card opened by hand closes; a warning's stays for the way back
+      _rpTop.y = y;
+    } else if (dy < -24) { w.classList.remove('tuck'); _rpTop.y = y; }
+  });
+}
+function rpTopBoot() {
+  const mo = new MutationObserver(rpTopWhenPaint);
+  ['asofTime', 'asofDate', 'metaPeriod'].forEach(id => { const e = document.getElementById(id); if (e) mo.observe(e, { childList: true, characterData: true, subtree: true }); });
+  rpTopWhenPaint();
+  window.addEventListener('scroll', rpTopScroll, { passive: true });
+  rpTopApply();
+}
+
+let _rpStatT = null;
 function rpSetStatus(txt, isWarn) {
   const el = document.getElementById('rpStatus');
   el.textContent = txt || '';
   el.className = isWarn ? 'rp-warn' : 'rp-note';
+  clearTimeout(_rpStatT);
+  if (txt && _rpTop) _rpTop.last = { t: txt, warn: !!isWarn, at: new Date() };
+  rpTopLastPaint();
+  // Compact: a done message goes after a while; a warning, or one still going (…), stays
+  const cfg = rpTopCfg();
+  if (txt && !isWarn && !/…\s*$/.test(txt) && cfg.mode === 'compact' && cfg.fade)
+    _rpStatT = setTimeout(() => { el.classList.add('fading'); _rpStatT = setTimeout(() => { el.classList.add('gone'); rpTopLastPaint(); }, 420); }, 5000);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -5972,7 +6218,6 @@ async function rpPersistPrefs(extra) {
   const pr = appSettings.powerReport || {};
   const more = {};
   if (pr.dbHidden != null) more.dbHidden = pr.dbHidden;
-  if (pr.dbStat != null) more.dbStat = pr.dbStat;
   (Array.isArray(extra) ? extra : []).forEach(k => { more[k] = pr[k]; });
   try {
     const res = await fetch(
@@ -6021,6 +6266,12 @@ function rpSwitch(n) {
   const sub = document.getElementById('rpViewSub');
   if (sub) sub.style.display = db ? 'none' : '';
   if (n === 5) renderRpDb();
+  // the phone's tab strip: bring the chosen tab into view
+  const tb = document.getElementById('rpTab' + n), set = document.getElementById('rpTabset');
+  if (tb && set && set.scrollWidth > set.clientWidth + 1) {
+    const l = tb.offsetLeft - set.offsetLeft, r = l + tb.offsetWidth;
+    if (l < set.scrollLeft) set.scrollLeft = l - 12; else if (r > set.scrollLeft + set.clientWidth) set.scrollLeft = r - set.clientWidth + 12;
+  }
 }
 
 // Build day → { 'party|colliery': qty } for the month of the active date,
@@ -6308,9 +6559,11 @@ function rpCard(t) {
 }
 
 function renderRpReports() {
+  rpTopApply();
   rpSyncSaveBtn();
   const md = rpMonthData();
   const sub = document.getElementById('rpViewSub');
+  sub.classList.toggle('rp-empty', !md);
   const pr  = appSettings.powerReport || {};
   const n1 = (pr.parties || []).filter(p => p.r1).length;
   const n2 = (pr.parties || []).filter(p => p.r2).length;
@@ -7166,7 +7419,6 @@ const RP_SF_DBTAB = [
   ['edit',   'Edit SOs on the tab',      'Yes: ✎ on each row opens the SO’s details to change.', 'Edit'],
   ['remove', 'Remove SOs on the tab',    'Yes: rows can be ticked and removed from the DO database.', 'Remove'],
   ['smart',  'Smart filter on the tab',  'Yes: conditions such as greater than or contains in each column’s menu.', 'Smart filter'],
-  ['stat',   'Status bar on the tab',    'Yes: Sum, Average, Count, Min and Max of one column under the report.', 'Status bar'],
 ];
 function rpDbHidden(pr) { const h = (pr || appSettings.powerReport || {}).dbHidden; return new Set(Array.isArray(h) ? h.filter(k => k !== 'doNum' && RP_DB_IX[k] != null) : []); }
 function rpDbColsInTab(pr) { return (pr || appSettings.powerReport || {}).dbColsInTab !== false; }
@@ -7220,7 +7472,6 @@ const RP_DB_TABOPTS = [
   ['edit',   'Edit SOs',       '✎ on each row opens the SO’s details to change — kept as soon as it closes, as in DO Edits.'],
   ['remove', 'Remove SOs',     'A tick on each row, and Select all that match the search and filters, to remove DOs with their lifting and edits.'],
   ['smart',  'Smart filter',   'Conditions in each column’s menu: greater than, less than, equals, before, after, contains… two joined by And or Or.'],
-  ['stat',   'Status bar',     'Sum, Average, Count, Min and Max of one column, for what the filters show — at the foot of the report.'],
 ];
 function renderRpDoDb() {
   if (!_rpDraft) return;
@@ -7844,7 +8095,7 @@ const RP_DB_IX = {};
 RP_DB_COLS.forEach((c, i) => { RP_DB_IX[c.k] = i; });
 const RP_DB_PAGE = 200;
 const _rpDb = { ver: 0, sig: '', rows: [], cols: [], q: '', filt: {}, sort: { c: 1, dir: -1 }, page: 0, fv: 0, cache: null, pop: null, tok: 0, gaps: null,
-                sel: new Set(), selMsg: null, selBusy: false, edPop: null, statC: -1, rowOpt: null };
+                sel: new Set(), selMsg: null, selBusy: false, edPop: null, rowOpt: null };
 // rows per page and View all, kept in the settings (powerReport.dbPageSize / dbPageAll)
 function rpDbSize() { const n = +((appSettings.powerReport || {}).dbPageSize); return n >= 10 && n <= 100000 ? Math.round(n) : RP_DB_PAGE; }
 function rpDbAll() { return !!(appSettings.powerReport || {}).dbPageAll; }
@@ -8003,7 +8254,6 @@ function renderRpDb() {
          <div class="rp-dbselbar" id="rpDbSelBar" style="display:none"></div>
          <div class="rp-dbscroll" id="rpDbScroll"><table class="rp-dbt" id="rpDbTable"></table></div>
          <div class="rp-dbmore" id="rpDbMore"></div>
-         <div class="rp-dbstat" id="rpDbStat" style="display:none" role="status" aria-label="Status bar"></div>
        </div>`;
     const tb = document.getElementById('rpDbTable');
     tb.onclick = e => { const b = e.target.closest && e.target.closest('.rp-dbedb'); if (b) rpDbEditOpen(b.dataset.k); };
@@ -8079,10 +8329,9 @@ function rpDbDraw() {
   chipBox.style.display = chips.length ? '' : 'none';
 
   const sortOf = c => _rpDb.sort && _rpDb.sort.c === c ? (_rpDb.sort.dir > 0 ? '▲' : '▼') : '';
-  const stC = tabo.stat ? rpDbStatCol(cols) : -1;
-  _rpDb.rowOpt = { st: stC, ed: tabo.edit, sel: tabo.remove };
+  _rpDb.rowOpt = { ed: tabo.edit, sel: tabo.remove };
   let h = '<thead><tr>' + cols.map(c => {
-    const col = RP_DB_COLS[c], f = !!_rpDb.filt[c], so = sortOf(c), cls = [col.type === 'num' ? 'n' : '', f ? 'f' : '', c === stC ? 'st' : ''].filter(Boolean).join(' ');
+    const col = RP_DB_COLS[c], f = !!_rpDb.filt[c], so = sortOf(c), cls = [col.type === 'num' ? 'n' : '', f ? 'f' : ''].filter(Boolean).join(' ');
     return `<th${cls ? ` class="${cls}"` : ''}><button class="rp-dbh" data-c="${c}" onclick="rpDbOpen(${c}, this)" aria-haspopup="dialog" ` +
       `title="${col.tip ? rpEsc(col.tip) + ' — tap to sort and filter' : 'Sort and filter ' + rpEsc(col.t)}"><span class="rp-dbht">${rpEsc(col.t)}</span><span class="rp-dbi">${so}${f ? RP_DB_FUNNEL : so ? '' : '<span class="rp-dbcar">▾</span>'}</span></button></th>`;
   }).join('') + '</tr></thead><tbody>';
@@ -8112,7 +8361,6 @@ function rpDbDraw() {
   sc.onscroll = _rpDb.view.virt ? () => { if (!_rpDb.raf) _rpDb.raf = requestAnimationFrame(() => { _rpDb.raf = 0; rpDbWindow(false); }); } : null;
   rpDbPager(list.length, pages, all, size);
   rpDbSelPaint(list);
-  rpDbStatPaint(list, cols);
 }
 // The corner note: is the ePass in for every date of the DOs shown, up to
 // yesterday? Tapping it lists the dates that aren't.
@@ -8172,7 +8420,7 @@ function rpDbRowHtml(r, cols, i) {
     // the tab's ticks and ✎ go before the DO number
     const pre = c !== 0 ? '' : (o.sel ? `<input type="checkbox" class="rp-dbsel" data-k="${rpEsc(v)}"${sel ? ' checked' : ''} aria-label="Select ${rpEsc(v)}">` : '') +
                                (o.ed ? `<button class="rp-dbedb" data-k="${rpEsc(v)}" title="Edit this SO" aria-label="Edit ${rpEsc(v)}">✎</button>` : '');
-    return `<td class="${col.type === 'num' ? 'n' : col.type === 'code' ? 'k' : ''}${col.wide ? ' w' : ''}${ed ? ' ed' : ''}${c === o.st ? ' st' : ''}"${tip ? ` title="${rpEsc(tip)}"` : ''}>${pre}${rpEsc(v)}</td>`;
+    return `<td class="${col.type === 'num' ? 'n' : col.type === 'code' ? 'k' : ''}${col.wide ? ' w' : ''}${ed ? ' ed' : ''}"${tip ? ` title="${rpEsc(tip)}"` : ''}>${pre}${rpEsc(v)}</td>`;
   }).join('') + '</tr>';
 }
 // the rows in view (and a margin) between two spacers
@@ -8290,7 +8538,6 @@ function rpDbOpen(c, anchor) {
   const pop = _rpDb.pop = { c, vals, count, key, q: f.q || '', unt: new Set(), open: new Set(), date: col.type === 'date', mode: tabo.smart && f.cond ? 'c' : 'v' };
   if (f.only) vals.forEach(v => { if (!f.only.has(v)) pop.unt.add(v); });
   const label = { date: ['Oldest to newest', 'Newest to oldest'], num: ['Smallest to largest', 'Largest to smallest'] }[col.type] || ['A to Z', 'Z to A'];
-  const stOn = tabo.stat && _rpDb.statC === c;
 
   const bg = document.createElement('div');
   bg.id = 'rpDbPopBg'; bg.onclick = rpDbClose;
@@ -8302,7 +8549,6 @@ function rpDbOpen(c, anchor) {
        <button onclick="rpDbSort(${c}, 1)" class="${_rpDb.sort && _rpDb.sort.c === c && _rpDb.sort.dir > 0 ? 'on' : ''}">▲ ${label[0]}</button>
        <button onclick="rpDbSort(${c}, -1)" class="${_rpDb.sort && _rpDb.sort.c === c && _rpDb.sort.dir < 0 ? 'on' : ''}">▼ ${label[1]}</button>
      </div>` +
-    (tabo.stat ? `<div class="rp-dbp-sort"><button id="rpDbPopStat" onclick="rpDbStatSet({ col: '${col.k}' }); rpDbClose()" class="${stOn ? 'on' : ''}">Σ ${stOn ? 'In the status bar' : 'Show in the status bar'}</button></div>` : '') +
     (tabo.smart ? `<div class="rp-dbp-mode"><button data-m="v" onclick="rpDbPopMode('v')">Values</button><button data-m="c" onclick="rpDbPopMode('c')">Condition</button></div>` + rpDbCondHtml(c) : '') +
     `<label class="rp-dbp-q rp-dbp-vals"><span>Search values</span><input id="rpDbPopQ" type="search" autocomplete="off" spellcheck="false" value="${rpEsc(pop.q)}"></label>
      <div class="rp-dbp-all rp-dbp-vals"></div>
@@ -8459,16 +8705,14 @@ function rpDbClose() {
 // ═══════════════════════════════════════════════════════
 //  THE DO DATABASE TAB'S OWN TOOLS (⚙ → DO Database → On the DO Database tab)
 // ═══════════════════════════════════════════════════════
-//   powerReport.dbTab = { edited, edit, remove, smart, stat }
+//   powerReport.dbTab = { edited, edit, remove, smart }
 //     edited  the Edited · n button            (on unless switched off)
 //     edit    ✎ on each row to change its details
 //     remove  ticks on each row, and Remove
 //     smart   conditions (>, ≤, contains, …) in each column's menu
-//     stat    the status bar: Sum, Average… of one column (on unless switched off)
-//   powerReport.dbStat = { col, show: ['sum', 'avg', …] } — the status bar's column and figures
 function rpDbTab(pr) {
   const t = (pr || appSettings.powerReport || {}).dbTab || {};
-  return { edited: t.edited !== false, edit: !!t.edit, remove: !!t.remove, smart: !!t.smart, stat: t.stat !== false };
+  return { edited: t.edited !== false, edit: !!t.edit, remove: !!t.remove, smart: !!t.smart };
 }
 
 // Before a form is drawn again, let a box still being typed in hand over its
@@ -8685,81 +8929,6 @@ function rpDbApplyCond() {
   _rpDb.filt[p.c] = { cond };
   _rpDb.fv++; _rpDb.page = 0;
   rpDbClose(); rpDbDraw();
-}
-
-// ── the status bar: Sum, Average… of one column, over what the filters let through ──
-const RP_DB_STATS = [['sum', 'Sum'], ['avg', 'Average'], ['count', 'Count'], ['min', 'Min'], ['max', 'Max']];
-function rpDbStatCfg(pr) {
-  const s = (pr || appSettings.powerReport || {}).dbStat || {};
-  return { col: RP_DB_IX[s.col] != null ? s.col : 'doQty',
-           show: Array.isArray(s.show) ? RP_DB_STATS.map(x => x[0]).filter(k => s.show.indexOf(k) >= 0) : RP_DB_STATS.map(x => x[0]) };
-}
-let _rpDbStatT = null;
-function rpDbStatSet(o) {
-  const pr = appSettings.powerReport = appSettings.powerReport || {};
-  pr.dbStat = Object.assign(rpDbStatCfg(), o);
-  rpDbDraw(); rpDbStatMenuPaint();
-  clearTimeout(_rpDbStatT);
-  _rpDbStatT = setTimeout(() => rpPersistPrefs(), 1200);
-}
-// the column the bar adds up: the one chosen, or the first number column shown when that one is hidden
-function rpDbStatCol(cols) {
-  const want = RP_DB_IX[rpDbStatCfg().col];
-  if (cols.indexOf(want) >= 0) return want;
-  const n = cols.find(c => RP_DB_COLS[c].type === 'num');
-  return n != null ? n : cols[0];
-}
-function rpDbStatPaint(list, cols) {
-  const el = document.getElementById('rpDbStat');
-  if (!el) return;
-  if (!rpDbTab().stat) { el.style.display = 'none'; _rpDb.statC = -1; return; }
-  const c = rpDbStatCol(cols), col = RP_DB_COLS[c], show = rpDbStatCfg().show, k = rpDbCondKind(c);
-  _rpDb.statC = c;
-  let n = 0, sum = 0, min = null, max = null;
-  for (const r of list) {
-    if (r.v[c] === '') continue;
-    n++;
-    const s = r.s[c];
-    if (k !== 'text' && s != null) { if (k === 'num') sum += s; if (min === null || s < min) min = s; if (max === null || s > max) max = s; }
-  }
-  const num = x => x.toLocaleString('en-IN', { maximumFractionDigits: 2 });
-  const fmt = x => x == null ? '—' : k === 'date' ? rpDayLabel(rpDayNo(x), true) : num(x);
-  const has = { sum: k === 'num', avg: k === 'num', count: true, min: k !== 'text', max: k !== 'text' };
-  const val = { sum: num(sum), avg: n ? num(sum / n) : '—', count: n.toLocaleString('en-IN'), min: fmt(min), max: fmt(max) };
-  const parts = RP_DB_STATS.filter(([s]) => show.indexOf(s) >= 0 && has[s]).map(([s, t]) => `<span><i>${t}</i> <b>${val[s]}</b></span>`);
-  el.style.display = '';
-  el.innerHTML = `<button class="rp-dbstcol" onclick="rpDbStatOpen(this)" title="Choose the column and the figures">Σ ${rpEsc(col.t)} ▾</button>` +
-    (parts.length ? parts.join('') : '<span class="rp-count">Nothing ticked to show</span>');
-}
-function rpDbStatOpen(anchor) {
-  rpDbClose();
-  const bg = document.createElement('div'); bg.id = 'rpDbPopBg'; bg.onclick = rpDbClose;
-  const el = document.createElement('div'); el.id = 'rpDbPop'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Status bar');
-  el.innerHTML = `<div class="rp-dbp-h"><b>Status bar</b><button class="rp-dbp-x" onclick="rpDbClose()" aria-label="Close">✕</button></div>
-    <div class="rp-dbp-sub">Show</div><div class="rp-dbp-list rp-dbstshow" id="rpDbStShow"></div>
-    <div class="rp-dbp-sub">Of the column</div><div class="rp-dbp-list" id="rpDbStCols"></div>
-    <div class="rp-dbp-foot"><span style="flex:1"></span><button class="rp-dbbtn rp-dbok" onclick="rpDbClose()">Done</button></div>`;
-  document.body.appendChild(bg); document.body.appendChild(el);
-  if (window.innerWidth < 600) { el.classList.add('sheet'); bg.classList.add('dim'); }
-  else {
-    const r = anchor.getBoundingClientRect(), w = el.offsetWidth;
-    el.style.left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)) + 'px';
-    const room = r.top - 12;
-    el.style.maxHeight = Math.min(560, room) + 'px';
-    el.style.top = Math.max(8, r.top - 4 - Math.min(el.offsetHeight, room)) + 'px';
-  }
-  document.addEventListener('keydown', rpDbKey);
-  rpDbStatMenuPaint();
-}
-function rpDbStatMenuPaint() {
-  const sh = document.getElementById('rpDbStShow'), cs = document.getElementById('rpDbStCols');
-  if (!sh || !cs) return;
-  const cfg = rpDbStatCfg(), cur = rpDbStatCol(rpDbVisCols());
-  sh.innerHTML = RP_DB_STATS.map(([k, t]) => `<label><input type="checkbox" data-s="${k}"${cfg.show.indexOf(k) >= 0 ? ' checked' : ''}><span class="v">${t}</span></label>`).join('');
-  sh.onchange = e => { const k = e.target.dataset && e.target.dataset.s; if (!k) return; const s = new Set(rpDbStatCfg().show); if (e.target.checked) s.add(k); else s.delete(k); rpDbStatSet({ show: RP_DB_STATS.map(x => x[0]).filter(x => s.has(x)) }); };
-  cs.innerHTML = rpDbVisCols().map(c => `<label><input type="radio" name="rpDbStCol" value="${RP_DB_COLS[c].k}"${c === cur ? ' checked' : ''}><span class="v">${rpEsc(RP_DB_COLS[c].t)}</span>` +
-    `<span class="c">${RP_DB_COLS[c].type === 'num' ? 'number' : RP_DB_COLS[c].type === 'date' ? 'date' : 'count only'}</span></label>`).join('');
-  cs.onchange = e => { if (e.target.name === 'rpDbStCol') rpDbStatSet({ col: e.target.value }); };
 }
 
 // the lifting's state, for the Excel note
@@ -10938,6 +11107,7 @@ function showSavedReports() {
 //  BOOT
 // ═══════════════════════════════════════════════════════
 rpThemeUI();
+rpTopBoot();
 loadSettingsFromGitHub()
   .then(() => loadRpHistory())
   .then(() => { renderRpReports(); });
