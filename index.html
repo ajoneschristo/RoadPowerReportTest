@@ -1169,6 +1169,13 @@ body.dark .rp-db { --zebra: #171e26; }
 .rp-dbchip { display:inline-flex; align-items:center; gap:6px; padding:3px 4px 3px 9px; border:1px solid var(--live); color:var(--live);
   font-family:var(--mono); font-size:11px; max-width:100%; }
 .rp-dbchip button { border:0; background:transparent; color:inherit; cursor:pointer; font-size:12px; padding:2px 5px; }
+.rp-db { --ed: var(--ed-l, #fff2a8); }
+body.dark .rp-db, body.dark .rp-deprev { --ed: var(--ed-d, rgba(255,214,0,.28)); }
+.rp-deprev { --ed: var(--ed-l, #fff2a8); }
+.rp-db.edf .rp-dbt td.ed, .rp-deprev.edf .ed { color:var(--ed); font-weight:600; }
+.rp-db.edh .rp-dbt tbody td.ed, .rp-deprev.edh .ed { background:var(--ed); }
+body.dark .rp-db.edh .rp-dbt tbody td.ed { color:var(--ink); }
+#rpDbEd.on { border-color:var(--live); color:var(--live); background:var(--live-bar, rgba(217,122,6,.12)); }
 .rp-dbsum { padding:8px 12px; font-family:var(--mono); font-size:11px; color:var(--mute); border-bottom:1px solid var(--ash);
   display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; }
 .rp-dblift { margin-left:auto; text-align:right; color:var(--mute); }
@@ -1283,6 +1290,51 @@ button.rp-dbt-x:focus-visible { outline:2px solid #d97a06; outline-offset:-2px; 
 }
 .rp-pin.on { border-color:#d97a06; color:#d97a06; background:rgba(217,122,6,.1); }
 .rp-pin:active { opacity:.7; }
+/* DO edits (⚙ → DO Edits) */
+.rp-dehits { margin-top:6px; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+.rp-dehit { display:grid; grid-template-columns:auto minmax(0,1fr); gap:1px 10px; width:100%; text-align:left; padding:8px 10px;
+  border:0; border-top:1px solid var(--border); background:var(--surface); color:var(--text); cursor:pointer; }
+.rp-dehit:first-child { border-top:0; }
+.rp-dehit:hover, .rp-dehit:active { background:var(--amber-lo); }
+.rp-dehit b { font-family:var(--mono); font-size:12px; grid-row:1 / span 2; align-self:center; }
+.rp-dehit span { font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rp-dehit span + span { font-size:11px; color:var(--dim); }
+.rp-dehit.ed b::after { content:' ✎'; color:var(--live, #b8620a); }
+.rp-deform { margin-top:10px; border:1.5px solid #d97a06; border-radius:10px; overflow:hidden; }
+.rp-dehd { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 12px; background:var(--bg); border-bottom:1px solid var(--border); }
+.rp-dehd b { font-family:var(--mono); font-size:13px; display:block; }
+.rp-dehd span { font-size:12px; color:var(--dim); }
+.rp-defs { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:0 14px; padding:6px 12px 10px; }
+.rp-defld { display:grid; grid-template-columns:96px minmax(0,1fr) 30px; gap:2px 8px; align-items:center; padding:5px 0; }
+.rp-defld label { font-family:'IBM Plex Sans Condensed', sans-serif; font-size:10px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
+.rp-defld .stt-input { min-width:0; padding:7px 9px; font-family:var(--mono); font-size:12px; }
+.rp-defld.ed .stt-input { border-color:#d97a06; background:var(--amber-lo); }
+.rp-defld .stt-input.bad { border-color:var(--red); }
+.rp-dereset { width:30px; height:30px; border:1px solid var(--border); border-radius:6px; background:transparent; color:var(--text); cursor:pointer; }
+.rp-dereset:disabled { opacity:.25; cursor:default; }
+.rp-dewas { grid-column:2 / span 2; font-family:var(--mono); font-size:10px; color:var(--dim); }
+.rp-dewas:empty { display:none; }
+.rp-defoot { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; padding:9px 12px; border-top:1px solid var(--border); font-size:11px; color:var(--dim); }
+.rp-derow { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 8px; padding:8px 0; border-top:1px solid var(--border); }
+.rp-derow:first-child { border-top:0; }
+.rp-derow.on .rp-dego b { color:#d97a06; }
+.rp-dego { display:flex; gap:10px; align-items:baseline; min-width:0; border:0; background:transparent; padding:0; text-align:left; cursor:pointer; color:var(--text); }
+.rp-dego b { font-family:var(--mono); font-size:12px; }
+.rp-dego span { font-size:12px; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rp-dex { width:28px; height:28px; border:1px solid var(--border); border-radius:6px; background:transparent; color:var(--dim); cursor:pointer; }
+.rp-debits { grid-column:1 / span 2; display:flex; flex-wrap:wrap; gap:4px 12px; font-family:var(--mono); font-size:11px; color:var(--text); }
+.rp-debit i { font-style:normal; color:var(--dim); font-family:'IBM Plex Sans Condensed', sans-serif; font-size:10px; letter-spacing:.06em; text-transform:uppercase; }
+.rp-debit em { font-style:normal; color:var(--dim); font-size:10px; }
+.rp-deswrow { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.rp-desw { width:40px; height:32px; border-radius:7px; border:1.5px solid var(--border); cursor:pointer; font:700 13px var(--mono); background:var(--surface); }
+.rp-desw.on { border-color:var(--text); box-shadow:0 0 0 2px var(--surface), 0 0 0 4px #d97a06; }
+.rp-deprev { display:inline-grid; grid-template-columns:auto auto; margin-top:10px; border:1px solid var(--border); font-family:var(--mono); font-size:12px; }
+.rp-deprev span { padding:5px 10px; border-bottom:1px solid var(--border); }
+.rp-deprev span:nth-child(odd) { color:var(--dim); font-family:'IBM Plex Sans Condensed', sans-serif; font-size:10px; letter-spacing:.06em; text-transform:uppercase; border-right:1px solid var(--border); }
+.rp-deprev span:nth-last-child(-n+2) { border-bottom:0; }
+.rp-deprev .n { text-align:right; }
+@media (max-width: 560px) { .rp-defs { grid-template-columns:minmax(0,1fr); } }
+
 /* saved-days list (⚙ → Saved days) */
 .rp-dcount { font-family:var(--mono); font-size:10px; color:var(--dim); text-align:right; }
 .rp-dcount .miss, .rp-dmeta .miss { color:var(--live, #b8620a); font-weight:600; }
@@ -1670,7 +1722,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B50-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B51-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1824,6 +1876,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
       <button role="tab" data-tab="customers" onclick="rpSettingsTab('customers')"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 4.8a3 3 0 010 6M21 20c0-2.5-1.5-4.6-3.8-5.5"/></svg><span>Customers</span></button>
       <button role="tab" data-tab="exports" onclick="rpSettingsTab('exports')"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span>Exports</span></button>
       <button role="tab" data-tab="sheet" onclick="rpSettingsTab('sheet')"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/></svg><span class="rp-lg">Google Sheet</span><span class="rp-sm">Sheet</span></button>
+      <button role="tab" data-tab="doedit" onclick="rpSettingsTab('doedit')"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg><span class="rp-lg">DO Edits</span><span class="rp-sm">Edits</span></button>
       <button role="tab" data-tab="days" onclick="rpSettingsTab('days')"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 15l2 2 4-4"/></svg><span class="rp-lg">Saved days</span><span class="rp-sm">Days</span></button>
       <button role="tab" data-tab="general" onclick="rpSettingsTab('general')"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg><span>General</span></button>
     </div>
@@ -2055,6 +2108,42 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
         <div class="stt-hint" style="margin-top:6px;">
           The script never overwrites a cell that holds a formula — it reports those cells back instead.
           Anyone holding the script URL can write numbers into your spreadsheets, so keep it to this settings file.
+        </div>
+      </div>
+      </div>
+
+      <div class="rp-stab" data-tab="doedit" role="tabpanel" hidden>
+      <div class="stt-section">
+        <div class="stt-section-hdr">
+          <label class="stt-label">Edit an SO</label>
+          <span class="rp-dcount" id="rpDeCount"></span>
+        </div>
+        <div class="stt-hint" style="margin:0 0 10px;">
+          Find an SO in the DO database and change any of its details. The change is kept in these settings, not in the i3MS list,
+          so a fresh paste of the list — or ePass Viewer — doesn’t undo it. It counts across this app: the reports go by an edited
+          party or colliery, the DO Database by an edited quantity or date. Tap Save to keep it.
+        </div>
+        <label class="rp-dbsearch"><span>Find</span>
+          <input id="rpDeQ" type="search" autocomplete="off" spellcheck="false" placeholder="DO number, party or colliery" oninput="rpDeHits()" aria-label="Find an SO"></label>
+        <div class="rp-dehits" id="rpDeHits"></div>
+        <div id="rpDeForm"></div>
+      </div>
+      <div class="stt-section">
+        <div class="stt-section-hdr"><label class="stt-label">Edited SOs</label></div>
+        <div id="rpDeList"></div>
+      </div>
+      <div class="stt-section">
+        <div class="stt-section-hdr"><label class="stt-label">Show Edited Cells</label></div>
+        <div class="rp-modes rp-modes3">
+          <button class="rp-mode" id="rpDe_font" onclick="rpDeMode('font')"><b>Coloured font</b><span>The edited value in a colour.</span></button>
+          <button class="rp-mode" id="rpDe_fill" onclick="rpDeMode('fill')"><b>Highlighted cell</b><span>The edited cell filled in.</span></button>
+          <button class="rp-mode" id="rpDe_none" onclick="rpDeMode('none')"><b>Neither</b><span>Edited cells look like the rest.</span></button>
+        </div>
+        <div class="rp-deswrow" id="rpDeSw"></div>
+        <div class="rp-deprev" id="rpDePrev"><span>DO End Date</span><span class="ed">31-Dec-2026</span><span>DO Qty</span><span class="ed n">12,000</span></div>
+        <div class="stt-hint" style="margin-top:6px;">
+          In the DO Database report and its Excel file — Excel’s <strong>Filter by Colour</strong> then picks the edited cells out.
+          Tap and hold an edited cell in the app to see what the i3MS list says.
         </div>
       </div>
       </div>
@@ -2817,11 +2906,14 @@ function rpDecode(s) {
     .replace(/&quot;/gi, '"').replace(/&#0?39;/g, "'").replace(/&nbsp;/gi, ' ')
     .replace(/\s+/g, ' ').trim();
 }
+let _rpPartyIdxDb = null;
 function rpBuildPartyIndex(force) {
-  if (_rpPartyIdx && !force) return _rpPartyIdx;
+  const db = rpDoDB();
+  if (_rpPartyIdx && !force && _rpPartyIdxDb === db) return _rpPartyIdx;
+  _rpPartyIdxDb = db;
   const idx = {};
-  for (const k in mclhoDB) {
-    const r = mclhoDB[k];
+  for (const k in db) {
+    const r = db[k];
     const c = String(r.partyCode || '').trim();
     if (!c) continue;
     const nm = rpDecode(r.partyName);
@@ -2835,9 +2927,9 @@ function rpBuildPartyIndex(force) {
 }
 // Collieries a party has DOs for → [{code,name}]
 function rpPartyCollieries(code) {
-  const out = {};
-  for (const k in mclhoDB) {
-    const r = mclhoDB[k];
+  const out = {}, db = rpDoDB();
+  for (const k in db) {
+    const r = db[k];
     if (String(r.partyCode || '').trim() !== String(code)) continue;
     const cc = String(r.collieryCode || '').trim();
     if (!cc) continue;
@@ -2879,7 +2971,9 @@ function rpOpenSettingsNow() {
                show: shDef, reports: rpReportList(pr.reports), exportReports: rpExportList(pr),
                pdfLevel: rpPdfLevel(pr), pdfMode: rpPdfMode(pr), pdfOnePage: rpPdfPowerOnePage(pr), dlFormat: rpDlFormat(pr), dlShare: rpDlShare(pr), lock: rpLockDraft(pr), gs: rpGsCfg(pr.gsheet),
                groups: rpDraftGroups(pr), groupTable: !!pr.groupTable,
-               groupSub: pr.groupSubtotals !== false, groupColors: !!pr.groupColors, autoSave: rpAutoSaveOn(pr) };
+               groupSub: pr.groupSubtotals !== false, groupColors: !!pr.groupColors, autoSave: rpAutoSaveOn(pr),
+               doEdits: JSON.parse(JSON.stringify(rpDoEdits(pr))), doEditStyle: (({ mode, font, fill }) => ({ mode, font, fill }))(rpEdStyle(pr)) };
+  _rpDeOpen = null;
   _rpGrpPick = null;
   (pr.parties || []).forEach(p => {
     const codes = rpCodesOf(p);
@@ -3425,7 +3519,7 @@ function rpLockForSave(status) {
 }
 
 // ── Settings tabs ──────────────────────────────────────────────────────
-const RP_STABS = ['reports', 'customers', 'exports', 'sheet', 'days', 'general'];
+const RP_STABS = ['reports', 'customers', 'exports', 'sheet', 'doedit', 'days', 'general'];
 let _rpSttTab = (() => { try { return localStorage.getItem('rpSttTab') || 'reports'; } catch (_) { return 'reports'; } })();
 let _rpEstDone = false;
 function rpSettingsTab(t) {
@@ -3440,6 +3534,7 @@ function rpSettingsTab(t) {
   document.querySelectorAll('#rpSettingsOverlay .rp-stab').forEach(p => { p.hidden = p.dataset.tab !== t; });
   if (t === 'sheet') renderRpGs();
   if (t === 'days') rpDaysOpen();
+  if (t === 'doedit') renderRpDoEdits();
   if (t === 'exports' && !_rpEstDone) { _rpEstDone = true; rpPdfEstimate(); }
   // with the tab bar pinned, bring the new tab's first line up under it
   const ov = document.getElementById('rpSettingsOverlay'), bar = document.getElementById('rpSttTabs');
@@ -3452,6 +3547,7 @@ function rpSttDots() {
   const set = (t, on) => { const b = document.querySelector(`#rpSttTabs [data-tab="${t}"]`); if (b) b.classList.toggle('lit', !!on); };
   set('sheet', _rpDraft.gs && _rpDraft.gs.on);
   set('general', _rpDraft.lock && _rpDraft.lock.on);
+  set('doedit', _rpDraft.doEdits && Object.keys(_rpDraft.doEdits).length > 0);
 }
 // a save problem on another tab: show it there, with the field marked
 function rpSaveFail(status, tab, msg, elId) {
@@ -3931,7 +4027,7 @@ async function rpGsSend() {
 // key / value rows and tables with drop-downs where there's a fixed choice.
 // Export takes what's on screen; import fills the settings screen from the
 // file, and nothing reaches the shared settings until Save.
-const RP_BUILD = 'rp-B50-test';
+const RP_BUILD = 'rp-B51-test';
 const RP_SF_FORMAT = 'RoadPowerSettings 1';
 const RP_SF_YN = ['Yes', 'No'];
 
@@ -3955,7 +4051,7 @@ function rpSfSheets() {
     { t: 'blank' },
     { t: 'head2', v: 'How to use this file' },
     ...[
-      'Each tab holds one part of the settings: Reports, Customers, Groups, Customer Report, Exports, Google Sheet and General.',
+      'Each tab holds one part of the settings: Reports, Customers, Groups, Customer Report, Exports, Google Sheet, DO Edits and General.',
       'Change the white cells. Grey cells are there for reference and are ignored when the file is read back.',
       'Keep the tab names and the headings as they are. Rows can be in any order.',
       'Yes / No and the other fixed choices have drop-downs.',
@@ -4087,30 +4183,55 @@ function rpSfSheets() {
     { t: 'head2', v: 'History database' },
     { t: 'kv', rows: [['History file', document.getElementById('rp_histPath').value.trim() || d.historyPath, { note: 'The .json file in epass-db that holds the saved days.' }]] },
   ] };
-  return [readMe, reports, customers, groupsSh, custReport, exportsSh, sheetSh, general];
+  // ── DO Edits ──
+  const est = rpEdStyle({ doEditStyle: d.doEditStyle }), dEd = d.doEdits || {};
+  const edRows = [];
+  Object.keys(dEd).sort().forEach(k => RP_DO_EDIT_FIELDS.forEach(f => {
+    if (dEd[k][f.k] == null) return;
+    const raw = mclhoDB[k];
+    edRows.push([k, f.t, dEd[k][f.k], raw ? (f.type === 'grade' ? rpGradeOf(rpDecode(raw[f.k])) : rpDecode(raw[f.k])) : '(not in the DO database now)', raw ? rpDecode(raw.partyName) : '']);
+  }));
+  const doEditsSh = { name: 'DO Edits', cols: [16, 18, 22, 26, 44], blocks: [
+    { t: 'title', v: 'DO Edits' },
+    { t: 'note', v: 'Details of SOs changed from what the i3MS list says. They stay as set here when a fresh list is pasted, and count across the app. One row per changed detail; delete a row to undo that change. Dates as DD-Mon-YYYY.' },
+    { t: 'blank' },
+    { t: 'kv', rows: [
+      ['Show edited cells', (RP_ED_MODES.find(m => m[0] === est.mode) || RP_ED_MODES[1])[1], { list: RP_ED_MODES.map(m => m[1]), note: 'In the DO Database report and its Excel file.' }],
+      ['Font colour', est.font, { list: RP_ED_COLORS.font.map(c => c[0]) }],
+      ['Highlight colour', est.fill, { list: RP_ED_COLORS.fill.map(c => c[0]) }],
+    ] },
+    { t: 'blank' },
+    { t: 'table', head: [{ v: 'DO Number' }, { v: 'Detail', list: RP_DO_EDIT_FIELDS.map(f => f.t) }, { v: 'Edited value' }, { v: 'i3MS value', ro: true }, { v: 'Party', ro: true }],
+      rows: edRows, extra: 40 },
+  ] };
+  return [readMe, reports, customers, groupsSh, custReport, exportsSh, sheetSh, doEditsSh, general];
 }
 
 // ── writing .xlsx ──
 // cell styles in rpSfStylesXml: 1 title · 2 note · 3 heading · 4 key · 5 text ·
 // 6 number · 7 reference (grey) · 8 sub-heading
-function rpSfStylesXml() {
+// styles 12–15: styles 5, 9, 10 and 11 in the edit colour (a font or a fill)
+const RP_SF_ED = { 5: 12, 9: 13, 10: 14, 11: 15 };
+function rpSfStylesXml(ed) {
   const b = '<border><left style="thin"><color rgb="FFC3CCD6"/></left><right style="thin"><color rgb="FFC3CCD6"/></right>' +
             '<top style="thin"><color rgb="FFC3CCD6"/></top><bottom style="thin"><color rgb="FFC3CCD6"/></bottom><diagonal/></border>';
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
     '<numFmts count="1"><numFmt numFmtId="165" formatCode="dd\\-mmm\\-yyyy"/></numFmts>' +
-    '<fonts count="6"><font><sz val="11"/><name val="Calibri"/></font>' +
+    '<fonts count="7"><font><sz val="11"/><name val="Calibri"/></font>' +
     '<font><b/><sz val="15"/><color rgb="FF1F2833"/><name val="Calibri"/></font>' +
     '<font><i/><sz val="10"/><color rgb="FF5D6A78"/><name val="Calibri"/></font>' +
     '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>' +
     '<font><b/><sz val="11"/><color rgb="FF1F2833"/><name val="Calibri"/></font>' +
-    '<font><b/><sz val="12"/><color rgb="FFB8620A"/><name val="Calibri"/></font></fonts>' +
-    '<fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' +
+    '<font><b/><sz val="12"/><color rgb="FFB8620A"/><name val="Calibri"/></font>' +
+    `<font>${ed && ed.mode === 'font' ? '<b/>' : ''}<sz val="11"/><color rgb="FF${ed && ed.mode === 'font' ? ed.rgb.slice(1).toUpperCase() : '000000'}"/><name val="Calibri"/></font></fonts>` +
+    '<fills count="5"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' +
     '<fill><patternFill patternType="solid"><fgColor rgb="FF1F2833"/><bgColor indexed="64"/></patternFill></fill>' +
-    '<fill><patternFill patternType="solid"><fgColor rgb="FFEEF1F4"/><bgColor indexed="64"/></patternFill></fill></fills>' +
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFEEF1F4"/><bgColor indexed="64"/></patternFill></fill>' +
+    `<fill><patternFill patternType="solid"><fgColor rgb="FF${ed && ed.mode === 'fill' ? ed.rgb.slice(1).toUpperCase() : 'FFFFFF'}"/><bgColor indexed="64"/></patternFill></fill></fills>` +
     `<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>${b}</borders>` +
     '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-    '<cellXfs count="12"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+    '<cellXfs count="16"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
     '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
     '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
     '<xf numFmtId="0" fontId="3" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"><alignment vertical="center" wrapText="1"/></xf>' +
@@ -4122,7 +4243,9 @@ function rpSfStylesXml() {
     // 9 a date, 10 a whole number, 11 a number with decimals — the DO Database export
     '<xf numFmtId="165" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>' +
     '<xf numFmtId="3" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>' +
-    '<xf numFmtId="4" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/></cellXfs>' +
+    '<xf numFmtId="4" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>' +
+    [49, 165, 3, 4].map(nf => `<xf numFmtId="${nf}" fontId="${ed && ed.mode === 'font' ? 6 : 0}" fillId="${ed && ed.mode === 'fill' ? 4 : 0}" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>`).join('') +
+    '</cellXfs>' +
     '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
 }
 function rpSfSheetXml(sh) {
@@ -4150,7 +4273,10 @@ function rpSfSheetXml(sh) {
       row(() => b.head.map((h, i) => cell(i + 1, h.v, 3)), 34);
       if (sh.freeze && !freezeAt) freezeAt = r;
       const first = r + 1;
-      b.rows.forEach(vals => row(() => vals.map((v, i) => cell(i + 1, v, b.head[i].style != null ? b.head[i].style : b.head[i].ro ? 7 : b.head[i].num ? 6 : 5))));
+      // a cell given as { v, s } carries a style of its own
+      b.rows.forEach(vals => row(() => vals.map((v, i) => v && typeof v === 'object'
+        ? cell(i + 1, v.v, v.s)
+        : cell(i + 1, v, b.head[i].style != null ? b.head[i].style : b.head[i].ro ? 7 : b.head[i].num ? 6 : 5))));
       if (sh.filter) sh._af = `A${first - 1}:${rpColLetter(b.head.length)}${Math.max(first, r)}`;
       const last = Math.max(first, r + (bi === sh.blocks.length - 1 ? (b.extra || 0) : 0));
       b.head.forEach((h, i) => { if (h.list) list(`${rpColLetter(i + 1)}${first}:${rpColLetter(i + 1)}${last}`, h.list); });
@@ -4167,7 +4293,7 @@ function rpSfSheetXml(sh) {
     (dv.length ? `<dataValidations count="${dv.length}">${dv.join('')}</dataValidations>` : '') +
     '<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/></worksheet>';
 }
-function rpSfWorkbook(sheets) {
+function rpSfWorkbook(sheets, opt) {
   const enc = new TextEncoder();
   const WS = 'application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml';
   const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
@@ -4189,7 +4315,7 @@ function rpSfWorkbook(sheets) {
       '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
       sheets.map((_, n) => `<Relationship Id="rId${n + 1}" Type="${REL}/worksheet" Target="worksheets/sheet${n + 1}.xml"/>`).join('') +
       `<Relationship Id="rId${sheets.length + 1}" Type="${REL}/styles" Target="styles.xml"/></Relationships>`),
-    'xl/styles.xml': enc.encode(rpSfStylesXml()),
+    'xl/styles.xml': enc.encode(rpSfStylesXml(opt && opt.ed)),
   };
   sheets.forEach((sh, n) => { files[`xl/worksheets/sheet${n + 1}.xml`] = enc.encode(rpSfSheetXml(sh)); });
   return _buildZip(files);
@@ -4334,7 +4460,7 @@ function rpSfReader(grid) {
 // build the new settings from the workbook; returns { draft, done, warn } or throws
 function rpSfApply(book, fileName) {
   const sheetOf = n => { const k = Object.keys(book).find(x => x.trim().toLowerCase() === n.toLowerCase()); return k ? book[k] : null; };
-  const known = ['Reports', 'Customers', 'Groups', 'Customer Report', 'Exports', 'Google Sheet', 'General'];
+  const known = ['Reports', 'Customers', 'Groups', 'Customer Report', 'Exports', 'Google Sheet', 'DO Edits', 'General'];
   const readMe = sheetOf('Read me');
   if (readMe) {
     const f = rpSfReader(readMe).kv('format');
@@ -4715,6 +4841,45 @@ function rpSfApply(book, fileName) {
     }
     done.push('General — ' + parts.join(', '));
   }
+
+  // ── DO Edits ──
+  const deSh = sheetOf('DO Edits');
+  if (deSh) {
+    const R = rpSfReader(deSh), parts = [];
+    const st = Object.assign({}, rpEdStyle({ doEditStyle: d.doEditStyle }));
+    const sm = R.kv('show edited cells');
+    if (sm && rpSfTxt(sm.v)) {
+      const m = RP_ED_MODES.find(x => x[1].toLowerCase() === rpSfKey(sm.v) || x[0] === rpSfKey(sm.v));
+      if (m) st.mode = m[0]; else w('DO Edits', sm.r, `“${rpSfTxt(sm.v)}” isn’t one of ${RP_ED_MODES.map(x => x[1]).join(', ')} — kept as it was.`);
+    }
+    [['font colour', 'font'], ['highlight colour', 'fill']].forEach(([key, set]) => {
+      const c = R.kv(key);
+      if (!c || !rpSfTxt(c.v)) return;
+      const hit = RP_ED_COLORS[set].find(x => x[0].toLowerCase() === rpSfKey(c.v));
+      if (hit) st[set] = hit[0]; else w('DO Edits', c.r, `“${rpSfTxt(c.v)}” isn’t one of ${RP_ED_COLORS[set].map(x => x[0]).join(', ')} — kept as it was.`);
+    });
+    d.doEditStyle = { mode: st.mode, font: st.font, fill: st.fill };
+    const t = R.table(['DO Number', 'Detail', 'Edited value'], true);
+    if (t) {
+      const out = {};
+      const byLabel = Object.fromEntries(RP_DO_EDIT_FIELDS.map(f => [f.t.toLowerCase(), f.k]));
+      t.forEach(({ r, c }) => {
+        const dn = rpSfCode(c['do number']);
+        if (!dn) return;
+        const k = byLabel[rpSfKey(c['detail'])];
+        if (!k) { w('DO Edits', r, `“${rpSfTxt(c['detail'])}” isn’t a detail that can be edited — left out.`); return; }
+        const v = rpDoEditNorm(k, c['edited value']);
+        if (v == null) { w('DO Edits', r, `“${rpSfTxt(c['edited value'])}” isn’t a ${RP_DO_EDIT_F[k].t} — left out.`); return; }
+        const raw = mclhoDB[dn];
+        if (raw && rpDoEditSame(k, v, raw[k])) return;          // the list says the same: nothing to edit
+        if (!raw && mclhoCount) w('DO Edits', r, `${dn} isn’t in the DO database — kept, and it counts once the list has it.`);
+        (out[dn] = out[dn] || {})[k] = v;
+      });
+      d.doEdits = out;
+    }
+    const n = Object.keys(d.doEdits || {}).length;
+    done.push(`DO Edits — ${n} SO${n === 1 ? '' : 's'} edited, ${(RP_ED_MODES.find(m => m[0] === d.doEditStyle.mode) || [])[1] || ''}`.replace(/, $/, ''));
+  }
   return { draft: d, done, warn };
 }
 async function rpSfImport(input) {
@@ -4736,6 +4901,8 @@ async function rpSfImport(input) {
   _rpDraft = res.draft;
   document.getElementById('rp_histPath').value = _rpDraft.historyPath;
   rpAutoSaveUi();
+  _rpDeOpen = null;
+  if (_rpSttTab === 'doedit') renderRpDoEdits();
   document.getElementById('rpLockPin1').value = '';
   document.getElementById('rpLockPin2').value = '';
   renderRpReportLists();
@@ -5222,6 +5389,8 @@ async function saveRpSettings() {
     groupSubtotals: _rpDraft.groupSub !== false,
     groupColors: !!_rpDraft.groupColors,
     autoSave: _rpDraft.autoSave !== false,
+    doEdits: rpDoEditsForSave(_rpDraft.doEdits),
+    doEditStyle: (({ mode, font, fill }) => ({ mode, font, fill }))(rpEdStyle({ doEditStyle: _rpDraft.doEditStyle })),
     // set only in the settings file on GitHub
     ...(pr0.liftPath ? { liftPath: pr0.liftPath } : {}),
     parties,
@@ -5260,8 +5429,10 @@ async function saveRpSettings() {
     rpResetFileMaps();
     status.textContent = '✓ Saved'; status.style.color = 'var(--green)';
     renderRpReports();
-    // switched on just now with a file open: save it
-    if (rpAutoSaveOn() && !rpAutoSaveOn(pr0) && allRows.length) rpAutoSaveMaybe();
+    // switched on just now with a file open, or an SO's party or colliery changed: save it again
+    const edMoved = JSON.stringify(rpDoEdits(pr0)) !== JSON.stringify(rpDoEdits());
+    if (edMoved) { rpDbChanged(); rpLiftRefresh(); }
+    if (allRows.length && rpAutoSaveOn() && (!rpAutoSaveOn(pr0) || edMoved)) rpAutoSaveMaybe();
     setTimeout(closeRpSettings, 1000);
   } catch(e) {
     status.textContent = 'Save failed: ' + e.message;
@@ -5311,7 +5482,7 @@ function rpFileDayMaps(force) {
   (pr.parties || []).filter(p => p.power).forEach(p => rpCodesOf(p).forEach(c => powerSet.add(c)));
   const usePower = powerSet.size > 0;
 
-  const out = {};
+  const out = {}, db = rpDoDB();
   for (let i = 0; i < rowGross.length; i++) {
     const key = rpKeyFromDMY(rowGWDate[i]);
     if (!key) continue;
@@ -5324,7 +5495,7 @@ function rpFileDayMaps(force) {
     // every trip counts toward its colliery's all-sector total (MCL report);
     // a DO missing from the database is kept under '?'
     const net = rowGross[i] - rowTar[i];
-    const rec = mclhoDB[rowDO[i]];
+    const rec = db[rowDO[i]];
     const cc  = rec ? (String(rec.collieryCode || '').trim() || '?') : '?';
     e.all[cc] = (e.all[cc] || 0) + net;
     if (!rec) continue;
@@ -6298,12 +6469,13 @@ function rpByColliery(pc, powerSet) {
 }
 
 // Colliery names for codes that aren't in settings, read off the DO database.
-let _rpCollNames = null, _rpCollNamesN = -1;
+let _rpCollNames = null, _rpCollNamesN = null;
 function rpCollieryName(code) {
-  if (!_rpCollNames || _rpCollNamesN !== mclhoCount) {   // rebuilt whenever the DO database changes
-    _rpCollNames = {}; _rpCollNamesN = mclhoCount;
-    for (const k in mclhoDB) {
-      const r = mclhoDB[k], c = String(r.collieryCode || '').trim();
+  const db = rpDoDB();
+  if (!_rpCollNames || _rpCollNamesN !== db) {   // rebuilt whenever the DO database or its edits change
+    _rpCollNames = {}; _rpCollNamesN = db;
+    for (const k in db) {
+      const r = db[k], c = String(r.collieryCode || '').trim();
       if (c && !_rpCollNames[c] && r.collieryName) _rpCollNames[c] = rpDecode(r.collieryName);
     }
   }
@@ -6757,7 +6929,7 @@ async function rpLiftSave(fileDays, force) {
       store = rpLiftClean(got && got.json); sha = got ? got.sha : null;
       const now = new Date().toISOString();
       res = rpLiftMerge(store, fileDays, now, force);
-      const folded = mclhoCount ? rpLiftFold(store, mclhoDB, rpTodayNo()) : 0;
+      const folded = mclhoCount ? rpLiftFold(store, rpDoDB(), rpTodayNo()) : 0;
       if (!res.saved.length && !folded) break;
       store.updated = now;
       const span = res.saved.length ? res.saved[0] + (res.saved.length > 1 ? '…' + res.saved[res.saved.length - 1] : '') : 'fold';
@@ -6804,6 +6976,253 @@ function rpLiftGaps(list) {
   const miss = [], part = [];
   for (let i = 0, c = 0; i < n; i++) { c += cov[i]; if (c > 0 && gap[i]) { miss.push(lo + i); if (gap[i] === 2) part.push(lo + i); } }
   return { miss, part, sos, lastFull };
+}
+
+// ═══════════════════════════════════════════════════════
+//  DO EDITS (⚙ → DO Edits)
+// ═══════════════════════════════════════════════════════
+// Details of an SO changed from what the i3MS list says, kept in the settings
+// as powerReport.doEdits = { doNumber: { field: value } }. They are laid over
+// the list wherever this app reads a DO (rpDoDB), and never written into
+// mclho.json — so a fresh paste of the list, or ePass Viewer, leaves them be.
+const RP_DO_EDIT_FIELDS = [
+  { k: 'doDate',       t: 'DO Date',       type: 'date' },
+  { k: 'doQty',        t: 'DO Qty',        type: 'num'  },
+  { k: 'partyCode',    t: 'Party Code',    type: 'code' },
+  { k: 'partyName',    t: 'Party Name',    type: 'text' },
+  { k: 'collieryCode', t: 'Colliery Code', type: 'code' },
+  { k: 'collieryName', t: 'Colliery Name', type: 'text' },
+  { k: 'grade',        t: 'Grade',         type: 'grade' },
+  { k: 'size',         t: 'Size',          type: 'text' },
+  { k: 'doStartDate',  t: 'DO Start Date', type: 'date' },
+  { k: 'doEndDate',    t: 'DO End Date',   type: 'date' },
+];
+const RP_DO_EDIT_F = Object.fromEntries(RP_DO_EDIT_FIELDS.map(f => [f.k, f]));
+// how edited cells look: a coloured font, a highlighted cell, or neither
+const RP_ED_MODES = [['font', 'Coloured font'], ['fill', 'Highlighted cell'], ['none', 'Neither']];
+const RP_ED_COLORS = {          // name, colour on a light page (and in Excel), colour on a dark page
+  font: [['Blue', '#1155cc', '#7fb0ff'], ['Red', '#c0392b', '#ff8a7a'], ['Purple', '#7b3fb5', '#c9a3ff'], ['Green', '#1a7f45', '#5fd394'], ['Orange', '#c25e00', '#ffb366']],
+  fill: [['Yellow', '#fff2a8', 'rgba(255,214,0,.28)'], ['Green', '#d6f0d0', 'rgba(60,200,90,.25)'], ['Blue', '#d7e6fb', 'rgba(80,150,255,.28)'], ['Pink', '#fbdbe7', 'rgba(255,90,150,.25)'], ['Orange', '#fde0c4', 'rgba(255,150,40,.28)']],
+};
+function rpDoEdits(pr) { const e = (pr || appSettings.powerReport || {}).doEdits; return e && typeof e === 'object' ? e : {}; }
+function rpEdStyle(pr) {
+  const s = (pr || appSettings.powerReport || {}).doEditStyle || {};
+  const mode = RP_ED_MODES.some(m => m[0] === s.mode) ? s.mode : 'fill';
+  const pick = (set, n) => RP_ED_COLORS[set].find(c => c[0] === n) || RP_ED_COLORS[set][0];
+  const font = pick('font', s.font), fill = pick('fill', s.fill);
+  return { mode, font: font[0], fill: fill[0], cur: mode === 'none' ? null : (mode === 'font' ? font : fill) };
+}
+
+// a value as the list writes it, or null when it doesn't make sense for the field
+function rpDoEditNorm(k, v) {
+  const f = RP_DO_EDIT_F[k];
+  if (!f) return null;
+  if (f.type === 'date') {
+    let key = null;
+    if (typeof v === 'number' && v > 20000 && v < 80000) {            // an Excel date
+      const d = new Date(Date.UTC(1899, 11, 30) + v * 864e5);
+      key = d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
+    } else key = rpDbDateKey(String(v == null ? '' : v).trim());
+    if (!key) return null;
+    const y = Math.floor(key / 10000), m = Math.floor(key / 100) % 100, d = key % 100;
+    if (m < 1 || m > 12 || d < 1 || d > 31 || y < 2000 || y > 2100) return null;
+    return `${rp2(d)}-${RP_MON[m - 1]}-${y}`;
+  }
+  const s = String(v == null ? '' : v).trim();
+  if (f.type === 'num') { const n = rpDbQty(s); return n == null || n < 0 ? null : n.toFixed(3); }
+  if (f.type === 'code') return /^\d{1,15}$/.test(s) ? s : null;
+  if (f.type === 'grade') return s ? rpGradeOf(s) : null;
+  return s ? s : null;
+}
+// is an edit the same as what the list says?
+function rpDoEditSame(k, a, b) {
+  const f = RP_DO_EDIT_F[k];
+  if (f.type === 'date') return rpDbDateKey(String(a || '')) === rpDbDateKey(rpDecode(b || ''));
+  if (f.type === 'num') return rpDbQty(a) === rpDbQty(b);
+  if (f.type === 'grade') return rpGradeOf(a) === rpGradeOf(rpDecode(b));
+  return String(a || '').trim() === rpDecode(b || '');
+}
+
+// the DO database as this app reads it: the i3MS list with the edits laid over
+let _doView = null;
+function rpDoDB() {
+  const ed = rpDoEdits(), sig = _dbVer + '|' + JSON.stringify(ed);
+  if (_doView && _doView.sig === sig && _doView.base === mclhoDB) return _doView.db;
+  const keys = Object.keys(ed).filter(k => mclhoDB[k] && ed[k] && Object.keys(ed[k]).length);
+  let db = mclhoDB;
+  if (keys.length) {
+    db = Object.assign({}, mclhoDB);
+    keys.forEach(k => {
+      const r = Object.assign({}, mclhoDB[k]);
+      for (const f in ed[k]) if (RP_DO_EDIT_F[f]) r[f] = ed[k][f];
+      db[k] = r;
+    });
+  }
+  _doView = { sig, base: mclhoDB, db };
+  return db;
+}
+
+// ── the tab ──
+let _rpDeOpen = null;            // the SO open in the form
+function renderRpDoEdits() {
+  if (!_rpDraft) return;
+  if (!_rpDraft.doEdits) _rpDraft.doEdits = {};
+  const st = rpEdStyle({ doEditStyle: _rpDraft.doEditStyle });
+  RP_ED_MODES.forEach(([m]) => { const b = document.getElementById('rpDe_' + m); if (b) b.classList.toggle('on', st.mode === m); });
+  const sw = document.getElementById('rpDeSw');
+  if (sw) {
+    sw.style.display = st.mode === 'none' ? 'none' : '';
+    sw.innerHTML = RP_ED_COLORS[st.mode === 'font' ? 'font' : 'fill'].map(([n, l]) =>
+      `<button class="rp-desw${(st.mode === 'font' ? st.font : st.fill) === n ? ' on' : ''}" onclick="rpDeColor('${n}')" title="${n}" aria-label="${n}"` +
+      ` style="${st.mode === 'font' ? `color:${l}` : `background:${l}`}">${st.mode === 'font' ? 'Aa' : ''}</button>`).join('');
+  }
+  const pv = document.getElementById('rpDePrev');
+  if (pv) {
+    pv.className = 'rp-deprev ' + (st.mode === 'font' ? 'edf' : st.mode === 'fill' ? 'edh' : '');
+    pv.style.cssText = st.cur ? `--ed-l:${st.cur[1]};--ed-d:${st.cur[2]}` : '';
+  }
+  rpDeHits();
+  rpDeForm();
+  rpDeList();
+  rpSttDots();
+}
+function rpDeMode(m) { _rpDraft.doEditStyle = Object.assign({}, rpEdStyle({ doEditStyle: _rpDraft.doEditStyle }), { mode: m }); delete _rpDraft.doEditStyle.cur; renderRpDoEdits(); }
+function rpDeColor(n) {
+  const st = rpEdStyle({ doEditStyle: _rpDraft.doEditStyle });
+  const o = { mode: st.mode, font: st.font, fill: st.fill };
+  o[st.mode === 'font' ? 'font' : 'fill'] = n;
+  _rpDraft.doEditStyle = o;
+  renderRpDoEdits();
+}
+// the SOs that match what is typed in Find
+function rpDeHits() {
+  const box = document.getElementById('rpDeHits'), q = (document.getElementById('rpDeQ') || {}).value || '';
+  if (!box) return;
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) { box.innerHTML = ''; box.style.display = 'none'; return; }
+  const db = mclhoDB || {}, hits = [];
+  const exact = db[q.trim()] ? [q.trim()] : [];
+  for (const k in db) {
+    if (hits.length >= 8) break;
+    if (exact[0] === k) continue;
+    const r = db[k];
+    const h = (k + ' ' + (r.partyCode || '') + ' ' + rpDecode(r.partyName) + ' ' + (r.collieryCode || '') + ' ' + rpDecode(r.collieryName)).toLowerCase();
+    if (words.every(w => h.indexOf(w) >= 0)) hits.push(k);
+  }
+  const list = exact.concat(hits).slice(0, 8);
+  box.style.display = '';
+  box.innerHTML = list.length ? list.map(k => {
+    const r = rpDoDB()[k];
+    return `<button class="rp-dehit${_rpDraft.doEdits[k] ? ' ed' : ''}" data-do="${rpEsc(k)}"><b>${rpEsc(k)}</b>` +
+      `<span>${rpEsc(rpDecode(r.partyName))}</span><span>${rpEsc(rpDecode(r.collieryName) || r.collieryCode || '')} · ${rpEsc(rpDecode(r.doDate))}</span></button>`;
+  }).join('') + (hits.length >= 8 ? '<div class="rp-count" style="padding:6px 10px;">Showing the first 8 — type more to narrow it down.</div>' : '')
+    : `<div class="rp-count" style="padding:8px 10px;">No SO in the DO database matches “${rpEsc(q.trim())}”.</div>`;
+  box.querySelectorAll('[data-do]').forEach(b => b.onclick = () => rpDeOpen(b.dataset.do));
+}
+function rpDeOpen(doNum) {
+  _rpDeOpen = doNum;
+  const q = document.getElementById('rpDeQ');
+  if (q) q.value = '';
+  rpDeHits(); rpDeForm();
+  const f = document.getElementById('rpDeForm');
+  if (f) try { f.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
+}
+function rpDeClose() { _rpDeOpen = null; rpDeForm(); }
+// 'DD-Mon-YYYY' ⇄ the date box's 'YYYY-MM-DD'
+function rpDeIsoOf(v) { const k = rpDbDateKey(rpDecode(v || '')); return k ? `${Math.floor(k / 10000)}-${rp2(Math.floor(k / 100) % 100)}-${rp2(k % 100)}` : ''; }
+function rpDeForm() {
+  const box = document.getElementById('rpDeForm');
+  if (!box) return;
+  const k = _rpDeOpen, raw = k && mclhoDB[k];
+  if (!k) { box.innerHTML = ''; box.style.display = 'none'; return; }
+  box.style.display = '';
+  const ed = _rpDraft.doEdits[k] || {};
+  if (!raw) {
+    box.innerHTML = `<div class="rp-deform"><div class="rp-dehd"><b>${rpEsc(k)}</b><button class="rp-mini-btn" onclick="rpDeClose()">Close</button></div>
+      <div class="rp-count" style="padding:10px 12px;">This SO isn’t in the DO database now. Its edits are kept and count again once the list has it.</div></div>`;
+    return;
+  }
+  const rows = RP_DO_EDIT_FIELDS.map(f => {
+    const has = Object.prototype.hasOwnProperty.call(ed, f.k);
+    const val = has ? ed[f.k] : (f.k === 'grade' ? rpGradeOf(rpDecode(raw[f.k])) : rpDecode(raw[f.k]));
+    const was = f.type === 'grade' ? rpGradeOf(rpDecode(raw[f.k])) : f.type === 'num' && rpDbQty(raw[f.k]) != null ? rpNum(rpDbQty(raw[f.k])) || '0' : rpDecode(raw[f.k]);
+    const input = f.type === 'date'
+      ? `<input class="stt-input" type="date" data-f="${f.k}" value="${rpDeIsoOf(val)}">`
+      : `<input class="stt-input" type="${f.type === 'num' ? 'number' : 'text'}" data-f="${f.k}" value="${rpEsc(f.type === 'num' ? String(rpDbQty(val) == null ? '' : rpDbQty(val)) : val)}"` +
+        `${f.type === 'num' ? ' inputmode="decimal" step="0.001" min="0"' : f.type === 'code' ? ' inputmode="numeric"' : ''}${f.type === 'grade' ? ' list="rpDeGrades"' : ''} autocomplete="off" spellcheck="false">`;
+    return `<div class="rp-defld${has ? ' ed' : ''}">
+      <label>${f.t}</label>${input}
+      <button class="rp-dereset" data-reset="${f.k}" title="Back to what the i3MS list says"${has ? '' : ' disabled'}>↺</button>
+      <div class="rp-dewas">${has ? `i3MS: ${rpEsc(was || '—')}` : ''}</div>
+    </div>`;
+  }).join('');
+  const n = Object.keys(ed).length;
+  box.innerHTML = `<div class="rp-deform">
+    <div class="rp-dehd"><div><b>${rpEsc(k)}</b><span>${rpEsc(rpDecode(raw.partyName))}</span></div>
+      <button class="rp-mini-btn" onclick="rpDeClose()">Done</button></div>
+    <div class="rp-defs">${rows}</div>
+    <div class="rp-defoot"><span>${n ? `${n} detail${n === 1 ? '' : 's'} edited` : 'Nothing edited yet — change a box to edit it.'}</span>
+      ${n ? `<button class="rp-mini-btn rp-ddel" onclick="rpDeUndo('${rpEsc(k)}')">Undo all for this SO</button>` : ''}</div>
+  </div>
+  <datalist id="rpDeGrades">${['Rejects'].concat(Array.from({ length: 17 }, (_, i) => 'G' + (i + 1))).map(g => `<option value="${g}">`).join('')}</datalist>`;
+  box.querySelectorAll('input[data-f]').forEach(inp => inp.onchange = () => rpDeSet(k, inp.dataset.f, inp.value, inp));
+  box.querySelectorAll('[data-reset]').forEach(b => b.onclick = () => rpDeSet(k, b.dataset.reset, null));
+}
+// put an edit in (or take it out when it matches the list again)
+function rpDeSet(doNum, k, v, inp) {
+  const raw = mclhoDB[doNum];
+  if (!raw) return;
+  const ed = _rpDraft.doEdits[doNum] = _rpDraft.doEdits[doNum] || {};
+  if (v == null || String(v).trim() === '') {
+    delete ed[k];                                       // ↺, or an emptied box: back to what the list says
+  } else {
+    const n = rpDoEditNorm(k, v);
+    if (n == null) {
+      if (inp) { inp.classList.add('bad'); inp.title = 'That isn’t a ' + RP_DO_EDIT_F[k].t.toLowerCase(); }
+      return;
+    }
+    if (rpDoEditSame(k, n, raw[k])) delete ed[k]; else ed[k] = n;
+    // a new party or colliery code brings its name along, unless that is edited too
+    const nameOf = { partyCode: ['partyName', c => (rpBuildPartyIndex()[c] || {}).name], collieryCode: ['collieryName', c => { const nm = rpCollieryName(c); return nm !== c ? nm : ''; }] }[k];
+    if (nameOf && ed[k] && !ed[nameOf[0]]) { const nm = nameOf[1](ed[k]); if (nm && !rpDoEditSame(nameOf[0], nm, raw[nameOf[0]])) ed[nameOf[0]] = nm; }
+  }
+  if (!Object.keys(ed).length) delete _rpDraft.doEdits[doNum];
+  rpDeForm(); rpDeList(); rpSttDots();
+}
+function rpDeUndo(doNum) { delete _rpDraft.doEdits[doNum]; rpDeForm(); rpDeList(); rpSttDots(); }
+// every SO with an edit, and what was changed
+function rpDeList() {
+  const box = document.getElementById('rpDeList'), cnt = document.getElementById('rpDeCount');
+  if (!box) return;
+  const ed = _rpDraft.doEdits || {}, keys = Object.keys(ed).filter(k => Object.keys(ed[k]).length).sort();
+  if (cnt) cnt.textContent = keys.length ? `${keys.length} SO${keys.length === 1 ? '' : 's'} edited` : '';
+  if (!keys.length) { box.innerHTML = '<div class="rp-count" style="padding:10px 2px;">No SO edited yet.</div>'; return; }
+  box.innerHTML = keys.map(k => {
+    const raw = mclhoDB[k];
+    const bits = RP_DO_EDIT_FIELDS.filter(f => ed[k][f.k] != null).map(f => {
+      const was = raw ? (f.type === 'grade' ? rpGradeOf(rpDecode(raw[f.k])) : rpDecode(raw[f.k])) : '';
+      const same = raw && rpDoEditSame(f.k, ed[k][f.k], raw[f.k]);
+      return `<span class="rp-debit"><i>${f.t}</i> ${rpEsc(f.type === 'num' ? rpNum(rpDbQty(ed[k][f.k])) || '0' : ed[k][f.k])}` +
+        (raw ? (same ? ' <em>(the list says the same now)</em>' : ` <em>(i3MS ${rpEsc((f.type === 'num' ? rpNum(rpDbQty(was)) : was) || '—')})</em>`) : '') + '</span>';
+    }).join('');
+    return `<div class="rp-derow${k === _rpDeOpen ? ' on' : ''}">
+      <button class="rp-dego" data-do="${rpEsc(k)}"><b>${rpEsc(k)}</b><span>${raw ? rpEsc(rpDecode(raw.partyName)) : '<em>not in the DO database now</em>'}</span></button>
+      <button class="rp-dex" data-undo="${rpEsc(k)}" title="Undo every edit of this SO" aria-label="Undo the edits of ${rpEsc(k)}">✕</button>
+      <div class="rp-debits">${bits}</div>
+    </div>`;
+  }).join('');
+  box.querySelectorAll('[data-do]').forEach(b => b.onclick = () => rpDeOpen(b.dataset.do));
+  box.querySelectorAll('[data-undo]').forEach(b => b.onclick = () => rpDeUndo(b.dataset.undo));
+}
+// tidy for saving: known fields, sensible values, no empty SOs
+function rpDoEditsForSave(ed) {
+  const out = {};
+  Object.keys(ed || {}).forEach(k => {
+    const o = {};
+    Object.keys(ed[k] || {}).forEach(f => { if (RP_DO_EDIT_F[f] && ed[k][f] != null && ed[k][f] !== '') o[f] = ed[k][f]; });
+    if (Object.keys(o).length) out[k] = o;
+  });
+  return out;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -7029,12 +7448,12 @@ function rpDbQty(x) {
 // what the rows are built from: the database, the lifting, the date and the power list
 function rpDbSig() {
   const pr = appSettings.powerReport || {};
-  return [_dbVer, _liftVer, rpTodayNo(), (pr.parties || []).filter(p => p.power).map(p => rpCodesOf(p).join(',')).join(';')].join('|');
+  return [_dbVer, _liftVer, rpTodayNo(), (pr.parties || []).filter(p => p.power).map(p => rpCodesOf(p).join(',')).join(';'), JSON.stringify(rpDoEdits())].join('|');
 }
 function rpDbBuild() {
   const sig = rpDbSig();
   if (_rpDb.sig === sig) return;
-  const db = mclhoDB || {};
+  const db = rpDoDB(), edits = rpDoEdits();
   const pr = appSettings.powerReport || {};
   const power = new Set();
   (pr.parties || []).filter(p => p.power).forEach(p => rpCodesOf(p).forEach(c => power.add(String(c).trim())));
@@ -7080,7 +7499,17 @@ function rpDbBuild() {
     const s = RP_DB_COLS.map((c, i) => !v[i] ? null : c.type === 'date' ? rpDbDateKey(v[i])
                               : c.type === 'num' ? (c.calc ? x[c.k] : rpDbQty(r[c.k]))
                               : c.type === 'code' && /^\d+$/.test(v[i]) ? v[i].padStart(20, '0') : v[i].toLowerCase());
-    return { v, s, qty, p0: S, p1: E, h: v.join('\u0001').toLowerCase() };
+    // which cells were edited, and what the i3MS list says for each
+    let ed = null, was = null;
+    const e0 = edits[doNum];
+    if (e0) for (const f in e0) {
+      const c = RP_DB_IX[f];
+      if (c == null || !RP_DO_EDIT_F[f]) continue;
+      (ed = ed || []).push(c);
+      const w = mclhoDB[doNum] ? mclhoDB[doNum][f] : '';
+      (was = was || {})[c] = f === 'grade' ? rpGradeOf(rpDecode(w)) : RP_DO_EDIT_F[f].type === 'num' && rpDbQty(w) != null ? fmt(rpDbQty(w)) : rpDecode(w);
+    }
+    return { v, s, qty, p0: S, p1: E, ed, was, h: v.join('\u0001').toLowerCase() };
   });
   // columns no record fills (older saves kept fewer fields) are left out;
   // the worked-out ones always stay, so they don't come and go as the lifting loads
@@ -7092,6 +7521,7 @@ function rpDbBuild() {
 function rpDbWords(q) { return String(q || '').toLowerCase().split(/\s+/).filter(Boolean); }
 // does a row pass the search and every column filter but one (skip)?
 function rpDbPass(row, words, skip) {
+  if (_rpDb.edOnly && !row.ed) return false;
   for (const w of words) if (row.h.indexOf(w) < 0) return false;
   for (const c in _rpDb.filt) {
     if (+c === skip) continue;
@@ -7110,7 +7540,7 @@ function rpDbCmp(c, dir) {
   };
 }
 function rpDbFiltered() {
-  const sig = [_rpDb.ver, _rpDb.q, _rpDb.fv, _rpDb.sort ? _rpDb.sort.c + ':' + _rpDb.sort.dir : ''].join('|');
+  const sig = [_rpDb.ver, _rpDb.q, _rpDb.fv, _rpDb.edOnly ? 'ed' : '', _rpDb.sort ? _rpDb.sort.c + ':' + _rpDb.sort.dir : ''].join('|');
   if (_rpDb.cache && _rpDb.cache.sig === sig) return _rpDb.cache.list;
   const words = rpDbWords(_rpDb.q);
   let list = _rpDb.rows.filter(r => rpDbPass(r, words, -1));
@@ -7137,6 +7567,7 @@ function renderRpDb() {
          <div class="rp-dbbar">
            <label class="rp-dbsearch"><span>Search</span>
              <input id="rpDbQ" type="search" autocomplete="off" spellcheck="false" aria-label="Search every column"></label>
+           <button class="rp-dbbtn" id="rpDbEd" onclick="rpDbEdOnly()" aria-pressed="false" title="Show only the SOs edited in ⚙ → DO Edits"></button>
            <button class="rp-dbbtn" id="rpDbClear" onclick="rpDbClearAll()">Clear all</button>
            <button class="rp-dbbtn" id="rpDbXls" onclick="rpDbExport()" title="The DOs that match, as an Excel file">Excel</button>
          </div>
@@ -7165,7 +7596,7 @@ function rpDbDraw() {
   const tot = k => { const c = RP_DB_IX[k]; let t = 0, n = 0; list.forEach(r => { if (r.s[c] != null) { t += r.s[c]; n++; } }); return n ? t : null; };
   const figs = [['lifted', 'Lifted'], ['balance', 'Balance'], ['lapsed', 'Lapsed']]
     .map(([k, t]) => { const v = tot(k); return v == null ? '' : ` · ${t} <b>${v.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</b>`; }).join('');
-  const any = _rpDb.q || Object.keys(_rpDb.filt).length;
+  const any = _rpDb.q || Object.keys(_rpDb.filt).length || _rpDb.edOnly;
   const when = rpDbWhen(_dbUpdated);
   document.getElementById('rpDbMeta').textContent = `${fmtN(total)} DOs${when ? ' · saved ' + when : ''}`;
   document.getElementById('rpDbSum').innerHTML =
@@ -7178,7 +7609,19 @@ function rpDbDraw() {
   xl.textContent = any ? `Excel · ${fmtN(list.length)} DOs` : 'Excel · all';
   xl.disabled = !list.length;
   // what is filtered, each with its own ✕
+  // edited cells as set in ⚙ → DO Edits; the Edited switch while there are any
+  const est = rpEdStyle(), card = document.querySelector('#rpPane5 .rp-db');
+  if (card) {
+    card.classList.toggle('edf', est.mode === 'font'); card.classList.toggle('edh', est.mode === 'fill');
+    if (est.cur) { card.style.setProperty('--ed-l', est.cur[1]); card.style.setProperty('--ed-d', est.cur[2]); }
+  }
+  const nEd = _rpDb.rows.filter(r => r.ed).length, eb = document.getElementById('rpDbEd');
+  if (!nEd && _rpDb.edOnly) _rpDb.edOnly = false;
+  eb.style.display = nEd ? '' : 'none';
+  eb.textContent = `Edited · ${fmtN(nEd)}`;
+  eb.classList.toggle('on', !!_rpDb.edOnly); eb.setAttribute('aria-pressed', String(!!_rpDb.edOnly));
   const chips = [];
+  if (_rpDb.edOnly) chips.push(`<span class="rp-dbchip">Edited SOs only<button onclick="rpDbEdOnly()" aria-label="Show every SO">✕</button></span>`);
   if (_rpDb.q) chips.push(`<span class="rp-dbchip">Search: “${rpEsc(_rpDb.q)}”<button onclick="rpDbClearSearch()" aria-label="Clear the search">✕</button></span>`);
   Object.keys(_rpDb.filt).forEach(c => {
     const f = _rpDb.filt[c], parts = [];
@@ -7272,8 +7715,9 @@ function rpDbLiftNote(list) {
 const RP_DB_VIRT = 400;        // past this many rows on one page, draw only what is in view
 function rpDbRowHtml(r, cols, i) {
   return `<tr${i % 2 ? ' class="z"' : ''}>` + cols.map(c => {
-    const col = RP_DB_COLS[c], v = r.v[c];
-    return `<td class="${col.type === 'num' ? 'n' : col.type === 'code' ? 'k' : ''}${col.wide ? ' w' : ''}"${col.wide && v.length > 28 ? ` title="${rpEsc(v)}"` : ''}>${rpEsc(v)}</td>`;
+    const col = RP_DB_COLS[c], v = r.v[c], ed = r.ed && r.ed.indexOf(c) >= 0;
+    const tip = ed ? `Edited in ⚙ → DO Edits — the i3MS list says ${r.was[c] || '(blank)'}` : col.wide && v.length > 28 ? v : '';
+    return `<td class="${col.type === 'num' ? 'n' : col.type === 'code' ? 'k' : ''}${col.wide ? ' w' : ''}${ed ? ' ed' : ''}"${tip ? ` title="${rpEsc(tip)}"` : ''}>${rpEsc(v)}</td>`;
   }).join('') + '</tr>';
 }
 // the rows in view (and a margin) between two spacers
@@ -7365,7 +7809,8 @@ function rpDbChipDates(c, only) {
 const RP_DB_FUNNEL = '<svg class="rp-dbfun" viewBox="0 0 24 24" aria-label="filtered"><path d="M3 5h18l-7 8v5l-4 2v-7z" fill="currentColor"/></svg>';
 function rpDbClearSearch() { _rpDb.q = ''; const q = document.getElementById('rpDbQ'); if (q) q.value = ''; _rpDb.page = 0; rpDbDraw(); }
 function rpDbClearCol(c) { delete _rpDb.filt[c]; _rpDb.fv++; _rpDb.page = 0; rpDbDraw(); }
-function rpDbClearAll() { _rpDb.filt = {}; _rpDb.fv++; rpDbClearSearch(); }
+function rpDbClearAll() { _rpDb.filt = {}; _rpDb.edOnly = false; _rpDb.fv++; rpDbClearSearch(); }
+function rpDbEdOnly() { _rpDb.edOnly = !_rpDb.edOnly; _rpDb.page = 0; rpDbDraw(); }
 
 // ── the column menu: sort, and the values to tick ──
 function rpDbOpen(c, anchor) {
@@ -7559,14 +8004,17 @@ async function rpDbExport() {
     const col = RP_DB_COLS[c];
     return { v: col.t, style: col.type === 'date' ? 9 : col.type === 'num' ? (!col.int && fracOf(c) ? 11 : 10) : 5 };
   });
-  const rows = list.map(r => cols.map(c => {
+  const est = rpEdStyle();
+  const rows = list.map(r => cols.map((c, i) => {
     const col = RP_DB_COLS[c];
-    if (col.type === 'date') return r.s[c] ? serial(r.s[c]) : r.v[c];
-    if (col.type === 'num') return r.s[c] != null ? r.s[c] : r.v[c];
-    return r.v[c];
+    const v = col.type === 'date' ? (r.s[c] ? serial(r.s[c]) : r.v[c]) : col.type === 'num' ? (r.s[c] != null ? r.s[c] : r.v[c]) : r.v[c];
+    // an edited cell gets the edit colour on top of its own number format
+    return est.cur && r.ed && r.ed.indexOf(c) >= 0 ? { v, s: RP_SF_ED[head[i].style] } : v;
   }));
+  const nEd = list.filter(r => r.ed).length;
   const parts = [];
   if (_rpDb.q) parts.push(`search “${_rpDb.q}”`);
+  if (_rpDb.edOnly) parts.push('edited SOs only');
   Object.keys(_rpDb.filt).forEach(c => parts.push(RP_DB_COLS[c].t + ' filtered'));
   const sh = { name: 'DO Database', freeze: true, filter: true,
     cols: cols.map(c => ({ doNum: 14, doDate: 13, doQty: 11, partyCode: 13, partyName: 44, sector: 11, collieryCode: 12, collieryName: 30,
@@ -7574,13 +8022,14 @@ async function rpDbExport() {
     blocks: [
       { t: 'title', v: 'i3MS DO Database' },
       { t: 'note', v: `${list.length.toLocaleString('en-IN')} of ${_rpDb.rows.length.toLocaleString('en-IN')} DOs` + (parts.length ? ' · ' + parts.join(' · ') : '') +
+                      (nEd ? ` · ${nEd.toLocaleString('en-IN')} edited SO${nEd === 1 ? '' : 's'}${est.cur ? ` — edited cells in ${est.cur[0].toLowerCase()} ${est.mode === 'font' ? 'type' : 'highlight'}` : ''}` : '') +
                       (_dbUpdated ? ` · database saved ${rpDbWhen(_dbUpdated)}` : '') + rpDbLiftLine(list) },
       { t: 'table', head, rows },
     ] };
   const t = new Date();
   const fname = `DO_Database_${rp2(t.getDate())}_${RP_MON[t.getMonth()]}_${t.getFullYear()}.xlsx`;
   try {
-    await rpShareOrSave(rpSfWorkbook([sh]), fname, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'DO Database');
+    await rpShareOrSave(rpSfWorkbook([sh], { ed: est.cur ? { mode: est.mode, rgb: est.cur[1] } : null }), fname, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'DO Database');
   } catch (e) { alert('Could not build the Excel file: ' + e.message); }
 }
 
