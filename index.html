@@ -1283,11 +1283,31 @@ button.rp-dbt-x:focus-visible { outline:2px solid #d97a06; outline-offset:-2px; 
 }
 .rp-pin.on { border-color:#d97a06; color:#d97a06; background:rgba(217,122,6,.1); }
 .rp-pin:active { opacity:.7; }
-/* saved-days list */
+/* saved-days list (⚙ → Saved days) */
+.rp-dcount { font-family:var(--mono); font-size:10px; color:var(--dim); text-align:right; }
+.rp-dcount .miss, .rp-dmeta .miss { color:var(--live, #b8620a); font-weight:600; }
+.rp-dlist { max-height:min(62vh, 560px); overflow:auto; -webkit-overflow-scrolling:touch; }
+.rp-dlist > :first-child { border-top:0; }
 .rp-dgrp {
-  display:grid; grid-template-columns:22px 1fr auto auto auto auto; gap:8px; align-items:center;
-  padding:8px 10px; background:var(--bg);
-  border-top:2px solid var(--border);
+  display:grid; grid-template-columns:22px minmax(0,1fr) auto auto; gap:4px 10px; align-items:center;
+  padding:9px 10px; background:var(--bg);
+  border-top:2px solid var(--border); position:sticky; top:0; z-index:1;
+}
+.rp-dexp { display:flex; align-items:center; gap:6px; border:0; background:transparent; padding:2px 0; cursor:pointer; color:inherit; min-width:0; text-align:left; }
+.rp-dcar { font-size:11px; color:var(--dim); width:10px; }
+.rp-dgrp .rp-dmeta { grid-column:2; grid-row:2; padding-left:16px; }
+.rp-dmsum { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:2px 12px; grid-column:3; grid-row:1 / span 2; }
+.rp-dgrp .rp-pin { grid-column:4; grid-row:1 / span 2; }
+.rp-dgrp > input { grid-row:1 / span 2; }
+.rp-dmiss { padding:6px 12px 6px 42px; font-size:11px; color:var(--live, #b8620a); background:var(--live-bar, rgba(217,122,6,.1)); border-top:1px solid var(--border); }
+.rp-dact { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:8px; }
+.rp-ddel { color:var(--red); border-color:var(--red); }
+.rp-ddel:disabled { opacity:.4; cursor:default; }
+@media (max-width: 560px) {
+  .rp-dgrp { grid-template-columns:22px minmax(0,1fr) auto; }
+  .rp-dmsum { grid-column:2; grid-row:3; justify-content:flex-start; padding-left:16px; }
+  .rp-dgrp .rp-pin { grid-column:3; grid-row:1 / span 3; }
+  .rp-dgrp > input { grid-row:1 / span 3; }
 }
 .rp-dgrp input { width:16px; height:16px; accent-color:#d97a06; cursor:pointer; }
 .rp-dmon {
@@ -1306,9 +1326,23 @@ body.dark .rp-dmavg { color:#7fa8f5; }
 .rp-dsel .rp-selavg { color:#123a8a; }
 body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 .rp-drow {
-  display:grid; grid-template-columns:22px 62px 1fr 92px 66px; gap:6px; align-items:center;
-  padding:7px 10px 7px 22px; border-top:1px solid var(--border); cursor:pointer;
+  display:grid; grid-template-columns:22px 30px minmax(0,1fr) auto; gap:1px 9px; align-items:baseline;
+  padding:7px 12px; border-top:1px solid var(--border); cursor:pointer;
 }
+.rp-drow > input { grid-row:1 / span 3; align-self:center; }
+.rp-drow .rp-ddate { grid-row:1 / span 3; align-self:center; display:flex; flex-direction:column; align-items:center; line-height:1.15; }
+.rp-ddate i { font-style:normal; font-weight:400; font-size:9px; letter-spacing:.04em; color:var(--dim); }
+.rp-dcut, .rp-dfile, .rp-dso { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+.rp-dtot, .rp-dall { white-space:nowrap; }
+.rp-dcut b { font-weight:600; }
+.rp-dcut b.ok, .rp-dso.ok { color:var(--green); }
+.rp-dcut b.part, .rp-dso.part { color:var(--live, #b8620a); }
+.rp-dso.no { color:var(--dim); }
+.rp-dfile, .rp-dso { font-family:var(--mono); font-size:10px; color:var(--dim); }
+.rp-dall { font-family:var(--mono); font-size:11px; text-align:right; color:var(--dim); }
+.rp-dcut { font-size:11px; }
+.rp-dtot b, .rp-dall b { font-weight:600; color:var(--text); }
+.rp-dtot i { font-style:normal; color:var(--dim); font-size:10px; }
 .rp-drow:active { background:var(--amber-lo); }
 .rp-drow input { width:16px; height:16px; accent-color:var(--red); cursor:pointer; }
 .rp-ddate { font-family:var(--mono); font-size:12px; font-weight:600; color:var(--text); }
@@ -1636,7 +1670,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B49-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B50-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1757,8 +1791,6 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
     </label>
     <span style="flex:1"></span>
     <button class="rp-mini-btn" id="rpSaveDayBtn" onclick="saveRpDay()">💾 Save Day</button>
-    <button class="rp-mini-btn" onclick="loadRpHistory(true).then(renderRpReports)">↻ Reload</button>
-    <button class="rp-mini-btn" onclick="openRpDays()">Saved days</button>
     <button class="rp-mini-btn" id="rpShareBtn" onclick="shareRpReport()">Share</button>
     <button class="rp-mini-btn" id="rpDlBtn" onclick="rpDownload()">⤓ Download</button>
     <button class="rp-mini-btn" id="rpHtmlBtn" onclick="rpExportHtml()">HTML</button>
@@ -1792,6 +1824,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
       <button role="tab" data-tab="customers" onclick="rpSettingsTab('customers')"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 4.8a3 3 0 010 6M21 20c0-2.5-1.5-4.6-3.8-5.5"/></svg><span>Customers</span></button>
       <button role="tab" data-tab="exports" onclick="rpSettingsTab('exports')"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span>Exports</span></button>
       <button role="tab" data-tab="sheet" onclick="rpSettingsTab('sheet')"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/></svg><span class="rp-lg">Google Sheet</span><span class="rp-sm">Sheet</span></button>
+      <button role="tab" data-tab="days" onclick="rpSettingsTab('days')"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 15l2 2 4-4"/></svg><span class="rp-lg">Saved days</span><span class="rp-sm">Days</span></button>
       <button role="tab" data-tab="general" onclick="rpSettingsTab('general')"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg><span>General</span></button>
     </div>
 
@@ -2026,7 +2059,48 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
       </div>
       </div>
 
+      <div class="rp-stab" data-tab="days" role="tabpanel" hidden>
+      <div class="stt-section">
+        <div class="stt-section-hdr">
+          <label class="stt-label">Saved Days</label>
+          <span class="rp-dcount" id="rpDaysCount"></span>
+        </div>
+        <div class="stt-hint" style="margin:0 0 10px;">
+          Each date saved from an ePass file — its report figures and its SO-wise lifting, kept together.
+          What you do on this tab happens straight away; there is nothing to Save.
+        </div>
+        <div class="rp-list-wrap"><div class="rp-dlist" id="rpDaysList"></div></div>
+        <div id="rpDaysSel" class="rp-dsel">Tick days, or a whole month, to total or delete them.</div>
+        <div class="rp-dact">
+          <button class="rp-mini-btn rp-ddel" id="rpDaysDelBtn" onclick="rpClearDays()" disabled>Delete selected days</button>
+          <span id="rpDaysStatus" class="stt-status"></span>
+        </div>
+        <div class="stt-hint" style="margin-top:8px;">
+          <strong>Whole</strong> is a date the file has from its first hour to the end of the day; <strong>Part</strong> is one it has only up to the time shown.
+          <strong>⤓</strong> is when that ePass file was downloaded. Opening another file of a date replaces it when that file was downloaded later —
+          i3MS takes cancelled trips out after a while — but part of a day never replaces a whole one.
+          <strong>☆ Show</strong> puts a month's Total and Avg / day in the reports for comparison.
+          Deleting a date takes out both its report figures and its SO-wise lifting; open its ePass file to put it back.
+        </div>
+      </div>
+      </div>
+
       <div class="rp-stab" data-tab="general" role="tabpanel">
+      <div class="stt-section">
+        <div class="stt-section-hdr">
+          <label class="stt-label">Autosave</label>
+          <label class="rp-sw" title="Save each ePass file as soon as it is opened">
+            <input type="checkbox" id="rpAutoSave" onchange="_rpDraft.autoSave = this.checked; document.getElementById('rpAutoSaveLbl').textContent = this.checked ? 'On' : 'Off';">
+            <span class="rp-sw-track"><span class="rp-sw-knob"></span></span>
+            <span class="rp-sw-lbl" id="rpAutoSaveLbl">On</span>
+          </label>
+        </div>
+        <div class="stt-hint" style="margin:0;">
+          On: each ePass file is saved as soon as it is opened — every report's history and the DO Database's SO-wise lifting, together.
+          Off: nothing is saved until you tap 💾 Save Day, which then saves both.
+        </div>
+      </div>
+
       <div class="stt-section">
         <div class="stt-section-hdr">
           <label class="stt-label">Settings File</label>
@@ -2069,7 +2143,6 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
           </div>
           <div class="rp-rsub">Stay unlocked</div>
           <div class="rp-monthpick" id="rpLockStay"></div>
-          <label class="rp-lkcheck"><input type="checkbox" id="rpLockDays" onchange="rpLockSet('days', this.checked)">Also ask before opening Saved days</label>
           <div class="stt-hint" style="margin-top:8px;">
             Date codes follow the phone's own date. Changes take effect when you save.
             Forgot the PIN? In <code>settings-test.json</code> on GitHub, set <code>"on"</code> under <code>powerReport → lock</code> to <code>false</code>.
@@ -2244,7 +2317,13 @@ function updateDbIndicator(unknownCount) {
   rpDbTick();
 }
 
+let _dbLoading = false;
 async function loadDbFromGitHub() {
+  _dbLoading = true;
+  try { await rpLoadDbNow(); } finally { _dbLoading = false; }
+  if (_saveWaitDb && mclhoCount && allRows.length) { _saveWaitDb = false; rpAutoSaveMaybe(); }
+}
+async function rpLoadDbNow() {
   updateDbStatus(true);
   const headers = { 'Authorization': `token ${GH.token}`, 'Accept': 'application/vnd.github.v3+json' };
 
@@ -2546,11 +2625,16 @@ async function rpParseMclho(raw) {
   _dbBusy = false;
   await saveDbToGitHub({ recs, added, updated: updated + regraded });
 
-  // Re-run stats if despatch data is already loaded
-  if (allRows.length > 0) updateStats();
+  // Re-run stats if despatch data is already loaded, and save it again with
+  // the newer list (a customer it couldn't tell apart before is now known)
+  if (allRows.length > 0) { updateStats(); _saveWaitDb = false; rpAutoSaveMaybe(); }
 }
 
+// when the ePass file was downloaded: its date stamp on the phone
+let _fileTime = 0, _fileName = '';
 function loadFile(file) {
+  _fileTime = file.lastModified || Date.now();
+  _fileName = file.name || '';
   const reader = new FileReader();
   reader.onload = e => {
     const text = e.target.result;
@@ -2795,7 +2879,7 @@ function rpOpenSettingsNow() {
                show: shDef, reports: rpReportList(pr.reports), exportReports: rpExportList(pr),
                pdfLevel: rpPdfLevel(pr), pdfMode: rpPdfMode(pr), pdfOnePage: rpPdfPowerOnePage(pr), dlFormat: rpDlFormat(pr), dlShare: rpDlShare(pr), lock: rpLockDraft(pr), gs: rpGsCfg(pr.gsheet),
                groups: rpDraftGroups(pr), groupTable: !!pr.groupTable,
-               groupSub: pr.groupSubtotals !== false, groupColors: !!pr.groupColors };
+               groupSub: pr.groupSubtotals !== false, groupColors: !!pr.groupColors, autoSave: rpAutoSaveOn(pr) };
   _rpGrpPick = null;
   (pr.parties || []).forEach(p => {
     const codes = rpCodesOf(p);
@@ -2813,6 +2897,7 @@ function rpOpenSettingsNow() {
   });
   rpR2Codes(_rpDraft.sel);
   document.getElementById('rp_histPath').value = _rpDraft.historyPath;
+  rpAutoSaveUi();
   document.getElementById('rpSettingsStatus').textContent = '';
   document.getElementById('rpSearch').value = '';
   _rpChips = { recent: true, sel: false };
@@ -2835,6 +2920,12 @@ function rpOpenSettingsNow() {
   document.getElementById('rpSettingsOverlay').scrollTop = 0;
   rpSettingsTab(_rpSttTab);
   rpSttDots();
+}
+function rpAutoSaveUi() {
+  const cb = document.getElementById('rpAutoSave');
+  if (!cb) return;
+  cb.checked = _rpDraft.autoSave !== false;
+  document.getElementById('rpAutoSaveLbl').textContent = cb.checked ? 'On' : 'Off';
 }
 function closeRpSettings() {
   document.getElementById('rpSettingsOverlay').style.display = 'none';
@@ -3307,7 +3398,6 @@ function renderRpLock() {
     : 'Type the PIN in both boxes. It is stored only as a scrambled hash, so it can’t be read back — note it down.';
   document.getElementById('rpLockStay').innerHTML = RP_LOCK_STAY.map(([v, t]) =>
     `<button class="rp-mchip${d.stay === v ? ' on' : ''}" onclick="rpLockSet('stay', ${v})">${t}</button>`).join('');
-  document.getElementById('rpLockDays').checked = d.days;
 }
 function rpLockSet(f, v) {
   _rpDraft.lock[f] = v;
@@ -3335,7 +3425,7 @@ function rpLockForSave(status) {
 }
 
 // ── Settings tabs ──────────────────────────────────────────────────────
-const RP_STABS = ['reports', 'customers', 'exports', 'sheet', 'general'];
+const RP_STABS = ['reports', 'customers', 'exports', 'sheet', 'days', 'general'];
 let _rpSttTab = (() => { try { return localStorage.getItem('rpSttTab') || 'reports'; } catch (_) { return 'reports'; } })();
 let _rpEstDone = false;
 function rpSettingsTab(t) {
@@ -3349,6 +3439,7 @@ function rpSettingsTab(t) {
   });
   document.querySelectorAll('#rpSettingsOverlay .rp-stab').forEach(p => { p.hidden = p.dataset.tab !== t; });
   if (t === 'sheet') renderRpGs();
+  if (t === 'days') rpDaysOpen();
   if (t === 'exports' && !_rpEstDone) { _rpEstDone = true; rpPdfEstimate(); }
   // with the tab bar pinned, bring the new tab's first line up under it
   const ov = document.getElementById('rpSettingsOverlay'), bar = document.getElementById('rpSttTabs');
@@ -3840,7 +3931,7 @@ async function rpGsSend() {
 // key / value rows and tables with drop-downs where there's a fixed choice.
 // Export takes what's on screen; import fills the settings screen from the
 // file, and nothing reaches the shared settings until Save.
-const RP_BUILD = 'rp-B49-test';
+const RP_BUILD = 'rp-B50-test';
 const RP_SF_FORMAT = 'RoadPowerSettings 1';
 const RP_SF_YN = ['Yes', 'No'];
 
@@ -3986,10 +4077,12 @@ function rpSfSheets() {
       ['Passcode', yn(lk.on), { list: RP_SF_YN }],
       ['Passcode type', mode.name, { list: RP_LOCK_MODES.map(m => m.name) }],
       ['Stay unlocked', (RP_LOCK_STAY.find(s => s[0] === lk.stay) || RP_LOCK_STAY[0])[1], { list: RP_LOCK_STAY.map(s => s[1]) }],
-      ['Also lock Saved days', yn(lk.days), { list: RP_SF_YN }],
       ['New PIN', '', { text: true, note: 'Type 4 to 8 digits to set a new PIN; leave it empty to keep the stored one.' }],
       ['Stored PIN', lk.pin ? `${lk.pin.salt}:${lk.pin.hash}:${lk.pin.len}` : '', { ro: true, note: 'Scrambled — it can’t be read back. Leave it as it is to keep the PIN.' }],
     ] },
+    { t: 'blank' },
+    { t: 'head2', v: 'Saving' },
+    { t: 'kv', rows: [['Autosave', yn(d.autoSave !== false), { list: RP_SF_YN, note: 'Yes: each ePass file is saved as soon as it is opened. No: only with Save Day.' }]] },
     { t: 'blank' },
     { t: 'head2', v: 'History database' },
     { t: 'kv', rows: [['History file', document.getElementById('rp_histPath').value.trim() || d.historyPath, { note: 'The .json file in epass-db that holds the saved days.' }]] },
@@ -4612,6 +4705,8 @@ function rpSfApply(book, fileName) {
     const mode = RP_LOCK_MODES.find(x => x.id === lk.mode);
     if (lk.on && mode && mode.pin && !lk.pin) w('General', 0, 'the passcode type needs a PIN and none is set — type one under New PIN, or on the General tab.');
     parts.unshift(lk.on ? `passcode on (${mode ? mode.name : lk.mode})` : 'passcode off');
+    const as = R.kv('autosave');
+    if (as) { const v = rpSfYN(as.v); if (v === null) w('General', as.r, 'Autosave must be Yes or No — kept as it was.'); else { d.autoSave = v; parts.push('autosave ' + (v ? 'on' : 'off')); } }
     const hf = R.kv('history file');
     if (hf) {
       const v = rpSfTxt(hf.v);
@@ -4640,6 +4735,7 @@ async function rpSfImport(input) {
   const keepTab = _rpSttTab;
   _rpDraft = res.draft;
   document.getElementById('rp_histPath').value = _rpDraft.historyPath;
+  rpAutoSaveUi();
   document.getElementById('rpLockPin1').value = '';
   document.getElementById('rpLockPin2').value = '';
   renderRpReportLists();
@@ -5125,6 +5221,9 @@ async function saveRpSettings() {
     groupTable: !!_rpDraft.groupTable,
     groupSubtotals: _rpDraft.groupSub !== false,
     groupColors: !!_rpDraft.groupColors,
+    autoSave: _rpDraft.autoSave !== false,
+    // set only in the settings file on GitHub
+    ...(pr0.liftPath ? { liftPath: pr0.liftPath } : {}),
     parties,
   } });
 
@@ -5161,6 +5260,8 @@ async function saveRpSettings() {
     rpResetFileMaps();
     status.textContent = '✓ Saved'; status.style.color = 'var(--green)';
     renderRpReports();
+    // switched on just now with a file open: save it
+    if (rpAutoSaveOn() && !rpAutoSaveOn(pr0) && allRows.length) rpAutoSaveMaybe();
     setTimeout(closeRpSettings, 1000);
   } catch(e) {
     status.textContent = 'Save failed: ' + e.message;
@@ -5249,274 +5350,243 @@ function rpLiveMap(dateKey) {
   return m ? m.pc : {};
 }
 
-async function saveRpDay() {
-  const key = rpActiveKey();
-  if (!allRows.length) { alert('Load a despatch file first.'); return; }
-  if (!key) { alert('Could not determine the report date from the loaded file.'); return; }
-  if (mclhoCount === 0) { alert('DO database is not loaded — party figures would all be zero.'); return; }
-
-  const pr = appSettings.powerReport || {};
-  if (!(pr.parties || []).some(p => p.power)) {
-    alert('No power parties selected yet. Open ⚙ and tick some parties first.'); return;
-  }
-
-  const fmk = rpFileDayMaps()[key];
-  const pc  = fmk ? fmk.pc : {};
-  const all = fmk ? fmk.all : {};
-  const tot = Object.values(pc).reduce((a,b) => a+b, 0);
-  const cut = (fmk && fmk.cut) || rpCutLabel();
-  const existing = rpHist && rpHist.days && rpHist.days[key];
-  let msg = `Save ${rpActiveDMY()} (cut-off ${cut || '—'}) — ${rpNum(tot)} T across ${Object.keys(pc).length} party/colliery pairs?`;
-  if (existing) {
-    const oldTot = Object.values(existing.pc || {}).reduce((a,b) => a+b, 0);
-    msg += `\n\nThis date is already stored (${rpNum(oldTot)} T, cut-off ${existing.cut || '—'}). It will be overwritten.`;
-    if (tot < oldTot * 0.95) msg += '\n\n⚠ The new figure is LOWER than what is stored. Check the time filter before saving.';
-  }
-  if (!confirm(msg)) return;
-
-  const btn = document.getElementById('rpSaveDayBtn');
-  const old = btn.textContent; btn.textContent = 'Saving…'; btn.disabled = true;
-  try {
-    await loadRpHistory(true);                       // always re-read for a fresh SHA
-    rpHist.days[key] = { cut, pc, all };
-    rpHist.updated = new Date().toISOString();
-
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(rpHist))));
-    const body = { message: `Road power history — ${key}`, content, branch: RP_GH.branch };
-    if (_rpHistSha) body.sha = _rpHistSha;
-    const res = await fetch(
-      `${RP_GH.api}/repos/${RP_GH.owner}/${RP_GH.repo}/contents/${RP_GH.path}`,
-      { method: 'PUT', headers: { Authorization: 'token ' + RP_GH.token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
-    );
-    if (!res.ok) throw new Error('GitHub ' + res.status);
-    const resp = await res.json();
-    _rpHistSha = resp.content.sha;
-    renderRpReports();
-    await rpAfterSave(`✓ ${rpActiveDMY()} saved to ${RP_GH.path}.`, [key]);
-  } catch(e) {
-    rpSetStatus('Save failed: ' + e.message, true);
-  } finally {
-    btn.textContent = old; btn.disabled = false;
-  }
-}
-
-// Save every date present in the loaded file in one write
-async function saveRpAllDays() {
+// 💾 Save Day — there only while Autosave is off: the date on screen, or on
+// the All days tab every date of the file. Asks first, and warns where the
+// saved copy would usually be kept (a later download, or a whole day).
+async function saveRpDay() { return rpSaveManual([rpActiveKey()]); }
+async function saveRpAllDays() { return rpSaveManual(null); }
+async function rpSaveManual(keys) {
   if (!allRows.length) { alert('Load a despatch file first.'); return; }
   if (mclhoCount === 0) { alert('DO database is not loaded — party figures would all be zero.'); return; }
   const pr = appSettings.powerReport || {};
-  if (!(pr.parties || []).some(p => p.power)) {
-    alert('No power parties selected yet. Open ⚙ and tick some parties first.'); return;
-  }
-
-  const fm = rpFileDayMaps();
-  const keys = Object.keys(fm).sort();
-  if (!keys.length) { alert('No dated rows found in this file.'); return; }
-
-  await loadRpHistory(true);   // fresh copy + fresh SHA before comparing
-
-  let grand = 0, overwrite = 0, lower = [];
-  keys.forEach(k => {
-    const t = Object.values(fm[k].pc).reduce((a,b) => a+b, 0);
-    grand += t;
-    const ex = rpHist.days[k];
-    if (ex) {
-      overwrite++;
-      const ot = Object.values(ex.pc || {}).reduce((a,b) => a+b, 0);
-      if (t < ot * 0.95) lower.push(`${k}: ${rpNum(t)} vs ${rpNum(ot)} stored`);
-    }
+  if (!(pr.parties || []).some(p => p.power)) { alert('No power parties selected yet. Open ⚙ and tick some parties first.'); return; }
+  const fileDays = rpLiftFromFile();
+  const ks = (keys ? keys : Object.keys(fileDays)).filter(k => k && fileDays[k]).sort();
+  if (!ks.length) { alert(keys ? 'Could not determine the report date from the loaded file.' : 'No dated rows found in this file.'); return; }
+  const days = rpHistFromFile(Object.fromEntries(ks.map(k => [k, fileDays[k]])));
+  let hist;
+  try { const got = await rpGhRead(RP_GH.path); hist = { updated: (got && got.json.updated) || '', days: (got && got.json.days) || {} }; }
+  catch (e) { rpSetStatus('Save failed — the saved history couldn’t be read: ' + e.message, true); return; }
+  const tot = ks.reduce((a, k) => a + rpDayTotal(days[k]), 0);
+  const over = ks.filter(k => hist.days[k]), warn = [];
+  over.forEach(k => {
+    const o = hist.days[k], why = rpDayTake(o, days[k], false, hist.updated);
+    if (why === 'older') warn.push(`${rpDaysLabel([k])}: the saved copy is from a later download${o.dl ? ' (' + rpFileWhen(o.dl) + ')' : ''}`);
+    if (why === 'whole') warn.push(`${rpDaysLabel([k])}: the saved copy is a whole day; this file has it only to ${days[k].cut || '—'}`);
   });
-
-  let msg = `Save ${keys.length} day(s) — ${keys[0]} to ${keys[keys.length-1]}\nTotal ${rpNum(grand)} T.`;
-  if (overwrite) msg += `\n\n${overwrite} of these are already stored and will be overwritten.`;
-  if (lower.length) msg += `\n\n⚠ LOWER than what is stored:\n` + lower.slice(0,8).join('\n') +
-                           (lower.length > 8 ? `\n… and ${lower.length - 8} more` : '') +
-                           `\n\nThat usually means this file is a partial extract for those dates.`;
+  let msg = ks.length === 1
+    ? `Save ${rpDaysLabel(ks)} (to ${days[ks[0]].cut || '—'}) — ${rpNum(tot)} T to the power sector — and its SO-wise lifting?`
+    : `Save ${ks.length} days, ${rpDaysLabel(ks)} — ${rpNum(tot)} T to the power sector — and their SO-wise lifting?`;
+  if (over.length) msg += `\n\n${ks.length === 1 ? 'This date is' : over.length + ' of these are'} saved already and will be replaced.`;
+  if (warn.length) msg += '\n\n⚠ ' + warn.slice(0, 8).join('\n⚠ ') + (warn.length > 8 ? `\n… and ${warn.length - 8} more` : '');
   if (!confirm(msg)) return;
-
   const btn = document.getElementById('rpSaveDayBtn');
   const old = btn.textContent; btn.textContent = 'Saving…'; btn.disabled = true;
-  try {
-    keys.forEach(k => { rpHist.days[k] = { cut: fm[k].cut, pc: fm[k].pc, all: fm[k].all }; });
-    rpHist.updated = new Date().toISOString();
-
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(rpHist))));
-    const body = { message: `Road power history — bulk ${keys[0]}…${keys[keys.length-1]} (${keys.length} days)`, content, branch: RP_GH.branch };
-    if (_rpHistSha) body.sha = _rpHistSha;
-    const res = await fetch(
-      `${RP_GH.api}/repos/${RP_GH.owner}/${RP_GH.repo}/contents/${RP_GH.path}`,
-      { method: 'PUT', headers: { Authorization: 'token ' + RP_GH.token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
-    );
-    if (!res.ok) throw new Error('GitHub ' + res.status);
-    const resp = await res.json();
-    _rpHistSha = resp.content.sha;
-    renderRpReports();
-    await rpAfterSave(`✓ ${keys.length} day(s) saved to ${RP_GH.path}.`, keys);
-  } catch(e) {
-    rpSetStatus('Bulk save failed: ' + e.message, true);
-  } finally {
-    btn.textContent = old; btn.disabled = false;
-  }
+  try { await rpSaveAll({ keys: ks, force: true }); }
+  finally { btn.textContent = old; btn.disabled = false; }
 }
 
-// ── Saved days: review what is stored, clear any of it ────────────────
-// Months whose Total and Avg / day appear in all three reports.
+// ── Saved days (⚙ → Saved days) ──────────────────────────────────────
+// Every date saved from an ePass file, month by month: whether it is in
+// whole or in part, when that file was downloaded, its Power Sector and
+// all-sector totals and its SO-wise lifting — with the dates missing in
+// between. What is done here is written at once; Save isn't needed.
 let _rpPins = new Set();
+let _rpDaysOpen = null;       // months opened out (the latest, to begin with)
+let _rpDaysSel = new Set();   // dates ticked
+let _rpPinT = null;
 
-function openRpDays() {
-  if (rpLockCfg().days) rpUnlock(rpOpenDaysNow, 'Saved days are locked');
-  else rpOpenDaysNow();
+function openRpDays() {       // kept for old links: Saved days now lives in Settings
+  _rpSttTab = 'days';
+  try { localStorage.setItem('rpSttTab', 'days'); } catch (_) {}
+  openRpSettings();
 }
-async function rpOpenDaysNow() {
-  const pr = appSettings.powerReport || {};
-  _rpPins = new Set(pr.r2Months || []);
-  document.getElementById('rpDaysOverlay').style.display = 'block';
-  document.getElementById('rpDaysList').innerHTML = '<div class="rp-count" style="padding:14px;">Loading…</div>';
-  await loadRpHistory(true);
+function rpDaysShown() {
+  const ov = document.getElementById('rpSettingsOverlay');
+  return _rpSttTab === 'days' && ov && ov.style.display !== 'none' && ov.style.display !== '';
+}
+async function rpDaysOpen() {
+  _rpPins = new Set((appSettings.powerReport || {}).r2Months || []);
+  const list = document.getElementById('rpDaysList');
+  if (list && !list.children.length) list.innerHTML = '<div class="rp-count" style="padding:14px;">Loading…</div>';
+  await Promise.all([loadRpHistory(true), rpLiftLoad()]);
   renderRpDays();
 }
-function closeRpDays() {
-  document.getElementById('rpDaysOverlay').style.display = 'none';
-  const pr = appSettings.powerReport = appSettings.powerReport || {};
-  const chosen = [..._rpPins].sort();
-  const changed = JSON.stringify(chosen) !== JSON.stringify((pr.r2Months || []).slice().sort());
-  pr.r2Months = chosen;
-  renderRpReports();
-  if (changed) rpPersistPrefs();
-}
+function rpDaysRefresh() { if (rpDaysShown()) renderRpDays(); }
 
-function rpDayTotal(rec) {
-  return Object.values((rec && rec.pc) || {}).reduce((a,b) => a+b, 0);
+function rpDayTotal(rec) { return Object.values((rec && rec.pc) || {}).reduce((a, b) => a + b, 0); }
+function rpDayAll(rec) { return Object.values((rec && rec.all) || {}).reduce((a, b) => a + b, 0); }
+function rpDaysAll() {
+  const H = (rpHist && rpHist.days) || {}, L = (rpLift && rpLift.days) || {};
+  return { H, L, keys: [...new Set([...Object.keys(H), ...Object.keys(L)])].sort() };
+}
+function rpDayWhole(h, l) {
+  const r = h || l;
+  if (!r) return false;
+  if (r.full != null) return !!r.full;
+  return timeToMins(r.cut || '') >= 23 * 60;
+}
+function rpFileWhen(iso) {
+  const d = iso ? new Date(iso) : null;
+  if (!d || isNaN(d)) return '';
+  return `${d.getDate()} ${RP_MON[d.getMonth()]}${d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : ''}, ` +
+         d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
 }
 
 function renderRpDays() {
-  const days = (rpHist && rpHist.days) || {};
-  const keys = Object.keys(days).sort().reverse();
   const list = document.getElementById('rpDaysList');
-  document.getElementById('rpDaysCount').textContent =
-    keys.length ? `${keys.length} day(s) stored in ${RP_GH.path}` : '';
-
+  if (!list) return;
+  const { H, L, keys } = rpDaysAll();
+  [..._rpDaysSel].forEach(k => { if (!H[k] && !L[k]) _rpDaysSel.delete(k); });
+  const D1 = rpTodayNo() - 1;
+  const count = document.getElementById('rpDaysCount');
   if (!keys.length) {
-    list.innerHTML = '<div class="rp-count" style="padding:14px;">Nothing stored yet. Load a despatch file and tap Save Day.</div>';
+    count.textContent = '';
+    list.innerHTML = `<div class="rp-count" style="padding:14px;">Nothing saved yet. ${rpAutoSaveOn() ? 'Open an ePass file and it is saved straight away.' : 'Open an ePass file and tap 💾 Save Day.'}</div>`;
     rpDaysSyncBtn();
     return;
   }
+  const first = rpDayNo(keys[0]), have = new Set(keys);
+  // the dates missing between the first saved one and yesterday
+  const missAll = [];
+  for (let x = first; x <= D1; x++) if (!have.has(rpDayKey(x))) missAll.push(x);
+  count.innerHTML = `${keys.length.toLocaleString('en-IN')} day${keys.length === 1 ? '' : 's'} · ${rpDaySpan(first, rpDayNo(keys[keys.length - 1]))}` +
+    (missAll.length ? ` · <b class="miss">${missAll.length.toLocaleString('en-IN')} missing</b>` : '');
 
-  // group by month so a whole month can be totalled or cleared in one go
   const months = {};
-  keys.forEach(k => {
-    const m = k.slice(0,7);
-    (months[m] = months[m] || []).push(k);
-  });
-
+  keys.forEach(k => { (months[k.slice(0, 7)] = months[k.slice(0, 7)] || []).push(k); });
+  missAll.forEach(x => { const m = rpDayKey(x).slice(0, 7); if (!months[m]) months[m] = []; });
+  const order = Object.keys(months).sort().reverse();
+  if (_rpDaysOpen === null) _rpDaysOpen = new Set([order[0]]);
+  const fmt = n => rpNum(n) || '0';
+  const wk = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   let html = '';
-  Object.keys(months).sort().reverse().forEach(m => {
-    const mk = months[m];
-    const tot = mk.reduce((a,k) => a + rpDayTotal(days[k]), 0);
-    const avg = tot / mk.length;
-    const label = RP_MON[+m.slice(5,7) - 1] + ' ' + m.slice(0,4);
-    const pinned = _rpPins.has(m);
-    html += `<div class="rp-dgrp" data-mon="${m}">
-      <input type="checkbox" data-mon-cb="${m}" title="Select every day in ${label}">
-      <span class="rp-dmon">${label}</span>
-      <span class="rp-dmeta">${mk.length} day${mk.length > 1 ? 's' : ''}</span>
-      <span class="rp-dmtot">Total ${rpNum(tot) || '0'}</span>
-      <span class="rp-dmavg">Avg / day ${rpNum(avg) || '0'}</span>
+  order.forEach(m => {
+    const mk = months[m].slice().reverse();
+    const hk = mk.filter(k => H[k]);
+    const tot = hk.reduce((a, k) => a + rpDayTotal(H[k]), 0);
+    const miss = missAll.filter(x => rpDayKey(x).slice(0, 7) === m);
+    const label = RP_MON[+m.slice(5, 7) - 1] + ' ' + m.slice(0, 4);
+    const open = _rpDaysOpen.has(m), pinned = _rpPins.has(m);
+    const on = mk.filter(k => _rpDaysSel.has(k)).length;
+    html += `<div class="rp-dgrp${open ? ' open' : ''}" data-mon="${m}">
+      <input type="checkbox" data-mon-cb="${m}"${mk.length && on === mk.length ? ' checked' : ''}${on && on < mk.length ? ' data-some="1"' : ''}${mk.length ? '' : ' disabled'} aria-label="Select every day in ${label}">
+      <button class="rp-dexp" data-exp="${m}" aria-expanded="${open}"><span class="rp-dcar">${open ? '▾' : '▸'}</span><span class="rp-dmon">${label}</span></button>
+      <span class="rp-dmeta">${mk.length} day${mk.length === 1 ? '' : 's'}${miss.length ? ` · <b class="miss">${miss.length} missing</b>` : ''}</span>
+      <span class="rp-dmsum">${hk.length ? `<span class="rp-dmtot">Total ${fmt(tot)}</span><span class="rp-dmavg">Avg ${fmt(tot / hk.length)}</span>` : ''}</span>
       <button class="rp-pin${pinned ? ' on' : ''}" data-pin="${m}" title="Show this month's Total and Avg / day in the reports">${pinned ? '★ Shown' : '☆ Show'}</button>
     </div>`;
+    if (!open) return;
+    if (miss.length) {
+      const runs = rpDayRuns(miss).map(r => r[0] === r[1] ? String(new Date(r[0] * 864e5).getUTCDate()) : new Date(r[0] * 864e5).getUTCDate() + '–' + new Date(r[1] * 864e5).getUTCDate());
+      html += `<div class="rp-dmiss">Missing ${runs.join(', ')} ${RP_MON[+m.slice(5, 7) - 1]} — open the ePass of these dates to fill them in.</div>`;
+    }
     mk.forEach(k => {
-      const rec = days[k];
+      const h = H[k], l = L[k], whole = rpDayWhole(h, l), dt = new Date(rpDayNo(k) * 864e5);
+      const dl = (h && h.dl) || (l && l.dl) || '';
       html += `<label class="rp-drow" data-mon="${m}">
-        <input type="checkbox" value="${k}">
-        <span class="rp-ddate">${k.slice(8,10)} ${RP_MON[+k.slice(5,7)-1]}</span>
-        <span class="rp-dcut">${rpEsc(rec.cut || '—')}</span>
-        <span class="rp-dtot">${rpNum(rpDayTotal(rec)) || '0'} T</span>
-        <span class="rp-dpairs">${Object.keys(rec.pc || {}).length} rows</span>
+        <input type="checkbox" value="${k}"${_rpDaysSel.has(k) ? ' checked' : ''}>
+        <span class="rp-ddate">${rp2(dt.getUTCDate())} <i>${wk[dt.getUTCDay()]}</i></span>
+        <span class="rp-dcut"><b class="${whole ? 'ok' : 'part'}">${whole ? 'Whole' : 'Part'}</b> to ${rpEsc((h && h.cut) || (l && l.cut) || '—')}</span>
+        <span class="rp-dtot">${h ? `Power <b>${fmt(rpDayTotal(h))}</b>` : '<i>no report figures</i>'}</span>
+        <span class="rp-dfile" title="When this ePass file was downloaded">${dl ? '⤓ ' + rpEsc(rpFileWhen(dl)) : '⤓ time not kept'}</span>
+        <span class="rp-dall">${h ? `MCL <b>${fmt(rpDayAll(h))}</b>` : ''}</span>
+        <span class="rp-dso ${l ? (l.full ? 'ok' : 'part') : 'no'}">${l ? (l.full ? '✓ SO lifting' : 'SO lifting, part') : 'no SO lifting'}</span>
       </label>`;
     });
   });
   list.innerHTML = html;
-
-  // a month box ticks every day inside it
-  list.querySelectorAll('[data-mon-cb]').forEach(cb => {
-    cb.onchange = () => {
-      const m = cb.dataset.monCb;
-      list.querySelectorAll(`.rp-drow[data-mon="${m}"] input`).forEach(d => d.checked = cb.checked);
-      rpDaysSyncBtn();
-    };
+  list.querySelectorAll('input[data-some]').forEach(i => { i.indeterminate = true; });
+  list.querySelectorAll('[data-exp]').forEach(b => b.onclick = e => {
+    e.preventDefault();
+    const m = b.dataset.exp;
+    if (_rpDaysOpen.has(m)) _rpDaysOpen.delete(m); else _rpDaysOpen.add(m);
+    renderRpDays();
   });
-  list.querySelectorAll('.rp-drow input').forEach(cb => cb.onchange = () => { rpDaysSyncMonths(); rpDaysSyncBtn(); });
-  list.querySelectorAll('[data-pin]').forEach(b => {
-    b.onclick = e => {
-      e.preventDefault(); e.stopPropagation();
-      const m = b.dataset.pin;
-      if (_rpPins.has(m)) _rpPins.delete(m); else _rpPins.add(m);
-      renderRpDays();
-    };
+  list.querySelectorAll('[data-mon-cb]').forEach(cb => cb.onchange = () => {
+    (months[cb.dataset.monCb] || []).forEach(k => cb.checked ? _rpDaysSel.add(k) : _rpDaysSel.delete(k));
+    renderRpDays();
   });
-  rpDaysSyncMonths();
+  list.querySelectorAll('.rp-drow input').forEach(cb => cb.onchange = () => {
+    if (cb.checked) _rpDaysSel.add(cb.value); else _rpDaysSel.delete(cb.value);
+    renderRpDays();
+  });
+  list.querySelectorAll('[data-pin]').forEach(b => b.onclick = e => {
+    e.preventDefault(); e.stopPropagation();
+    const m = b.dataset.pin;
+    if (_rpPins.has(m)) _rpPins.delete(m); else _rpPins.add(m);
+    rpDaysPinsChanged();
+    renderRpDays();
+  });
   rpDaysSyncBtn();
 }
-
-// keep each month box in step with its days
-function rpDaysSyncMonths() {
-  const list = document.getElementById('rpDaysList');
-  list.querySelectorAll('[data-mon-cb]').forEach(cb => {
-    const m = cb.dataset.monCb;
-    const boxes = [...list.querySelectorAll(`.rp-drow[data-mon="${m}"] input`)];
-    const on = boxes.filter(b => b.checked).length;
-    cb.checked = on === boxes.length && boxes.length > 0;
-    cb.indeterminate = on > 0 && on < boxes.length;
-  });
+// a pin counts at once: into the reports now, into the settings file shortly
+function rpDaysPinsChanged() {
+  const pr = appSettings.powerReport = appSettings.powerReport || {};
+  pr.r2Months = [..._rpPins].sort();
+  if (_rpDraft && _rpDraft.r2Months) _rpDraft.r2Months = pr.r2Months.slice();
+  renderRpReports();
+  clearTimeout(_rpPinT);
+  _rpPinT = setTimeout(rpPersistPrefs, 1200);
 }
-
-function rpDaysChecked() {
-  return [...document.querySelectorAll('#rpDaysList .rp-drow input:checked')].map(x => x.value);
-}
-
+function rpDaysChecked() { return [..._rpDaysSel].sort(); }
 function rpDaysSyncBtn() {
   const keys = rpDaysChecked();
-  const btn = document.getElementById('rpDaysDelBtn');
-  btn.disabled = keys.length === 0;
-  btn.style.opacity = keys.length ? '1' : '.4';
-  btn.textContent = keys.length ? `Clear ${keys.length} day${keys.length > 1 ? 's' : ''}` : 'Clear selected days';
-
-  // running total and average for whatever is ticked
-  const days = (rpHist && rpHist.days) || {};
-  const sel = document.getElementById('rpDaysSel');
-  if (!keys.length) { sel.textContent = 'Tick days, or a whole month, to total them.'; return; }
-  const tot = keys.reduce((a,k) => a + rpDayTotal(days[k]), 0);
-  sel.innerHTML = `<strong>${keys.length} day${keys.length > 1 ? 's' : ''} selected</strong> · Total <strong>${rpNum(tot) || '0'}</strong> T · Avg / day <strong class="rp-selavg">${rpNum(tot / keys.length) || '0'}</strong> T`;
+  const btn = document.getElementById('rpDaysDelBtn'), sel = document.getElementById('rpDaysSel');
+  if (!btn || !sel) return;
+  btn.disabled = !keys.length;
+  btn.textContent = keys.length ? `Delete ${keys.length} day${keys.length > 1 ? 's' : ''}` : 'Delete selected days';
+  if (!keys.length) { sel.textContent = 'Tick days, or a whole month, to total or delete them.'; return; }
+  const H = (rpHist && rpHist.days) || {}, hk = keys.filter(k => H[k]);
+  const tot = hk.reduce((a, k) => a + rpDayTotal(H[k]), 0);
+  sel.innerHTML = `<strong>${keys.length} day${keys.length > 1 ? 's' : ''} selected</strong>` +
+    (hk.length ? ` · Power total <strong>${rpNum(tot) || '0'}</strong> T · Avg / day <strong class="rp-selavg">${rpNum(tot / hk.length) || '0'}</strong> T` : '');
 }
 
+// Delete the ticked dates from the report history and the SO-wise lifting.
+function rpLiftDrop(store, keys) {
+  keys.forEach(k => {
+    delete store.days[k];
+    for (const d in store.so) { const s = store.so[d]; if (s.d && s.d[k] != null && !(s.e && k <= s.e)) delete s.d[k]; }
+  });
+  for (const d in store.so) { const s = store.so[d]; if (s.d && !Object.keys(s.d).length) delete s.d; if (!s.d && !s.b && !s.e) delete store.so[d]; }
+}
 async function rpClearDays() {
   const keys = rpDaysChecked();
   if (!keys.length) return;
-  const tot = keys.reduce((a,k) => a + Object.values(rpHist.days[k].pc || {}).reduce((x,y) => x+y, 0), 0);
-  if (!confirm(`Clear ${keys.length} day(s) from the history?\n\n${keys.join(', ')}\n\nThat removes ${rpNum(tot)} T of stored figures. You can put a day back by loading its despatch file and saving it again.`)) return;
-
+  const H = (rpHist && rpHist.days) || {};
+  const tot = keys.reduce((a, k) => a + rpDayTotal(H[k]), 0);
+  if (!confirm(`Delete ${keys.length} day${keys.length > 1 ? 's' : ''} — ${rpDaysLabel(keys)}?\n\n` +
+               `Their report figures (${rpNum(tot) || '0'} T to the power sector) and SO-wise lifting come out of the saved history. ` +
+               `Open the ePass file of a date to put it back.`)) return;
   const st = document.getElementById('rpDaysStatus');
-  st.textContent = 'Clearing…'; st.style.color = 'var(--mid)';
-  try {
-    await loadRpHistory(true);                 // fresh SHA, and someone else may have written
-    keys.forEach(k => { delete rpHist.days[k]; });
-    rpHist.updated = new Date().toISOString();
-
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(rpHist))));
-    const body = { message: `Road power history — cleared ${keys.length} day(s)`, content, branch: RP_GH.branch };
-    if (_rpHistSha) body.sha = _rpHistSha;
-    const res = await fetch(
-      `${RP_GH.api}/repos/${RP_GH.owner}/${RP_GH.repo}/contents/${RP_GH.path}`,
-      { method: 'PUT', headers: { Authorization: 'token ' + RP_GH.token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
-    );
-    if (!res.ok) throw new Error('GitHub ' + res.status);
-    const resp = await res.json();
-    _rpHistSha = resp.content.sha;
-    st.textContent = `✓ Cleared ${keys.length} day(s)`; st.style.color = 'var(--green)';
-    renderRpDays();
-  } catch(e) {
-    st.textContent = 'Could not clear: ' + e.message; st.style.color = '#e05';
+  st.textContent = 'Deleting…'; st.style.color = 'var(--mid)';
+  const errs = [];
+  for (const [path, apply, label] of [
+    [RP_GH.path, j => { const o = Object.assign({ days: {} }, j); keys.forEach(k => { delete o.days[k]; }); return o; }, 'report history'],
+    [RP_LIFT.path, j => { const o = rpLiftClean(j); rpLiftDrop(o, keys); return o; }, 'SO-wise lifting'],
+  ]) {
+    try {
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const got = await rpGhRead(path);
+        if (!got) break;                                    // no such file: nothing to take out
+        const o = apply(got.json);
+        o.updated = new Date().toISOString();
+        try {
+          const sha = await rpGhWrite(path, o, got.sha, `Saved days — deleted ${keys.length} day(s)`);
+          if (path === RP_GH.path) { rpHist = { updated: o.updated, days: o.days }; _rpHistSha = sha; }
+          else { rpLift = o; _liftSha = sha; _liftVer++; _liftSeq++; }
+          break;
+        } catch (e) { if ((e.status === 409 || e.status === 422) && attempt < 3) continue; throw e; }
+      }
+    } catch (e) { errs.push(`${label} (${e.message})`); }
   }
+  keys.forEach(k => _rpDaysSel.delete(k));
+  if (errs.length) { st.textContent = 'Could not delete from ' + errs.join(', '); st.style.color = 'var(--red)'; }
+  else { st.textContent = `✓ Deleted ${rpDaysLabel(keys)}`; st.style.color = 'var(--green)'; }
+  renderRpDays();
+  renderRpReports();
+  rpLiftRefresh();
 }
 
 function rpSetStatus(txt, isWarn) {
@@ -5890,6 +5960,7 @@ function rpCard(t) {
 }
 
 function renderRpReports() {
+  rpSyncSaveBtn();
   const md = rpMonthData();
   const sub = document.getElementById('rpViewSub');
   const pr  = appSettings.powerReport || {};
@@ -6479,10 +6550,10 @@ function renderRp2(md) {
 // d is a DO's lifting day by day. Once every day of its validity is in as a
 // full day, those figures are folded into b (its lifting up to and including
 // e), so the file stays about the size of the DOs still running.
-// A date comes in from a file when the store hasn't got it, or has it only in
-// part and the file has it whole, or has it the same way with no more trips;
-// so opening a date again replaces it, and a shorter file never overwrites a
-// fuller one.
+// Which copy of a date is kept is decided by rpDayTake (see SAVING AN EPASS
+// FILE): the later download wins, but part of a day never replaces a whole one.
+// Folding waits RP_LIFT_HOLD days after a DO ends, so a later download of its
+// last dates — with cancelled trips taken out — still counts.
 const RP_LIFT = {
   get path() { return (appSettings.powerReport && appSettings.powerReport.liftPath) || 'do-lifted-test.json'; },
 };
@@ -6518,12 +6589,13 @@ function rpLiftClean(j) {
 }
 
 // GitHub reads and writes of a JSON file in epass-db
-async function rpGhRead(path) {
+async function rpGhRead(path, knownSha) {
   const headers = { Authorization: `token ${GH.token}`, Accept: 'application/vnd.github.v3+json' };
   const meta = await fetch(`${GH.api}/repos/${GH.owner}/${GH.repo}/contents/${path}?ref=${GH.branch}&t=${Date.now()}`, { headers });
   if (meta.status === 404) return null;
   if (!meta.ok) { const e = new Error('GitHub ' + meta.status); e.status = meta.status; throw e; }
   const m = await meta.json();
+  if (knownSha && m.sha === knownSha) return { sha: m.sha, same: true };
   const blob = await fetch(`${GH.api}/repos/${GH.owner}/${GH.repo}/git/blobs/${m.sha}`, { headers: { ...headers, Accept: 'application/vnd.github.v3.raw' } });
   if (!blob.ok) { const e = new Error('GitHub ' + blob.status); e.status = blob.status; throw e; }
   return { sha: m.sha, json: await blob.json() };
@@ -6537,12 +6609,13 @@ async function rpGhWrite(path, obj, sha, message) {
   return (await res.json()).content.sha;
 }
 
-async function rpLiftLoad() {
+async function rpLiftLoad(ifChanged) {
   const seq = ++_liftSeq;
-  _liftState = 'loading'; rpLiftRefresh();
+  if (!ifChanged) { _liftState = 'loading'; rpLiftRefresh(); }
   try {
-    const got = await rpGhRead(RP_LIFT.path);
+    const got = await rpGhRead(RP_LIFT.path, ifChanged && rpLift ? _liftSha : null);
     if (seq !== _liftSeq) return;                       // a save has put in a newer copy meanwhile
+    if (got && got.same) return;                        // nothing new since it was read
     rpLift = rpLiftClean(got && got.json); _liftSha = got ? got.sha : null;
     _liftState = 'ok'; _liftErr = '';
   } catch (e) {
@@ -6559,7 +6632,7 @@ function rpLiftRefresh() {
 }
 
 // The loaded ePass file, date by date:
-//   { 'YYYY-MM-DD': { cut, first, last, trips, t, full, so: { doNumber: tonnes } } }
+//   { 'YYYY-MM-DD': { cut, first, last, trips, t, full, dl, so: { doNumber: tonnes } } }
 // A date is whole when it is before today, its first trip is in the first
 // hour, and the file either goes on to a later date or has trips after 11 pm.
 function rpLiftFromFile() {
@@ -6577,8 +6650,10 @@ function rpLiftFromFile() {
     if (d) e.so[d] = (e.so[d] || 0) + net;
   }
   const keys = Object.keys(out).sort(), today = rpDayKey(rpTodayNo());
+  const dl = new Date(_fileTime || Date.now()).toISOString();      // when the file was downloaded
   keys.forEach((k, i) => {
     const e = out[k];
+    e.dl = dl;
     e.full = k < today && e.first <= 60 && (i < keys.length - 1 || e.last >= 23 * 60);
     e.t = rp3(e.t);
     for (const d in e.so) e.so[d] = rp3(e.so[d]);
@@ -6586,15 +6661,15 @@ function rpLiftFromFile() {
   return out;
 }
 
-// Lay a file's dates over the store (see the rule above).
-//   → { saved: dates put in, same: dates already in as they are, kept: dates the store has fuller }
-function rpLiftMerge(store, fileDays, now) {
+// Lay a file's dates over the store, by the rule in rpDayTake.
+//   → { saved: dates put in, same: dates already in from this very file, kept: [{ k, why }] }
+function rpLiftMerge(store, fileDays, now, force) {
   const saved = [], kept = [], same = [];
   Object.keys(fileDays).sort().forEach(k => {
     const n = fileDays[k], o = store.days[k];
-    const take = !o || (n.full && !o.full) || (!!n.full === !!o.full && n.trips >= (o.trips || 0));
-    if (!take) { kept.push(k); return; }
-    if (o && !!o.full === !!n.full && o.trips === n.trips && Math.abs((o.t || 0) - n.t) < 0.0005) { same.push(k); return; }
+    const why = rpDayTake(o, n, force);
+    if (why === 'same') { same.push(k); return; }
+    if (why !== 'new') { kept.push({ k, why }); return; }
     for (const d in store.so) {                         // the date's old figures out …
       const s = store.so[d];
       if (s.d && s.d[k] != null && !(s.e && k <= s.e)) delete s.d[k];
@@ -6604,7 +6679,7 @@ function rpLiftMerge(store, fileDays, now) {
       if (s.e && k <= s.e) continue;                    // folded already: the date is inside b
       (s.d || (s.d = {}))[k] = n.so[d];
     }
-    store.days[k] = { cut: n.cut, full: !!n.full, trips: n.trips, t: n.t, at: now || new Date().toISOString() };
+    store.days[k] = { cut: n.cut, full: !!n.full, trips: n.trips, t: n.t, dl: n.dl || '', at: now || new Date().toISOString() };
     saved.push(k);
   });
   for (const d in store.so) {
@@ -6615,16 +6690,17 @@ function rpLiftMerge(store, fileDays, now) {
   return { saved, kept, same };
 }
 
-// Fold the days of each DO whose validity is over and whose every day, from
+// Fold the days of each DO that ended over RP_LIFT_HOLD days ago and whose every day, from
 // its start (or the day after what is folded already) to its end, is in as a
 // full day. → how many DOs were folded
+const RP_LIFT_HOLD = 30;
 function rpLiftFold(store, db, todayNo) {
   let n = 0;
   for (const d in store.so) {
     const s = store.so[d], r = db[d];
     if (!s.d || !r) continue;
     const S = rpDayNo(rpDbDateKey(rpDecode(r.doStartDate))), E = rpDayNo(rpDbDateKey(rpDecode(r.doEndDate)));
-    if (S == null || E == null || E >= todayNo || S > E) continue;
+    if (S == null || E == null || E >= todayNo - RP_LIFT_HOLD || S > E) continue;
     const from = s.e ? rpDayNo(s.e) + 1 : S;
     if (from > E) continue;
     let ok = true;
@@ -6670,23 +6746,20 @@ function rpDayRuns(list) {
   return runs;
 }
 
-// Save the SO-wise lifting of the loaded file, right after it is opened.
-async function rpLiftSave() {
-  if (!allRows.length) return;
+// Save the SO-wise lifting of some of the loaded file's dates (part of rpSaveAll).
+//   → { saved, same, kept }; throws when GitHub refuses
+async function rpLiftSave(fileDays, force) {
   if (_liftSaving) { try { await _liftSaving; } catch (e) {} }
-  const fileDays = rpLiftFromFile();
-  const keys = Object.keys(fileDays).sort();
-  if (!keys.length) return;
   const run = (async () => {
-    rpSetStatus('Saving SO-wise lifting…', false);
-    let res = null, folded = 0, store = null, sha = null;
+    let res = null, store = null, sha = null;
     for (let attempt = 1; attempt <= 3; attempt++) {
       const got = await rpGhRead(RP_LIFT.path);
       store = rpLiftClean(got && got.json); sha = got ? got.sha : null;
-      res = rpLiftMerge(store, fileDays);
-      folded = mclhoCount ? rpLiftFold(store, mclhoDB, rpTodayNo()) : 0;
+      const now = new Date().toISOString();
+      res = rpLiftMerge(store, fileDays, now, force);
+      const folded = mclhoCount ? rpLiftFold(store, mclhoDB, rpTodayNo()) : 0;
       if (!res.saved.length && !folded) break;
-      store.updated = new Date().toISOString();
+      store.updated = now;
       const span = res.saved.length ? res.saved[0] + (res.saved.length > 1 ? '…' + res.saved[res.saved.length - 1] : '') : 'fold';
       try { sha = await rpGhWrite(RP_LIFT.path, store, sha, `SO-wise lifting — ${span}`); break; }
       catch (e) {
@@ -6696,19 +6769,11 @@ async function rpLiftSave() {
     }
     // what was just read (and written) is the newest copy; a read still under way is now out of date
     rpLift = store; _liftSha = sha; _liftState = 'ok'; _liftErr = ''; _liftVer++; _liftSeq++;
-    const lab = ks => { const runs = rpDayRuns(ks.map(rpDayNo)); return runs.slice(0, 3).map(r => rpDaySpan(r[0], r[1])).join(', ') + (runs.length > 3 ? '…' : ''); };
-    const msg = [res.saved.length ? '✓ SO-wise lifting saved · ' + lab(res.saved)
-               : res.same.length ? 'SO-wise lifting already saved · ' + lab(res.same) : 'SO-wise lifting not changed'];
-    if (res.kept.length) msg.push(`${lab(res.kept)} kept — the saved copy is fuller`);
-    rpSetStatus(msg.join(' · '), false);
-    rpLiftRefresh();
+    return res;
   })();
   _liftSaving = run;
-  try { await run; }
-  catch (e) {
-    console.warn('SO-wise lifting save failed:', e);
-    rpSetStatus(`⚠ SO-wise lifting not saved (${e.message}). Open the file again to retry.`, true);
-  } finally { if (_liftSaving === run) _liftSaving = null; }
+  try { return await run; }
+  finally { if (_liftSaving === run) _liftSaving = null; }
 }
 
 // The ePass dates missing for a set of DO rows: every date from a DO's start
@@ -6740,6 +6805,171 @@ function rpLiftGaps(list) {
   for (let i = 0, c = 0; i < n; i++) { c += cov[i]; if (c > 0 && gap[i]) { miss.push(lo + i); if (gap[i] === 2) part.push(lo + i); } }
   return { miss, part, sos, lastFull };
 }
+
+// ═══════════════════════════════════════════════════════
+//  SAVING AN EPASS FILE — the reports' history and the SO-wise lifting, together
+// ═══════════════════════════════════════════════════════
+// One save writes both, date by date, by the same rule (rpDayTake):
+//   · a date the store hasn't got comes in;
+//   · the copy from the later download wins — i3MS takes cancelled trips out
+//     after a while, so a later file can rightly show less;
+//   · but a file that has only part of a date never replaces a whole one.
+// The download time is the file's own date stamp on the phone (lastModified).
+// With Autosave on (⚙ → General) this runs as soon as a file is opened; with
+// it off, only when 💾 Save Day is tapped.
+function rpAutoSaveOn(pr) { return (pr || appSettings.powerReport || {}).autoSave !== false; }
+
+// o: what is stored for a date, n: what the file has for it
+//   → 'new' | 'same' | 'whole' (kept: the stored copy is whole, the file has part) | 'older' (kept: stored from a later download)
+//   force: a Save Day the user has confirmed — the file goes in regardless
+//   ub: for dates stored before download times were kept, a time they were saved by
+function rpDayTake(o, n, force, ub) {
+  if (!o) return 'new';
+  if (o.dl && o.dl === n.dl && o.trips === n.trips && Math.abs((o.t || 0) - (n.t || 0)) < 0.0005) return 'same';
+  if (force) return 'new';
+  const oFull = o.full != null ? !!o.full : timeToMins(o.cut || '') >= 23 * 60;
+  if (oFull && !n.full) return 'whole';
+  if (n.full && !oFull) return 'new';
+  const nt = Date.parse(n.dl) || 0;
+  if (o.dl) return nt >= (Date.parse(o.dl) || 0) ? 'new' : 'older';
+  const bound = Date.parse(o.at || ub || '') || 0;
+  if (bound && nt > bound) return 'new';
+  return timeToMins(n.cut || '') >= timeToMins(o.cut || '') ? 'new' : 'older';
+}
+
+// the file's dates as history days: { cut, pc, all, full, trips, t, dl }
+function rpHistFromFile(fileDays) {
+  const maps = rpFileDayMaps(), out = {};
+  Object.keys(fileDays).forEach(k => {
+    const f = fileDays[k], m = maps[k] || { cut: f.cut, pc: {}, all: {} };
+    out[k] = { cut: m.cut || f.cut, pc: m.pc, all: m.all, full: f.full, trips: f.trips, t: f.t, dl: f.dl };
+  });
+  return out;
+}
+function rpMapSame(a, b) {
+  a = a || {}; b = b || {};
+  const ka = Object.keys(a);
+  return ka.length === Object.keys(b).length && ka.every(k => Math.abs((a[k] || 0) - (b[k] || 0)) < 0.006);
+}
+// lay the file's days over the history → { saved, same, kept: [{ k, why }] }
+function rpHistMerge(hist, days, force) {
+  const saved = [], same = [], kept = [];
+  Object.keys(days).sort().forEach(k => {
+    const n = days[k], o = hist.days[k];
+    let why = rpDayTake(o, n, force, hist.updated);
+    // the same file again still goes in if the party figures changed (a newer DO list)
+    if (o && (why === 'same' || (why === 'new' && o.dl && o.dl === n.dl)))
+      why = rpMapSame(o.pc, n.pc) && rpMapSame(o.all, n.all) && o.cut === n.cut ? 'same' : 'new';
+    if (why === 'same') { same.push(k); return; }
+    if (why !== 'new') { kept.push({ k, why }); return; }
+    hist.days[k] = n;
+    saved.push(k);
+  });
+  return { saved, same, kept };
+}
+async function rpHistSave(days, force) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const got = await rpGhRead(RP_GH.path);
+    const base = (got && got.json) || {};
+    const hist = { updated: base.updated || '', days: base.days || {} };
+    const res = rpHistMerge(hist, days, force);
+    if (!res.saved.length) { rpHist = hist; _rpHistSha = got ? got.sha : null; return res; }
+    hist.updated = new Date().toISOString();
+    const span = res.saved[0] + (res.saved.length > 1 ? '…' + res.saved[res.saved.length - 1] : '');
+    try {
+      _rpHistSha = await rpGhWrite(RP_GH.path, Object.assign({}, base, { updated: hist.updated, days: hist.days }), got ? got.sha : null,
+                                   `Road power history — ${span}${res.saved.length > 1 ? ` (${res.saved.length} days)` : ''}`);
+      rpHist = hist;
+      return res;
+    } catch (e) {
+      if ((e.status === 409 || e.status === 422) && attempt < 3) continue;   // written meanwhile: read it again
+      throw e;
+    }
+  }
+}
+
+// '11 Nov', '1–11 Nov', '28 Oct – 2 Nov, 5 Nov' for a list of 'YYYY-MM-DD'
+function rpDaysLabel(ks) {
+  const runs = rpDayRuns([...new Set(ks)].map(rpDayNo).sort((a, b) => a - b));
+  return runs.slice(0, 3).map(r => rpDaySpan(r[0], r[1])).join(', ') + (runs.length > 3 ? ` and ${runs.length - 3} more` : '');
+}
+
+let _saveQ = Promise.resolve();
+let _saveBusy = false;
+let _saveWaitDb = false;      // a save waiting for the DO database to finish loading
+function rpSaveAll(opts) {
+  const p = _saveQ.then(() => rpSaveAllNow(opts || {}));
+  _saveQ = p.catch(() => {});
+  return p;
+}
+function rpAutoSaveMaybe() {
+  if (!rpAutoSaveOn() || !allRows.length) return null;
+  return rpSaveAll({});
+}
+// opts: { keys: only these dates, force: Save Day confirmed }
+async function rpSaveAllNow(opts) {
+  if (!allRows.length) return null;
+  if (!mclhoCount) {
+    if (_dbLoading) { _saveWaitDb = true; rpSetStatus('Saving once the DO database has loaded…', false); return null; }
+    rpSetStatus('⚠ Not saved — the DO database isn’t loaded, so no customer can be told apart. Paste or upload it, and the file is saved then.', true);
+    _saveWaitDb = true;
+    return null;
+  }
+  if (!((appSettings.powerReport || {}).parties || []).some(p => p.power)) {
+    rpSetStatus('⚠ Not saved — no power customers are picked yet. Open ⚙ → Customers.', true);
+    return null;
+  }
+  let fileDays = rpLiftFromFile();
+  if (opts.keys) fileDays = Object.fromEntries(Object.entries(fileDays).filter(([k]) => opts.keys.indexOf(k) >= 0));
+  if (!Object.keys(fileDays).length) return null;
+  _saveBusy = true;
+  rpSetStatus('Saving…', false);
+  let h = null, l = null;
+  const errs = [];
+  try { h = await rpHistSave(rpHistFromFile(fileDays), !!opts.force); }
+  catch (e) { console.warn('History save failed:', e); errs.push(`report history (${e.message})`); }
+  try { l = await rpLiftSave(fileDays, !!opts.force); }
+  catch (e) { console.warn('SO-wise lifting save failed:', e); errs.push(`SO-wise lifting (${e.message})`); }
+  _saveBusy = false;
+  const saved = [].concat(h ? h.saved : [], l ? l.saved : []);
+  const same = [].concat(h ? h.same : [], l ? l.same : []).filter(k => saved.indexOf(k) < 0);
+  const kept = [].concat(h ? h.kept : [], l ? l.kept : []).filter(x => saved.indexOf(x.k) < 0);
+  const parts = [];
+  if (saved.length) parts.push('✓ Saved ' + rpDaysLabel(saved));
+  else if (same.length && !errs.length) parts.push('Already saved · ' + rpDaysLabel(same));
+  const kw = kept.filter(x => x.why === 'whole').map(x => x.k), ko = kept.filter(x => x.why === 'older').map(x => x.k);
+  if (ko.length) parts.push(`${rpDaysLabel(ko)} kept — the saved copy is from a later download`);
+  if (kw.length) parts.push(`${rpDaysLabel(kw)} kept — the saved copy is a whole day, this file has part`);
+  if (errs.length) parts.push(`⚠ Not saved: ${errs.join(', ')}. ${rpAutoSaveOn() ? 'Open the file again' : 'Tap Save Day again'} to retry.`);
+  const msg = parts.join(' · ') || 'Nothing to save';
+  if (h && h.saved.length) renderRpReports();
+  rpLiftRefresh();
+  rpDaysRefresh();
+  // the Google Sheet holds the latest month: send when a date of it was saved
+  const latest = rpLatestKey();
+  const toSheet = rpGsReady() && h && !errs.length && latest && h.saved.some(k => k.slice(0, 7) === latest.slice(0, 7));
+  if (toSheet) await rpAfterSave(msg.replace(/([^.])$/, '$1.'), h.saved);
+  else rpSetStatus(msg, !!errs.length);
+  return { h, l, errs };
+}
+
+// The Save Day button is there only while Autosave is off
+function rpSyncSaveBtn() {
+  const btn = document.getElementById('rpSaveDayBtn');
+  if (btn) btn.style.display = rpAutoSaveOn() ? 'none' : '';
+}
+
+// Coming back to the app after a while: pick up what another phone saved,
+// in place of the Reload button.
+let _rpHiddenAt = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { _rpHiddenAt = Date.now(); return; }
+  const away = _rpHiddenAt ? Date.now() - _rpHiddenAt : 0;
+  _rpHiddenAt = 0;
+  if (away < 60000 || _saveBusy || !rpHist) return;
+  loadRpHistory(true).then(() => { if (!_saveBusy) { renderRpReports(); rpDaysRefresh(); } });
+  if (rpLift && !_liftSaving) rpLiftLoad(true);
+});
 
 const RP_DB_COLS = [
   { k: 'doNum',        t: 'DO Number',     type: 'code' },
@@ -9359,7 +9589,7 @@ function finishLoad() {
   }
 
   updateStats();
-  rpLiftSave();
+  rpAutoSaveMaybe();
 }
 
 const RP_ALL_TAB = 'All days';
@@ -9694,32 +9924,6 @@ function reply_(o) {
 </div>
 
 <!-- ═══════════ SAVED DAYS ═══════════ -->
-<div id="rpDaysOverlay" class="stt-overlay" onclick="if(event.target===this)closeRpDays()">
-  <div class="stt-panel" style="max-width:600px;">
-    <div class="stt-header">
-      <div>
-        <div class="stt-title">Saved days</div>
-        <div class="stt-title-sub" id="rpDaysCount">—</div>
-      </div>
-      <button class="stt-close" onclick="closeRpDays()">✕</button>
-    </div>
-    <div class="stt-body" style="grid-template-columns:minmax(0,1fr);">
-      <div class="stt-section">
-        <div class="rp-list-wrap"><div class="rp-scroll" id="rpDaysList" style="max-height:400px;"></div></div>
-        <div class="stt-hint" style="margin-top:6px;">
-          <strong>☆ Show</strong> puts that month's Total and Avg / day into the reports for comparison — pin as many as you like.
-          The tick boxes are for selecting days to total or clear; clearing a day removes its figures from both reports, and you put it back by loading that day's despatch file and saving it again.
-        </div>
-      </div>
-    </div>
-    <div id="rpDaysSel" class="rp-dsel">Tick days, or a whole month, to total them.</div>
-    <div id="rpDaysStatus" class="stt-status"></div>
-    <div class="stt-footer">
-      <button class="stt-btn-cancel" onclick="closeRpDays()">Close</button>
-      <button class="stt-btn-save" id="rpDaysDelBtn" onclick="rpClearDays()" style="background:var(--red);border-color:var(--red);">Clear selected days</button>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
