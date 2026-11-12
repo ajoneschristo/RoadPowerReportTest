@@ -1721,6 +1721,9 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
   font-family:var(--mono); font-size:11px;
 }
 .rp-mchip.on { border-color:#d97a06; color:#d97a06; background:rgba(217,122,6,.09); }
+.rp-mchip.some { border-color:#d97a06; border-style:dashed; color:#d97a06; }
+.rp-sdsubs { display:contents; }
+.rp-sdsubs .rp-mchip { font-size:10.5px; padding:6px 9px; }
 .rp-mchip small { display:block; font-size:9px; opacity:.75; }
 .rp-chartpick { display:flex; flex-direction:column; gap:6px; }
 .rp-cpick { display:flex; align-items:flex-start; gap:8px; cursor:pointer; }
@@ -1844,7 +1847,7 @@ body.dark .rp-tbtn .rp-tmoon { display:block; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B54-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B55-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -2283,7 +2286,7 @@ body.dark .rp-tbtn .rp-tmoon { display:block; }
           <div class="rp-sdr"><span>DO Date</span><input class="stt-input" type="date" id="rpSdD0" onchange="rpSdChanged()" aria-label="DO Date from"><i>to</i><input class="stt-input" type="date" id="rpSdD1" onchange="rpSdChanged()" aria-label="DO Date to"></div>
           <div class="rp-sdr"><span>DO End Date</span><input class="stt-input" type="date" id="rpSdE0" onchange="rpSdChanged()" aria-label="DO End Date from"><i>to</i><input class="stt-input" type="date" id="rpSdE1" onchange="rpSdChanged()" aria-label="DO End Date to"></div>
           <div class="rp-sdr"><span>Status</span><div class="rp-monthpick" id="rpSdSt">
-            <button class="rp-mchip" data-v="Upcoming" onclick="rpSdChip('st', 'Upcoming')">Upcoming</button><button class="rp-mchip" data-v="Live" onclick="rpSdChip('st', 'Live')">Live</button><button class="rp-mchip" data-v="Expired" onclick="rpSdChip('st', 'Expired')">Expired</button></div></div>
+            <button class="rp-mchip" data-v="Upcoming" onclick="rpSdChip('st', 'Upcoming')">Upcoming</button><button class="rp-mchip" data-v="Live" onclick="rpSdChip('st', 'Live')">Live</button><button class="rp-mchip" data-v="Expired" onclick="rpSdChip('st', 'Expired')">Expired</button><span class="rp-sdsubs"><button class="rp-mchip" data-v="Expired (Lifted)" onclick="rpSdChip('st', 'Expired (Lifted)')">Expired (Lifted)</button><button class="rp-mchip" data-v="Expired (Lapsed)" onclick="rpSdChip('st', 'Expired (Lapsed)')">Expired (Lapsed)</button><button class="rp-mchip" data-v="Expired (ePass missing)" onclick="rpSdChip('st', 'Expired (ePass missing)')" title="Expired DOs whose lifting isn't known: no ePass file covers their days">Expired (ePass missing)</button></span></div></div>
           <div class="rp-sdr"><span>Sector</span><div class="rp-monthpick" id="rpSdSec">
             <button class="rp-mchip" data-v="Power" onclick="rpSdChip('sec', 'Power')">Power</button><button class="rp-mchip" data-v="Non-Power" onclick="rpSdChip('sec', 'Non-Power')">Non-Power</button></div></div>
           <button class="rp-mchip rp-sdtab" id="rpSdTabBtn" onclick="rpSdTab()" style="display:none"></button>
@@ -4250,7 +4253,7 @@ async function rpGsSend() {
 // key / value rows and tables with drop-downs where there's a fixed choice.
 // Export takes what's on screen; import fills the settings screen from the
 // file, and nothing reaches the shared settings until Save.
-const RP_BUILD = 'rp-B54-test';
+const RP_BUILD = 'rp-B55-test';
 const RP_SF_FORMAT = 'RoadPowerSettings 1';
 const RP_SF_YN = ['Yes', 'No'];
 
@@ -7513,7 +7516,10 @@ function rpSdOpen() {
 function rpSdChanged() { _rpSd.unt.clear(); _rpSd.shown = 50; renderRpSd(); }
 function rpSdChip(kind, v) {
   const set = _rpSd[kind];
-  if (set.has(v)) set.delete(v); else set.add(v);
+  if (kind === 'st' && v === 'Expired') {            // Expired: all its kinds at once
+    const all = RP_EXP_SUBS.every(x => set.has(x));
+    RP_EXP_SUBS.forEach(x => all ? set.delete(x) : set.add(x));
+  } else if (set.has(v)) set.delete(v); else set.add(v);
   rpSdChanged();
 }
 function rpSdTab() { _rpSd.tab = !_rpSd.tab; rpSdChanged(); }
@@ -7537,7 +7543,7 @@ function rpSdMatch(f) {
     if (f.d1 && !(dd <= f.d1)) return false;
     if (f.e0 && !(de >= f.e0)) return false;
     if (f.e1 && !(de <= f.e1)) return false;
-    if (_rpSd.st.size && !_rpSd.st.has(r.v[ix.status])) return false;
+    if (_rpSd.st.size && !_rpSd.st.has(rpDbFv(r, ix.status))) return false;
     if (_rpSd.sec.size && !_rpSd.sec.has(r.v[ix.sector])) return false;
     if (tabSet && !tabSet.has(r.v[0])) return false;
     return true;
@@ -7550,7 +7556,14 @@ function renderRpSd() {
   const cnt = document.getElementById('rpSdCount');
   const lt = rpLift ? rpLiftTotals() : null;
   if (cnt) cnt.textContent = mclhoCount ? `${fmtN(mclhoCount)} DOs${rpLift ? ` · lifting kept for ${fmtN(lt.size)}` : ''}` : '';
-  ['Upcoming', 'Live', 'Expired'].forEach(v => { const b = document.querySelector(`#rpSdSt [data-v="${v}"]`); if (b) b.classList.toggle('on', _rpSd.st.has(v)); });
+  RP_ST_ORDER.forEach(v => { const b = document.querySelector(`#rpSdSt [data-v="${v}"]`); if (b) b.classList.toggle('on', _rpSd.st.has(v)); });
+  {
+    const b = document.querySelector('#rpSdSt [data-v="Expired"]'), n = RP_EXP_SUBS.filter(x => _rpSd.st.has(x)).length;
+    if (b) { b.classList.toggle('on', n === RP_EXP_SUBS.length); b.classList.toggle('some', n > 0 && n < RP_EXP_SUBS.length); }
+    // Expired (ePass missing) only when some expired DO's lifting isn't known (or it is picked)
+    const em = document.querySelector('#rpSdSt [data-v="Expired (ePass missing)"]');
+    if (em) em.style.display = _rpSd.st.has(RP_EXP_SUBS[2]) || _rpDb.rows.some(r => r.sub === RP_EXP_SUBS[2]) ? '' : 'none';
+  }
   ['Power', 'Non-Power'].forEach(v => { const b = document.querySelector(`#rpSdSec [data-v="${v}"]`); if (b) b.classList.toggle('on', _rpSd.sec.has(v)); });
   // the DO Database tab's own search and filters, when it has any
   const tb = document.getElementById('rpSdTabBtn');
@@ -7578,7 +7591,7 @@ function renderRpSd() {
     `<span><b>${fmtN(on.length)}</b> of ${fmtN(list.length)} matching DO${list.length === 1 ? '' : 's'} ticked · DO Qty ${rpNum(qty) || '0'}${nl ? ` · lifting kept for ${fmtN(nl)}` : ''}</span></label>` +
     `<div class="rp-sdlist">${shown.map(r => `<label class="rp-sdrow"><input type="checkbox" value="${rpEsc(r.v[0])}"${_rpSd.unt.has(r.v[0]) ? '' : ' checked'}>` +
       `<b>${rpEsc(r.v[0])}</b><span class="p">${rpEsc(r.v[ix.partyName])}</span>` +
-      `<span class="d">${rpEsc(r.v[ix.doDate])} → ${rpEsc(r.v[ix.doEndDate] || '—')} · ${rpEsc(r.v[ix.status] || '')}${r.v[ix.lifted] ? ' · lifted ' + rpEsc(r.v[ix.lifted]) : ''}</span></label>`).join('')}</div>` +
+      `<span class="d">${rpEsc(r.v[ix.doDate])} → ${rpEsc(r.v[ix.doEndDate] || '—')} · ${rpEsc(rpDbFv(r, ix.status) || '')}${r.v[ix.lifted] ? ' · lifted ' + rpEsc(r.v[ix.lifted]) : ''}${r.v[ix.lapsed] && r.s[ix.lapsed] > 0 ? ' · lapsed ' + rpEsc(r.v[ix.lapsed]) : ''}</span></label>`).join('')}</div>` +
     (list.length > shown.length ? `<button class="rp-mini-btn" style="margin-top:6px;" onclick="_rpSd.shown += 100; renderRpSd();">Show ${fmtN(Math.min(100, list.length - shown.length))} more of ${fmtN(list.length - shown.length)}</button>` : '');
   const all = document.getElementById('rpSdAll');
   if (all) {
@@ -8184,7 +8197,9 @@ function rpDbBuild() {
       const w = mclhoDB[doNum] ? mclhoDB[doNum][f] : '';
       (was = was || {})[c] = f === 'grade' ? rpGradeOf(rpDecode(w)) : RP_DO_EDIT_F[f].type === 'num' && rpDbQty(w) != null ? fmt(rpDbQty(w)) : rpDecode(w);
     }
-    return { v, s, qty, p0: S, p1: E, ed, was, h: v.join('\u0001').toLowerCase() };
+    // an expired DO's kind, for the Status filters: fully lifted, some lapsed, or its lifting not known
+    const sub = x.status !== 'Expired' ? null : x.lapsed == null ? RP_EXP_SUBS[2] : x.lapsed > 0 ? RP_EXP_SUBS[1] : RP_EXP_SUBS[0];
+    return { v, s, qty, p0: S, p1: E, ed, was, sub, h: v.join('\u0001').toLowerCase() };
   });
   // columns no record fills (older saves kept fewer fields) are left out;
   // the worked-out ones always stay, so they don't come and go as the lifting loads
@@ -8195,12 +8210,17 @@ function rpDbBuild() {
 }
 function rpDbWords(q) { return String(q || '').toLowerCase().split(/\s+/).filter(Boolean); }
 // does a row pass the search and every column filter but one (skip)?
+// Expired splits three ways in the Status filters
+const RP_EXP_SUBS = ['Expired (Lifted)', 'Expired (Lapsed)', 'Expired (ePass missing)'];
+const RP_ST_ORDER = RP_EXP_SUBS.concat(['Live', 'Upcoming']);
+// the value a column's filter sees: the cell, or for Status an expired DO's kind
+function rpDbFv(row, c) { return c === RP_DB_IX.status && row.sub ? row.sub : row.v[c]; }
 function rpDbPass(row, words, skip) {
   if (_rpDb.edOnly && !row.ed) return false;
   for (const w of words) if (row.h.indexOf(w) < 0) return false;
   for (const c in _rpDb.filt) {
     if (+c === skip) continue;
-    const f = _rpDb.filt[c], v = row.v[c];
+    const f = _rpDb.filt[c], v = rpDbFv(row, +c);
     if (f.q && v.toLowerCase().indexOf(f.q) < 0) return false;
     if (f.only && !f.only.has(v)) return false;
     if (f.cond && !rpDbCondOk(f.cond, row, +c)) return false;
@@ -8320,7 +8340,8 @@ function rpDbDraw() {
   Object.keys(_rpDb.filt).forEach(c => {
     const f = _rpDb.filt[c], parts = [];
     if (f.q) parts.push(`contains “${rpEsc(f.q)}”`);
-    if (f.only) parts.push(f.only.size === 1 ? `= ${rpEsc([...f.only][0] || '(Blanks)')}` : rpDbChipDates(+c, f.only) || `${fmtN(f.only.size)} values`);
+    if (f.only) parts.push(+c === RP_DB_IX.status ? rpDbChipStatus(f.only)
+      : f.only.size === 1 ? `= ${rpEsc([...f.only][0] || '(Blanks)')}` : rpDbChipDates(+c, f.only) || `${fmtN(f.only.size)} values`);
     if (f.cond) parts.push(rpEsc(rpDbCondText(+c, f.cond)));
     chips.push(`<span class="rp-dbchip">${rpEsc(RP_DB_COLS[c].t)}: ${parts.join(', ')}<button onclick="rpDbClearCol(${c})" aria-label="Clear the ${rpEsc(RP_DB_COLS[c].t)} filter">✕</button></span>`);
   });
@@ -8416,7 +8437,7 @@ function rpDbRowHtml(r, cols, i) {
   const tr = [i % 2 ? 'z' : '', sel ? 'sel' : ''].filter(Boolean).join(' ');
   return `<tr${tr ? ` class="${tr}"` : ''}>` + cols.map(c => {
     const col = RP_DB_COLS[c], v = r.v[c], ed = r.ed && r.ed.indexOf(c) >= 0;
-    const tip = ed ? `Edited — the i3MS list says ${r.was[c] || '(blank)'}` : col.wide && v.length > 28 ? v : '';
+    const tip = ed ? `Edited — the i3MS list says ${r.was[c] || '(blank)'}` : col.wide && v.length > 28 ? v : r.sub && c === RP_DB_IX.status ? r.sub : '';
     // the tab's ticks and ✎ go before the DO number
     const pre = c !== 0 ? '' : (o.sel ? `<input type="checkbox" class="rp-dbsel" data-k="${rpEsc(v)}"${sel ? ' checked' : ''} aria-label="Select ${rpEsc(v)}">` : '') +
                                (o.ed ? `<button class="rp-dbedb" data-k="${rpEsc(v)}" title="Edit this SO" aria-label="Edit ${rpEsc(v)}">✎</button>` : '');
@@ -8526,16 +8547,18 @@ function rpDbOpen(c, anchor) {
   const col = RP_DB_COLS[c], words = rpDbWords(_rpDb.q), tabo = rpDbTab();
   // the column's values among the rows the other filters and the search let through
   const count = new Map();
-  _rpDb.rows.forEach(r => { if (rpDbPass(r, words, c)) count.set(r.v[c], (count.get(r.v[c]) || 0) + 1); });
+  const stc = c === RP_DB_IX.status;
+  _rpDb.rows.forEach(r => { if (rpDbPass(r, words, c)) { const v = rpDbFv(r, c); count.set(v, (count.get(v) || 0) + 1); } });
   const key = new Map();
-  _rpDb.rows.forEach(r => { if (count.has(r.v[c]) && !key.has(r.v[c])) key.set(r.v[c], r.s[c]); });
+  if (stc) count.forEach((n, v) => key.set(v, RP_ST_ORDER.indexOf(v) < 0 ? null : RP_ST_ORDER.indexOf(v)));
+  else _rpDb.rows.forEach(r => { if (count.has(r.v[c]) && !key.has(r.v[c])) key.set(r.v[c], r.s[c]); });
   const vals = [...count.keys()].sort((a, b) => {
     const x = key.get(a), y = key.get(b);
     if (x == null || y == null) return x == null && y == null ? 0 : x == null ? 1 : -1;
     return x < y ? -1 : x > y ? 1 : 0;
   });
   const f = _rpDb.filt[c] || {};
-  const pop = _rpDb.pop = { c, vals, count, key, q: f.q || '', unt: new Set(), open: new Set(), date: col.type === 'date', mode: tabo.smart && f.cond ? 'c' : 'v' };
+  const pop = _rpDb.pop = { c, vals, count, key, q: f.q || '', unt: new Set(), open: new Set(stc ? ['exp'] : []), date: col.type === 'date', stat: stc, mode: tabo.smart && f.cond ? 'c' : 'v' };
   if (f.only) vals.forEach(v => { if (!f.only.has(v)) pop.unt.add(v); });
   const label = { date: ['Oldest to newest', 'Newest to oldest'], num: ['Smallest to largest', 'Largest to smallest'] }[col.type] || ['A to Z', 'Z to A'];
 
@@ -8601,6 +8624,7 @@ function rpDbPopList() {
   cb.onchange = () => { match.forEach(v => cb.checked ? p.unt.delete(v) : p.unt.add(v)); rpDbPopList(); };
   document.getElementById('rpDbPopOk').disabled = !ticked;
   if (p.date) return rpDbPopTree(match, cb);
+  if (p.stat) return rpDbPopStatus(match);
   const shown = match.slice(0, RP_DB_POPMAX);
   document.getElementById('rpDbPopList').innerHTML = shown.map((v, i) =>
     `<label><input type="checkbox" data-i="${i}"${p.unt.has(v) ? '' : ' checked'}><span class="v">${v ? rpEsc(v) : '<i>(Blanks)</i>'}</span>` +
@@ -8675,6 +8699,48 @@ function rpDbPopTree(match, all) {
     nodes[+n].forEach(v => e.target.checked ? p.unt.delete(v) : p.unt.add(v));
     rpDbPopList();
   };
+}
+// Status: Expired, and under it Expired (Lifted), Expired (Lapsed) and, when some
+// DOs' lifting isn't known, Expired (ePass missing)
+function rpDbPopStatus(match) {
+  const p = _rpDb.pop, box = document.getElementById('rpDbPopList');
+  const subs = RP_EXP_SUBS.filter(v => match.indexOf(v) >= 0), rest = match.filter(v => subs.indexOf(v) < 0);
+  const nodes = [];
+  const row = (lvl, id, label, vals) => {
+    nodes.push(vals);
+    const t = vals.filter(v => !p.unt.has(v)).length, open = id && (!!p.q || p.open.has(id));
+    return `<div class="rp-dbt-row l${lvl}">` +
+      (id ? `<button class="rp-dbt-x" data-x="${id}" aria-expanded="${open}" aria-label="${open ? 'Close' : 'Open'} ${label}">${open ? '▾' : '▸'}</button>` : '<span class="rp-dbt-x"></span>') +
+      `<label><input type="checkbox" data-n="${nodes.length - 1}"${t === vals.length ? ' checked' : ''}${t && t < vals.length ? ' data-some="1"' : ''}>` +
+      `<span class="v">${label}</span><span class="c">${vals.reduce((a, v) => a + p.count.get(v), 0).toLocaleString('en-IN')}</span></label></div>`;
+  };
+  let h = '';
+  if (subs.length) {
+    h += row(0, 'exp', 'Expired', subs);
+    if (p.q || p.open.has('exp')) subs.forEach(v => { h += row(1, '', rpEsc(v), [v]); });
+  }
+  rest.forEach(v => { h += row(0, '', v ? rpEsc(v) : '<i>(Blanks)</i>', [v]); });
+  box.innerHTML = h || '<div class="rp-dbp-cap">No value matches.</div>';
+  box.querySelectorAll('input[data-some]').forEach(i => { i.indeterminate = true; });
+  box.onclick = e => {
+    const x = e.target.closest && e.target.closest('[data-x]');
+    if (!x) return;
+    if (p.open.has(x.dataset.x)) p.open.delete(x.dataset.x); else p.open.add(x.dataset.x);
+    rpDbPopList();
+  };
+  box.onchange = e => {
+    const n = e.target.dataset && e.target.dataset.n;
+    if (n == null) return;
+    nodes[+n].forEach(v => e.target.checked ? p.unt.delete(v) : p.unt.add(v));
+    rpDbPopList();
+  };
+}
+// a Status filter's chip: all three kinds of Expired read as Expired
+function rpDbChipStatus(only) {
+  const have = RP_EXP_SUBS.filter(v => _rpDb.rows.some(r => r.sub === v));
+  let names = RP_ST_ORDER.filter(v => only.has(v)).concat([...only].filter(v => RP_ST_ORDER.indexOf(v) < 0).map(v => v || '(Blanks)'));
+  if (have.length > 1 && have.every(v => only.has(v))) names = ['Expired'].concat(names.filter(v => RP_EXP_SUBS.indexOf(v) < 0));
+  return names.length === 1 ? `= ${rpEsc(names[0])}` : rpEsc(names.join(', '));
 }
 function rpDbDayNum(k) { return String(k % 100).padStart(2, '0'); }
 
