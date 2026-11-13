@@ -923,6 +923,24 @@ body.dark {
   font-family: 'IBM Plex Sans', sans-serif; white-space: nowrap;
 }
 .rp-mini-btn:active { opacity: .75; }
+/* icon buttons: the word shows only with ⚙ → General → Buttons → Icons and words */
+.rp-ic { width:16px; height:16px; flex-shrink:0; display:block; }
+.rp-ib { display:inline-flex; align-items:center; justify-content:center; gap:5px; position:relative; vertical-align:middle; }
+body:not(.rp-words) .rp-ib .bl { display:none; }
+body:not(.rp-words) .rp-mini-btn.rp-ib { padding:5px 8px; min-width:34px; min-height:30px; }
+body:not(.rp-words) .rp-dbbtn.rp-ib { padding:7px 9px; min-width:36px; }
+body:not(.rp-words) .rp-dbbar { flex-wrap:nowrap; gap:6px; }
+body:not(.rp-words) .rp-dbsearch { flex:1 1 100px; }
+body:not(.rp-words) .db-upload-btn.rp-ib { padding:7px 9px; min-width:36px; justify-content:center; }
+body:not(.rp-words) .rp-ib[data-n]:not([data-n=""])::after { content:attr(data-n); font:700 10px/1 'IBM Plex Mono', monospace; letter-spacing:0; }
+.rp-ib.busy .rp-ic { visibility:hidden; }
+.rp-ib.busy::before { content:''; position:absolute; left:50%; top:50%; width:11px; height:11px; margin:-7.5px 0 0 -7.5px; border:2px solid currentColor;
+  border-right-color:transparent; border-radius:50%; animation:rpDbSpin .8s linear infinite; }
+body.rp-words .rp-ib.busy .rp-ic { display:none; }
+body.rp-words .rp-ib.busy::before { position:static; margin:0; flex-shrink:0; }
+.rp-sw.rp-ib .rp-ic { color:var(--mid); }
+body.rp-words .rp-sw.rp-ib .rp-ic { display:none; }
+.open-new-btn.rp-ib .rp-ic { width:14px; height:14px; }
 /* ═══════════════════════════════════════════════════════
    REPORT SURFACE — "weighbridge"
    Cool coal-grey paper, hairline ash grid, one signal colour.
@@ -1193,6 +1211,11 @@ body.dark .rp-db.edh .rp-dbt tbody td.ed { color:var(--ink); }
 .rp-dbt td { padding:5px 9px; }
 .rp-dbt tbody tr.z td { background:var(--zebra); }
 .rp-dbt tbody tr.sp td { padding:0; border:0; background:transparent; box-shadow:none; position:static; }
+/* party subtotals and the total */
+.rp-dbt tbody tr.sub td { background:var(--ash-soft); font-weight:700; border-bottom-color:var(--mute); overflow:hidden; text-overflow:ellipsis; }
+.rp-dbt tbody tr.tot td { background:var(--ink); color:var(--paper); font-weight:700; overflow:hidden; text-overflow:ellipsis; }
+.rp-dbt tbody tr.tot td.k, .rp-dbt tbody tr.tot td:first-child { color:var(--paper); }
+.rp-dbt tbody tr.sub td.w, .rp-dbt tbody tr.tot td.w { font-family:'IBM Plex Sans', sans-serif; }
 .rp-dbt td.n { text-align:right; font-variant-numeric:tabular-nums; }
 .rp-dbt thead th { white-space:normal; vertical-align:middle; }
 .rp-dbt td.k { color:var(--mute); }
@@ -1810,7 +1833,7 @@ body.dark .rp-dsel .rp-selavg { color:#7fa8f5; }
 .rp-tbtn .rp-tmoon { display:none; }
 body.dark .rp-tbtn .rp-tsun { display:none; }
 body.dark .rp-tbtn .rp-tmoon { display:block; }
-@media (max-width: 420px) { .rp-tnew span { display:none; } }
+@media (max-width: 420px) { .rp-tnew .bl { display:none; } }
 /* the DO list's card: a drawer under the bar */
 #dashboard.rp-compact .rp-topwrap:not(.open) > .db-card { display:none; }
 #dashboard.rp-compact .rp-topwrap > .db-card { margin:0 0 8px; padding:9px 12px; }
@@ -1847,7 +1870,7 @@ body.dark .rp-tbtn .rp-tmoon { display:block; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B55-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B56-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -1885,8 +1908,8 @@ body.dark .rp-tbtn .rp-tmoon { display:block; }
       <div class="db-stats" id="dbStatsDrop" style="display:none;"></div>
     </div>
     <div style="display:flex;gap:6px;flex-shrink:0;">
-      <button class="db-upload-btn" onclick="pasteFromClipboard()" style="border-color:var(--dim);color:var(--dim);">Paste</button>
-      <button class="db-upload-btn" onclick="document.getElementById('mclhoInput').click()">Upload</button>
+      <button class="db-upload-btn" data-ic="paste" onclick="pasteFromClipboard()" style="border-color:var(--dim);color:var(--dim);" title="Paste the i3MS DO list"><span class="bl">Paste</span></button>
+      <button class="db-upload-btn" data-ic="upload" onclick="document.getElementById('mclhoInput').click()" title="Upload the i3MS DO list"><span class="bl">Upload</span></button>
     </div>
   </div>
 
@@ -1910,7 +1933,7 @@ body.dark .rp-tbtn .rp-tmoon { display:block; }
     <span class="rp-tgap"></span>
     <button class="rp-tbtn" onclick="toggleTheme()" title="Light or dark" aria-label="Light or dark"><svg class="rp-tsun" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><svg class="rp-tmoon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
     <button class="rp-tbtn" onclick="openRpSettings()" title="Settings" aria-label="Settings"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
-    <button class="rp-tbtn rp-tnew" onclick="document.getElementById('fileInput').click()" title="Open another ePass file"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg><span>New File</span></button>
+    <button class="rp-tbtn rp-tnew rp-ib" onclick="document.getElementById('fileInput').click()" title="New File — open another ePass file" aria-label="New File"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg><span class="bl">New File</span></button>
   </div>
 
   <div class="report-meta">
@@ -1934,11 +1957,8 @@ body.dark .rp-tbtn .rp-tmoon { display:block; }
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
       </svg>
     </button>
-    <button class="open-new-btn" onclick="document.getElementById('fileInput').click()">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-      </svg>
-      New File
+    <button class="open-new-btn" data-ic="upload" onclick="document.getElementById('fileInput').click()" title="New File — open another ePass file" aria-label="New File">
+      <span class="bl">New File</span>
     </button>
   </div>
 
@@ -1949,8 +1969,8 @@ body.dark .rp-tbtn .rp-tmoon { display:block; }
       <div class="db-stats" id="dbStats" style="display:none;"></div>
     </div>
     <div style="display:flex;gap:6px;flex-shrink:0;">
-      <button class="db-upload-btn" onclick="pasteFromClipboard()" style="border-color:var(--dim);color:var(--dim);">Paste</button>
-      <button class="db-upload-btn" id="dbUpdateBtn" onclick="document.getElementById('mclhoInput').click()">Upload</button>
+      <button class="db-upload-btn" data-ic="paste" onclick="pasteFromClipboard()" style="border-color:var(--dim);color:var(--dim);" title="Paste the i3MS DO list"><span class="bl">Paste</span></button>
+      <button class="db-upload-btn" id="dbUpdateBtn" data-ic="upload" onclick="document.getElementById('mclhoInput').click()" title="Upload the i3MS DO list"><span class="bl">Upload</span></button>
     </div>
   </div>
   <div class="rp-tlast" id="rpTopLast"></div>
@@ -1978,17 +1998,19 @@ body.dark .rp-tbtn .rp-tmoon { display:block; }
     <button class="rp-tab"    id="rpTab2" onclick="rpSwitch(2)">Customer</button>
     <button class="rp-tab"    id="rpTab5" onclick="rpSwitch(5)">DO Database</button>
     </div>
-    <label class="rp-sw" title="Show or hide the day-by-day breakdown for this report">
+    <label class="rp-sw" data-ic="cal" title="Day-by-day: show or hide the breakdown for this report">
       <input type="checkbox" id="rpDaywiseTgl" onchange="rpToggleDaywise()">
       <span class="rp-sw-track"><span class="rp-sw-knob"></span></span>
-      <span class="rp-sw-lbl">Day-by-day</span>
+      <span class="rp-sw-lbl bl">Day-by-day</span>
     </label>
     <span style="flex:1"></span>
-    <button class="rp-mini-btn" id="rpSaveDayBtn" onclick="saveRpDay()">💾 Save Day</button>
-    <button class="rp-mini-btn" id="rpShareBtn" onclick="shareRpReport()">Share</button>
-    <button class="rp-mini-btn" id="rpDlBtn" onclick="rpDownload()">⤓ Download</button>
-    <button class="rp-mini-btn" id="rpHtmlBtn" onclick="rpExportHtml()">HTML</button>
-    <button class="rp-mini-btn" id="rpGsBtn" onclick="openRpGs()" style="display:none" title="Send the figures to Google Sheets">Sheet</button>
+    <button class="rp-mini-btn" id="rpSaveDayBtn" data-ic="save" onclick="saveRpDay()" title="Save Day"><span class="bl">Save Day</span></button>
+    <button class="rp-mini-btn" id="rpShareBtn" data-ic="share" onclick="shareRpReport()" title="Share the report as a picture" aria-label="Share"><span class="bl">Share</span></button>
+    <button class="rp-mini-btn" id="rpDlBtn" data-ic="dl" onclick="rpDownload()"><span class="bl">Download</span></button>
+    <button class="rp-mini-btn" id="rpDbPdfBtn" data-ic="pdf" onclick="rpDbPdf()" style="display:none" title="The DOs shown, as a PDF — every column across the page" aria-label="PDF"><span class="bl">PDF</span></button>
+    <button class="rp-mini-btn" id="rpDbImgBtn" data-ic="img" onclick="rpDbImage()" style="display:none" title="The DOs shown, as a picture" aria-label="Image"><span class="bl">Image</span></button>
+    <button class="rp-mini-btn" id="rpHtmlBtn" data-ic="code" onclick="rpExportHtml()" title="The reports as a web page (HTML)" aria-label="HTML"><span class="bl">HTML</span></button>
+    <button class="rp-mini-btn" id="rpGsBtn" data-ic="grid" onclick="openRpGs()" style="display:none" title="Send the figures to Google Sheets" aria-label="Sheet"><span class="bl">Sheet</span></button>
   </div>
 
   <div class="rp-note" id="rpViewSub">—</div>
@@ -2384,6 +2406,13 @@ body.dark .rp-tbtn .rp-tmoon { display:block; }
             <span><b>Open the DO list by itself when it needs attention</b><i>No list loaded, a failed save, or DOs in the file that aren't in the list. It closes again once that's sorted.</i></span></label>
           <label class="rp-dbto"><input type="checkbox" id="rpTop_fade" onchange="rpTopPick('fade', this.checked)">
             <span><b>Hide done messages after 5 seconds</b><i>Such as ✓ Saved. Warnings stay. Tap ✓ in the bar to see the last message.</i></span></label>
+        </div>
+      </div>
+      <div class="stt-section">
+        <div class="stt-section-hdr"><label class="stt-label">Buttons</label></div>
+        <div class="rp-modes">
+          <button class="rp-mode" id="rpBtn_icons" onclick="rpBtnPick(false)"><b>Icons</b><span>Small buttons with a picture only — hold one, or point at it, for its name.</span></button>
+          <button class="rp-mode" id="rpBtn_words" onclick="rpBtnPick(true)"><b>Icons and words</b><span>Each button also says what it does.</span></button>
         </div>
       </div>
       <div class="stt-section">
@@ -3185,7 +3214,7 @@ function rpOpenSettingsNow() {
                groups: rpDraftGroups(pr), groupTable: !!pr.groupTable,
                groupSub: pr.groupSubtotals !== false, groupColors: !!pr.groupColors, autoSave: rpAutoSaveOn(pr),
                doEdits: JSON.parse(JSON.stringify(rpDoEdits(pr))), doEditStyle: (({ mode, font, fill }) => ({ mode, font, fill }))(rpEdStyle(pr)),
-               dbHidden: [...rpDbHidden(pr)], dbColsInTab: rpDbColsInTab(pr), dbTab: rpDbTab(pr), top: rpTopCfg(pr) };
+               dbHidden: [...rpDbHidden(pr)], dbColsInTab: rpDbColsInTab(pr), dbTab: rpDbTab(pr), top: rpTopCfg(pr), btnWords: rpBtnWords(pr) };
   _rpDeOpen = null;
   _rpGrpPick = null;
   (pr.parties || []).forEach(p => {
@@ -3244,7 +3273,7 @@ function rpAutoSaveUi() {
   if (!cb) return;
   cb.checked = _rpDraft.autoSave !== false;
   document.getElementById('rpAutoSaveLbl').textContent = cb.checked ? 'On' : 'Off';
-  rpTopUi();
+  rpTopUi(); rpBtnUi();
 }
 function closeRpSettings() {
   document.getElementById('rpSettingsOverlay').style.display = 'none';
@@ -4253,7 +4282,7 @@ async function rpGsSend() {
 // key / value rows and tables with drop-downs where there's a fixed choice.
 // Export takes what's on screen; import fills the settings screen from the
 // file, and nothing reaches the shared settings until Save.
-const RP_BUILD = 'rp-B55-test';
+const RP_BUILD = 'rp-B56-test';
 const RP_SF_FORMAT = 'RoadPowerSettings 1';
 const RP_SF_YN = ['Yes', 'No'];
 
@@ -4409,6 +4438,7 @@ function rpSfSheets() {
       ['While scrolling', RP_TOP_SCROLL.find(x => x[0] === tp.scroll)[1], { list: RP_TOP_SCROLL.map(x => x[1]), note: 'Compact only: what the bar does while a report is scrolled.' }],
       ['Open the DO list on a warning', yn(tp.warn), { list: RP_SF_YN, note: 'Compact only: the DO list opens by itself when it needs attention.' }],
       ['Hide done messages', yn(tp.fade), { list: RP_SF_YN, note: 'Compact only: messages such as ✓ Saved go after 5 seconds; warnings stay.' }],
+      ['Buttons', d.btnWords ? 'Icons and words' : 'Icons', { list: ['Icons', 'Icons and words'], note: 'Icons: a picture on each button, its name on hover or long press.' }],
     ])(rpTopCfg({ top: d.top })) },
     { t: 'blank' },
     { t: 'head2', v: 'Saving' },
@@ -4471,16 +4501,17 @@ function rpSfStylesXml(ed) {
     '<font><b/><sz val="11"/><color rgb="FF1F2833"/><name val="Calibri"/></font>' +
     '<font><b/><sz val="12"/><color rgb="FFB8620A"/><name val="Calibri"/></font>' +
     `<font>${ed && ed.mode === 'font' ? '<b/>' : ''}<sz val="11"/><color rgb="FF${ed && ed.mode === 'font' ? ed.rgb.slice(1).toUpperCase() : '000000'}"/><name val="Calibri"/></font></fonts>` +
-    '<fills count="5"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' +
+    '<fills count="6"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' +
     '<fill><patternFill patternType="solid"><fgColor rgb="FF1F2833"/><bgColor indexed="64"/></patternFill></fill>' +
     '<fill><patternFill patternType="solid"><fgColor rgb="FFEEF1F4"/><bgColor indexed="64"/></patternFill></fill>' +
-    `<fill><patternFill patternType="solid"><fgColor rgb="FF${ed && ed.mode === 'fill' ? ed.rgb.slice(1).toUpperCase() : 'FFFFFF'}"/><bgColor indexed="64"/></patternFill></fill></fills>` +
+    `<fill><patternFill patternType="solid"><fgColor rgb="FF${ed && ed.mode === 'fill' ? ed.rgb.slice(1).toUpperCase() : 'FFFFFF'}"/><bgColor indexed="64"/></patternFill></fill>` +
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFDDE4EC"/><bgColor indexed="64"/></patternFill></fill></fills>' +
     `<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>${b}</borders>` +
     '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-    '<cellXfs count="16"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+    '<cellXfs count="24"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
     '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
     '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
-    '<xf numFmtId="0" fontId="3" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"><alignment vertical="center" wrapText="1"/></xf>' +
+    '<xf numFmtId="0" fontId="3" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' +
     '<xf numFmtId="0" fontId="4" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/>' +
     '<xf numFmtId="49" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>' +
     '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"><alignment horizontal="center"/></xf>' +
@@ -4491,6 +4522,9 @@ function rpSfStylesXml(ed) {
     '<xf numFmtId="3" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>' +
     '<xf numFmtId="4" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>' +
     [49, 165, 3, 4].map(nf => `<xf numFmtId="${nf}" fontId="${ed && ed.mode === 'font' ? 6 : 0}" fillId="${ed && ed.mode === 'fill' ? 4 : 0}" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>`).join('') +
+    // 16–19 a party's subtotal (bold on grey), 20–23 the total (white on dark): text, date, whole number, decimals
+    [[4, 5], [3, 2]].map(([fo, fi]) => [49, 165, 3, 4].map(nf =>
+      `<xf numFmtId="${nf}" fontId="${fo}" fillId="${fi}" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>`).join('')).join('') +
     '</cellXfs>' +
     '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
 }
@@ -4516,8 +4550,9 @@ function rpSfSheetXml(sh) {
       if (o.list) list('B' + r, o.list);
     });
     else if (b.t === 'table') {
-      row(() => b.head.map((h, i) => cell(i + 1, h.v, 3)), 34);
+      row(() => b.head.map((h, i) => cell(i + 1, h.v, 3)), b.headHt || 34);
       if (sh.freeze && !freezeAt) freezeAt = r;
+      if (!sh._hdr) sh._hdr = r;
       const first = r + 1;
       // a cell given as { v, s } carries a style of its own
       b.rows.forEach(vals => row(() => vals.map((v, i) => v && typeof v === 'object'
@@ -4532,12 +4567,17 @@ function rpSfSheetXml(sh) {
   const view = freezeAt
     ? `<sheetViews><sheetView workbookViewId="0"><pane ySplit="${freezeAt}" topLeftCell="A${freezeAt + 1}" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>`
     : '<sheetViews><sheetView workbookViewId="0"/></sheetViews>';
+  // print: sh.print = { landscape, fitWidth } — every column on one page across
+  const pp = sh.print || null;
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
-    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' + view +
+    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+    (pp && pp.fitWidth ? '<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>' : '') + view +
     (cols ? `<cols>${cols}</cols>` : '') + `<sheetData>${rows.join('')}</sheetData>` +
     (sh._af ? `<autoFilter ref="${sh._af}"/>` : '') +
     (dv.length ? `<dataValidations count="${dv.length}">${dv.join('')}</dataValidations>` : '') +
-    '<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/></worksheet>';
+    (pp ? '<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/>' +
+          `<pageSetup paperSize="9"${pp.landscape ? ' orientation="landscape"' : ''}${pp.fitWidth ? ' fitToWidth="1" fitToHeight="0"' : ''}/>`
+        : '<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/>') + '</worksheet>';
 }
 function rpSfWorkbook(sheets, opt) {
   const enc = new TextEncoder();
@@ -4554,9 +4594,7 @@ function rpSfWorkbook(sheets, opt) {
     '_rels/.rels': enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
       '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
       `<Relationship Id="rId1" Type="${REL}/officeDocument" Target="xl/workbook.xml"/></Relationships>`),
-    'xl/workbook.xml': enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
-      `<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="${REL}"><sheets>` +
-      sheets.map((sh, n) => `<sheet name="${rpXmlEsc(sh.name)}" sheetId="${n + 1}" r:id="rId${n + 1}"/>`).join('') + '</sheets></workbook>'),
+    'xl/workbook.xml': null,
     'xl/_rels/workbook.xml.rels': enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
       '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
       sheets.map((_, n) => `<Relationship Id="rId${n + 1}" Type="${REL}/worksheet" Target="worksheets/sheet${n + 1}.xml"/>`).join('') +
@@ -4564,6 +4602,13 @@ function rpSfWorkbook(sheets, opt) {
     'xl/styles.xml': enc.encode(rpSfStylesXml(opt && opt.ed)),
   };
   sheets.forEach((sh, n) => { files[`xl/worksheets/sheet${n + 1}.xml`] = enc.encode(rpSfSheetXml(sh)); });
+  // a sheet set to print with its titles repeats its heading row on every page
+  const titles = sheets.map((sh, n) => sh.print && sh.print.titles && sh._hdr
+    ? `<definedName name="_xlnm.Print_Titles" localSheetId="${n}">'${rpXmlEsc(sh.name).replace(/'/g, "''")}'!$${sh._hdr}:$${sh._hdr}</definedName>` : '').join('');
+  files['xl/workbook.xml'] = enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    `<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="${REL}"><sheets>` +
+    sheets.map((sh, n) => `<sheet name="${rpXmlEsc(sh.name)}" sheetId="${n + 1}" r:id="rId${n + 1}"/>`).join('') + '</sheets>' +
+    (titles ? `<definedNames>${titles}</definedNames>` : '') + '</workbook>');
   return _buildZip(files);
 }
 async function rpSfExport() {
@@ -5090,6 +5135,8 @@ function rpSfApply(book, fileName) {
         if (v === null) w('General', x.r, `${label} must be Yes or No — kept as it was.`); else tp[k] = v;
       });
       d.top = tp;
+      const bw = R.kv('buttons');
+      if (bw) { const v = rpSfTxt(bw.v).toLowerCase(); if (v === 'icons') d.btnWords = false; else if (v === 'icons and words') d.btnWords = true; else w('General', bw.r, 'Buttons must be Icons or Icons and words — kept as it was.'); }
       parts.push(`top of the screen ${tp.mode}` + (tp.mode === 'compact' ? ` (${RP_TOP_SCROLL.find(x => x[0] === tp.scroll)[1].toLowerCase()})` : ''));
     }
     const as = R.kv('autosave');
@@ -5669,6 +5716,7 @@ async function saveRpSettings() {
     // owned by the DO Database report's page controls
     dbPageSize: pr0.dbPageSize,
     dbPageAll:  pr0.dbPageAll,
+    dbSub:      pr0.dbSub,
     show:      _rpDraft.show,
     reports:       _rpDraft.reports.map(r => ({ id: r.id, show: r.show })),
     exportReports: _rpDraft.exportReports.map(r => ({ id: r.id, show: r.show })),
@@ -5689,6 +5737,7 @@ async function saveRpSettings() {
     dbColsInTab: _rpDraft.dbColsInTab !== false,
     dbTab: rpDbTab({ dbTab: _rpDraft.dbTab }),
     top: rpTopCfg({ top: _rpDraft.top }),
+    btnWords: !!_rpDraft.btnWords,
     doEditStyle: (({ mode, font, fill }) => ({ mode, font, fill }))(rpEdStyle({ doEditStyle: _rpDraft.doEditStyle })),
     // set only in the settings file on GitHub
     ...(pr0.liftPath ? { liftPath: pr0.liftPath } : {}),
@@ -5853,9 +5902,9 @@ async function rpSaveManual(keys) {
   if (warn.length) msg += '\n\n⚠ ' + warn.slice(0, 8).join('\n⚠ ') + (warn.length > 8 ? `\n… and ${warn.length - 8} more` : '');
   if (!confirm(msg)) return;
   const btn = document.getElementById('rpSaveDayBtn');
-  const old = btn.textContent; btn.textContent = 'Saving…'; btn.disabled = true;
+  const old = btn.innerHTML, tip = btn.title; rpBtnLabel(btn, 'Saving…'); btn.classList.add('busy'); btn.disabled = true;
   try { await rpSaveAll({ keys: ks, force: true }); }
-  finally { btn.textContent = old; btn.disabled = false; }
+  finally { btn.innerHTML = old; btn.title = tip; btn.classList.remove('busy'); btn.disabled = false; }
 }
 
 // ── Saved days (⚙ → Saved days) ──────────────────────────────────────
@@ -6083,6 +6132,7 @@ function rpTopApply() {
   if (!d || !w) return;
   const c = rpTopCfg(), compact = c.mode === 'compact';
   d.classList.toggle('rp-compact', compact);
+  document.body.classList.toggle('rp-words', rpBtnWords());
   d.classList.toggle('rp-sticky', compact && c.scroll !== 'away');
   if (!compact || c.scroll !== 'back') w.classList.remove('tuck');
   if (!compact || c.scroll === 'away') w.classList.remove('lift');
@@ -6221,6 +6271,7 @@ async function rpPersistPrefs(extra) {
   const pr = appSettings.powerReport || {};
   const more = {};
   if (pr.dbHidden != null) more.dbHidden = pr.dbHidden;
+  if (pr.dbSub != null) more.dbSub = !!pr.dbSub;
   (Array.isArray(extra) ? extra : []).forEach(k => { more[k] = pr[k]; });
   try {
     const res = await fetch(
@@ -6589,17 +6640,22 @@ function rpSyncExportBtns() {
   if (_rpBusy) return;
   const sheets = rpExportReports().map(id => RP_REPORTS[id].sheet);
   const on = _rpTables.some(t => sheets.indexOf(t.sheet) >= 0);
-  // on the DO Database tab only Excel stays — and it saves the DOs that match
+  // on the DO Database tab: Excel, PDF and Image, of the DOs that match
   const db = _rpTab === 5;
-  ['rpShareBtn','rpDlBtn','rpHtmlBtn'].forEach(id => {
+  ['rpShareBtn','rpDlBtn','rpHtmlBtn','rpDbPdfBtn','rpDbImgBtn'].forEach(id => {
     const b = document.getElementById(id);
     if (!b) return;
-    const ok = db ? (id === 'rpDlBtn' && mclhoCount > 0) : on;
+    const mine = id === 'rpDlBtn' || id === 'rpDbPdfBtn' || id === 'rpDbImgBtn';
+    const ok = db ? (mine && mclhoCount > 0) : on;
     b.disabled = !ok; b.style.opacity = ok ? '1' : '.4';
-    b.style.display = db && id !== 'rpDlBtn' ? 'none' : '';
+    b.style.display = db ? (mine ? '' : 'none') : (id === 'rpDbPdfBtn' || id === 'rpDbImgBtn' ? 'none' : '');
   });
   const dl = document.getElementById('rpDlBtn');
-  if (dl) dl.title = db ? 'The DOs that match the search and filters, as an Excel file' : rpDlSummary();
+  if (dl && dl.dataset.mode !== (db ? 'db' : 'rep')) {
+    dl.dataset.mode = db ? 'db' : 'rep';
+    dl.innerHTML = rpIc(db ? 'xls' : 'dl') + `<span class="bl">${db ? 'Excel' : 'Download'}</span>`;
+  }
+  if (dl) { const t = db ? 'The DOs that match the search and filters, as an Excel file' : rpDlSummary(); dl.title = t; dl.setAttribute('aria-label', db ? 'Excel' : 'Download'); }
   const gsb = document.getElementById('rpGsBtn');
   if (gsb) {
     gsb.style.display = !db && rpGsReady() ? '' : 'none';
@@ -8199,7 +8255,9 @@ function rpDbBuild() {
     }
     // an expired DO's kind, for the Status filters: fully lifted, some lapsed, or its lifting not known
     const sub = x.status !== 'Expired' ? null : x.lapsed == null ? RP_EXP_SUBS[2] : x.lapsed > 0 ? RP_EXP_SUBS[1] : RP_EXP_SUBS[0];
-    return { v, s, qty, p0: S, p1: E, ed, was, sub, h: v.join('\u0001').toLowerCase() };
+    // the party a subtotal gathers it under: its name, or its code when it has no name
+    const gn = v[RP_DB_IX.partyName] || v[RP_DB_IX.partyCode] || '';
+    return { v, s, qty, p0: S, p1: E, ed, was, sub, gn, g: gn ? gn.toUpperCase() : '\uffff', h: v.join('\u0001').toLowerCase() };
   });
   // columns no record fills (older saves kept fewer fields) are left out;
   // the worked-out ones always stay, so they don't come and go as the lifting loads
@@ -8236,11 +8294,13 @@ function rpDbCmp(c, dir) {
   };
 }
 function rpDbFiltered() {
-  const sig = [_rpDb.ver, _rpDb.q, _rpDb.fv, _rpDb.edOnly ? 'ed' : '', _rpDb.sort ? _rpDb.sort.c + ':' + _rpDb.sort.dir : ''].join('|');
+  const sub = rpDbSubOn();
+  const sig = [_rpDb.ver, _rpDb.q, _rpDb.fv, _rpDb.edOnly ? 'ed' : '', _rpDb.sort ? _rpDb.sort.c + ':' + _rpDb.sort.dir : '', sub ? 'sub' : ''].join('|');
   if (_rpDb.cache && _rpDb.cache.sig === sig) return _rpDb.cache.list;
   const words = rpDbWords(_rpDb.q);
   let list = _rpDb.rows.filter(r => rpDbPass(r, words, -1));
-  if (_rpDb.sort) list.sort(rpDbCmp(_rpDb.sort.c, _rpDb.sort.dir));
+  if (sub) list.sort(rpDbGroupCmp());                  // party by party
+  else if (_rpDb.sort) list.sort(rpDbCmp(_rpDb.sort.c, _rpDb.sort.dir));
   _rpDb.cache = { sig, list };
   return list;
 }
@@ -8263,10 +8323,10 @@ function renderRpDb() {
          <div class="rp-dbbar">
            <label class="rp-dbsearch"><span>Search</span>
              <input id="rpDbQ" type="search" autocomplete="off" spellcheck="false" aria-label="Search every column"></label>
-           <button class="rp-dbbtn" id="rpDbColsBtn" onclick="rpDbColsOpen(this)" aria-haspopup="dialog" title="Show or hide columns">Columns</button>
-           <button class="rp-dbbtn" id="rpDbEd" onclick="rpDbEdOnly()" aria-pressed="false" title="Show only the SOs edited in ⚙ → DO Edits"></button>
-           <button class="rp-dbbtn" id="rpDbClear" onclick="rpDbClearAll()">Clear all</button>
-           <button class="rp-dbbtn" id="rpDbXls" onclick="rpDbExport()" title="The DOs that match, as an Excel file">Excel</button>
+           <button class="rp-dbbtn rp-ib" id="rpDbColsBtn" onclick="rpDbColsOpen(this)" aria-haspopup="dialog" title="Columns" aria-label="Columns">${rpIc('cols')}<span class="bl">Columns</span></button>
+           <button class="rp-dbbtn rp-ib" id="rpDbSubBtn" onclick="rpDbSubToggle()" aria-pressed="false" title="Party-wise subtotals" aria-label="Party-wise subtotals">${rpIc('sigma')}<span class="bl">Subtotals</span></button>
+           <button class="rp-dbbtn rp-ib" id="rpDbEd" onclick="rpDbEdOnly()" aria-pressed="false" title="Show only the edited SOs">${rpIc('pencil')}<span class="bl"></span></button>
+           <button class="rp-dbbtn rp-ib" id="rpDbClear" onclick="rpDbClearAll()" title="Clear the search and every filter" aria-label="Clear all">${rpIc('filterx')}<span class="bl">Clear all</span></button>
          </div>
          <div class="rp-dbchips" id="rpDbChips"></div>
          <div class="rp-dbsum"><span id="rpDbSum"></span><span class="rp-dblift" id="rpDbLift"></span></div>
@@ -8317,11 +8377,12 @@ function rpDbDraw() {
   rpDbLiftNote(list);
   const cb = document.getElementById('rpDbColsBtn');
   cb.style.display = rpDbColsInTab() ? '' : 'none';
-  cb.textContent = hid.size ? `Columns · ${hid.size} hidden` : 'Columns';
+  rpBtnLabel(cb, hid.size ? `Columns · ${hid.size} hidden` : 'Columns');
+  cb.dataset.n = hid.size ? `−${hid.size}` : '';
   document.getElementById('rpDbClear').style.display = any ? '' : 'none';
-  const xl = document.getElementById('rpDbXls');
-  xl.textContent = any ? `Excel · ${fmtN(list.length)} DOs` : 'Excel · all';
-  xl.disabled = !list.length;
+  const sb = document.getElementById('rpDbSubBtn'), subOn = rpDbSubOn();
+  sb.classList.toggle('on', subOn); sb.setAttribute('aria-pressed', String(subOn));
+  rpBtnLabel(sb, subOn ? 'Party-wise subtotals: on' : 'Party-wise subtotals');
   // what is filtered, each with its own ✕
   // edited cells as set in ⚙ → DO Edits; the Edited switch while there are any
   const est = rpEdStyle(), card = document.querySelector('#rpPane5 .rp-db');
@@ -8332,7 +8393,8 @@ function rpDbDraw() {
   const nEd = _rpDb.rows.filter(r => r.ed).length, eb = document.getElementById('rpDbEd');
   if (!nEd && _rpDb.edOnly) _rpDb.edOnly = false;
   eb.style.display = nEd && tabo.edited ? '' : 'none';
-  eb.textContent = `Edited · ${fmtN(nEd)}`;
+  rpBtnLabel(eb, `Edited · ${fmtN(nEd)}`);
+  eb.dataset.n = fmtN(nEd);
   eb.classList.toggle('on', !!_rpDb.edOnly); eb.setAttribute('aria-pressed', String(!!_rpDb.edOnly));
   const chips = [];
   if (_rpDb.edOnly) chips.push(`<span class="rp-dbchip">Edited SOs only<button onclick="rpDbEdOnly()" aria-label="Show every SO">✕</button></span>`);
@@ -8362,10 +8424,12 @@ function rpDbDraw() {
   // table is scrolled to: the rows in view plus a margin, with spacers above
   // and below standing in for the rest. Columns get fixed widths worked out
   // from the longest value in each, so nothing shifts as rows come and go.
-  const virt = to - from > RP_DB_VIRT;
-  _rpDb.view = { list, from, to, cols, virt, s: -1, e: -1, rowH: (_rpDb.view && _rpDb.view.rowH) || 0 };
+  // with Σ on, each party's subtotal follows its last DO, and the total the last page
+  const items = subOn && list.length ? rpDbItems(list, from, to) : null;
+  const virt = (items ? items.length : to - from) > RP_DB_VIRT;
+  _rpDb.view = { list, from, to, cols, virt, items, s: -1, e: -1, rowH: (_rpDb.view && _rpDb.view.rowH) || 0 };
   // fixed widths, so the headings wrap and the columns don't shift from page to page
-  const W = rpDbColWidths(list, from, to, cols);
+  const W = rpDbColWidths(list, from, to, cols, items);
   const colg = '<colgroup>' + W.map(w => `<col style="width:${w}px">`).join('') + '</colgroup>';
   table.style.tableLayout = 'fixed';
   table.style.width = W.reduce((a, b) => a + b, 0) + 'px';
@@ -8373,7 +8437,8 @@ function rpDbDraw() {
     table.innerHTML = colg + h + `<tr><td class="rp-dbnone" colspan="${cols.length}">No DO matches the search${Object.keys(_rpDb.filt).length ? ' and filters' : ''}.</td></tr></tbody>`;
   } else if (!virt) {
     let b = '';
-    for (let i = from; i < to; i++) b += rpDbRowHtml(list[i], cols, i);
+    if (items) items.forEach((it, i) => { b += rpDbItemHtml(it, cols, i); });
+    else for (let i = from; i < to; i++) b += rpDbRowHtml(list[i], cols, i);
     table.innerHTML = colg + h + b + '</tbody>';
   } else {
     table.innerHTML = colg + h + '</tbody>';
@@ -8448,9 +8513,10 @@ function rpDbRowHtml(r, cols, i) {
 function rpDbWindow(force) {
   const V = _rpDb.view, sc = document.getElementById('rpDbScroll'), table = document.getElementById('rpDbTable');
   if (!V || !V.virt || !sc || !table.tBodies[0]) return;
-  const n = V.to - V.from;
+  const n = V.items ? V.items.length : V.to - V.from;
+  const html = i => V.items ? rpDbItemHtml(V.items[i], V.cols, i) : rpDbRowHtml(V.list[V.from + i], V.cols, V.from + i);
   if (!V.rowH) {                                 // one row drawn, to learn the row height
-    table.tBodies[0].innerHTML = rpDbRowHtml(V.list[V.from], V.cols, V.from);
+    table.tBodies[0].innerHTML = html(0);
     V.rowH = table.tBodies[0].rows[0].getBoundingClientRect().height || 27;
   }
   const headH = table.tHead ? table.tHead.getBoundingClientRect().height : 0;
@@ -8461,24 +8527,25 @@ function rpDbWindow(force) {
   if (!force && s >= V.s && e <= V.e) return;    // still inside what is drawn
   s = Math.max(0, s - MARGIN); e = Math.min(n, e + MARGIN);
   let b = s ? `<tr class="sp"><td colspan="${V.cols.length}" style="height:${s * V.rowH}px"></td></tr>` : '';
-  for (let i = s; i < e; i++) b += rpDbRowHtml(V.list[V.from + i], V.cols, V.from + i);
+  for (let i = s; i < e; i++) b += html(i);
   if (e < n) b += `<tr class="sp"><td colspan="${V.cols.length}" style="height:${(n - e) * V.rowH}px"></td></tr>`;
   table.tBodies[0].innerHTML = b;
   V.s = s; V.e = e;
 }
 // fixed column widths, from the widest value, or the heading wrapped to
 // its longest word (and to three lines at most)
-function rpDbColWidths(list, from, to, cols) {
+function rpDbColWidths(list, from, to, cols, items) {
   const o = _rpDb.rowOpt || {};
   const cv = rpDbColWidths.cv || (rpDbColWidths.cv = document.createElement('canvas').getContext('2d'));
-  return cols.map(c => {
+  const subs = items ? items.filter(it => it.agg).map(it => rpDbSubCells(it, cols)) : [];
+  return cols.map((c, ci) => {
     const col = RP_DB_COLS[c];
     // the few longest values of the column, measured in the font they are shown in
     const top = [];
-    for (let i = from; i < to; i++) {
-      const v = list[i].v[c];
-      if (top.length < 6 || v.length > top[top.length - 1].length) { top.push(v); top.sort((a, b) => b.length - a.length); if (top.length > 6) top.pop(); }
-    }
+    const see = v => { if (top.length < 6 || v.length > top[top.length - 1].length) { top.push(v); top.sort((a, b) => b.length - a.length); if (top.length > 6) top.pop(); } };
+    for (let i = from; i < to; i++) see(list[i].v[c]);
+    // a subtotal's sum (a label under DO Number trails off instead)
+    subs.forEach(cells => { if (c !== 0 || cells[ci].length < 14) see(cells[ci]); });
     cv.font = col.wide ? '12px "IBM Plex Sans", sans-serif' : (c === 0 ? '600 ' : '') + '12px "IBM Plex Mono", monospace';
     let w = Math.max(0, ...top.map(v => cv.measureText(v).width)) + 20;
     if (col.wide) w = Math.min(w, 300);
@@ -8874,7 +8941,8 @@ function rpDbSelPaint(list) {
   bar.style.display = '';
   bar.innerHTML = `<label class="rp-dbselall"><input type="checkbox" id="rpDbSelAll"${inList && inList === list.length ? ' checked' : ''}${_rpDb.selBusy ? ' disabled' : ''}> Select all ${fmtN(list.length)}${list.length < _rpDb.rows.length ? ' that match' : ''}</label>` +
     `<span class="rp-dbseln${m && !n ? (m.ok ? ' ok' : ' bad') : ''}">${_rpDb.selBusy ? 'Removing…' : n ? `${fmtN(n)} selected${inList < n ? ` · ${fmtN(n - inList)} not shown` : ''}` : m ? rpEsc(m.t) : 'Tick DOs to remove them'}</span>` +
-    (n && !_rpDb.selBusy ? `<button class="rp-dbbtn" onclick="rpDbSelClear()">Clear</button><button class="rp-dbbtn rp-dbdel" id="rpDbSelDel" onclick="rpDbSelRemove()">Remove ${fmtN(n)}</button>` : '');
+    (n && !_rpDb.selBusy ? `<button class="rp-dbbtn rp-ib" onclick="rpDbSelClear()" title="Untick them all" aria-label="Clear">${rpIc('x')}<span class="bl">Clear</span></button>` +
+      `<button class="rp-dbbtn rp-dbdel rp-ib" id="rpDbSelDel" onclick="rpDbSelRemove()" title="Remove the ${fmtN(n)} ticked DOs" aria-label="Remove ${fmtN(n)}" data-n="${fmtN(n)}">${rpIc('trash')}<span class="bl">Remove ${fmtN(n)}</span></button>` : '');
   const all = document.getElementById('rpDbSelAll');
   all.indeterminate = inList > 0 && inList < list.length;
   all.onchange = () => { _rpDb.selMsg = null; list.forEach(r => all.checked ? _rpDb.sel.add(r.v[0]) : _rpDb.sel.delete(r.v[0])); rpDbDraw(); };
@@ -9006,8 +9074,461 @@ function rpDbLiftLine(list) {
 }
 
 // the rows that match, as an Excel file with Excel's own filter buttons on
+// ═══════════════════════════════════════════════════════
+//  BUTTON ICONS (⚙ → General → Buttons)
+// ═══════════════════════════════════════════════════════
+//   powerReport.btnWords  false (the default): buttons show an icon only, with
+//                         the name on hover / long press and for screen readers;
+//                         true: the icon and its word.
+// A button carries its word in .bl; a count to show beside the icon in data-n.
+const RP_IC = {
+  share:  '<circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.4 13.3l7.2 4.4M15.6 6.3l-7.2 4.4"/>',
+  dl:     '<path d="M12 3.5v11.5m0 0l-4.5-4.5M12 15l4.5-4.5M4 16.5v2.5a1.5 1.5 0 001.5 1.5h13a1.5 1.5 0 001.5-1.5v-2.5"/>',
+  upload: '<path d="M12 15.5V4m0 0L7.5 8.5M12 4l4.5 4.5M4 16.5v2.5a1.5 1.5 0 001.5 1.5h13a1.5 1.5 0 001.5-1.5v-2.5"/>',
+  code:   '<path d="M8 7l-5 5 5 5M16 7l5 5-5 5M13.5 4.5l-3 15"/>',
+  grid:   '<rect x="3.5" y="4" width="17" height="16" rx="1.5"/><path d="M3.5 9.5h17M3.5 15h17M9.5 4v16"/>',
+  save:   '<path d="M6 3.5h10l3.5 3.5v11.5A2 2 0 0117.5 20.5h-11A2 2 0 014.5 18.5v-13A2 2 0 016 3.5z"/><path d="M8 3.5v5h7v-5M8 20.5v-6h8v6"/>',
+  xls:    '<path d="M6 2.5h8.5L19 7v13a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 015 20V4a1.5 1.5 0 011-1.5z"/><path d="M14 2.5V7h5"/><path d="M8.6 11.5l5.8 6.5M14.4 11.5l-5.8 6.5" stroke-width="2.2"/>',
+  pdf:    '<path d="M6 2.5h8.5L19 7v13a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 015 20V4a1.5 1.5 0 011-1.5z"/><path d="M14 2.5V7h5"/><text x="12" y="17.6" text-anchor="middle" font-size="6.4" font-weight="800" font-family="Arial, Helvetica, sans-serif" fill="currentColor" stroke="none">PDF</text>',
+  img:    '<rect x="3" y="4.5" width="18" height="15" rx="1.8"/><circle cx="8.5" cy="9.5" r="1.7"/><path d="M21 15.5l-5-5L6.5 19.5"/>',
+  cols:   '<rect x="3.5" y="4" width="17" height="16" rx="1.5"/><path d="M9.2 4v16M14.8 4v16"/>',
+  pencil: '<path d="M4 20h4L19 9a2.1 2.1 0 00-3-3L5 17v3z"/><path d="M14 8l2.5 2.5"/>',
+  filterx:'<path d="M3.5 5h17l-6.5 7.5v5L10 20v-7.5z"/><path d="M3 3l18 18"/>',
+  sigma:  '<path d="M17.5 7V4.5h-11l6 7.5-6 7.5h11V17"/>',
+  paste:  '<rect x="8" y="2.5" width="8" height="4" rx="1"/><path d="M16 4.5h2a1.5 1.5 0 011.5 1.5v14a1.5 1.5 0 01-1.5 1.5H6A1.5 1.5 0 014.5 20V6A1.5 1.5 0 016 4.5h2"/>',
+  trash:  '<path d="M4 7h16M10 11v6M14 11v6M5.5 7l1 12.5A1.5 1.5 0 008 21h8a1.5 1.5 0 001.5-1.5L18.5 7M9 7V4.5a1 1 0 011-1h4a1 1 0 011 1V7"/>',
+  x:      '<path d="M6 6l12 12M18 6L6 18"/>',
+  cal:    '<rect x="3.5" y="5" width="17" height="15.5" rx="1.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M7.5 13.5h2M11 13.5h2M14.5 13.5h2M7.5 17h2M11 17h2" stroke-width="2.4"/>',
+  chart:  '<path d="M4 20V11M10 20V5M16 20v-6M21 20H3"/>',
+};
+function rpIc(name) {
+  return `<svg class="rp-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${RP_IC[name] || ''}</svg>`;
+}
+// a button's word (kept when the icon is all that shows, for its name and tooltip)
+function rpBtnLabel(b, text) {
+  if (!b) return;
+  const l = b.querySelector('.bl');
+  if (l) l.textContent = text; else b.textContent = text;
+  if (b.classList.contains('rp-ib')) { b.title = text; b.setAttribute('aria-label', text); }
+}
+function rpBtnWords(pr) { return !!(pr || appSettings.powerReport || {}).btnWords; }
+// icons into the buttons written in the page, once
+function rpIconsBoot() {
+  document.querySelectorAll('[data-ic]').forEach(b => {
+    if (b.querySelector('.rp-ic')) return;
+    b.insertAdjacentHTML('afterbegin', rpIc(b.dataset.ic));
+    b.classList.add('rp-ib');
+    const l = b.querySelector('.bl');
+    if (l && !b.getAttribute('aria-label')) b.setAttribute('aria-label', l.textContent.trim());
+    if (l && !b.title) b.title = l.textContent.trim();
+  });
+}
+function rpBtnUi() {
+  if (!_rpDraft) return;
+  const w = !!_rpDraft.btnWords;
+  ['icons', 'words'].forEach(m => { const b = document.getElementById('rpBtn_' + m); if (b) b.classList.toggle('on', (m === 'words') === w); });
+}
+function rpBtnPick(words) { _rpDraft.btnWords = !!words; rpBtnUi(); rpSttDots(); }
+
+// ═══════════════════════════════════════════════════════
+//  PARTY-WISE SUBTOTALS (Σ on the DO Database tab)
+// ═══════════════════════════════════════════════════════
+//   powerReport.dbSub  true: the DOs go party by party, each party closed by
+//                      'Subtotal (Party)', and the list by 'Total (All parties)'.
+//                      The Excel, PDF and picture take the same rows.
+// Parties go A to Z (Z to A when sorted so by Party Name); within a party
+// the DOs keep the sort picked.
+const RP_DB_SUMK = ['doQty', 'lifted', 'balance', 'lapsed', 'asking'];
+function rpDbSubOn() { return !!(appSettings.powerReport || {}).dbSub; }
+function rpDbSubToggle() {
+  const pr = appSettings.powerReport = appSettings.powerReport || {};
+  pr.dbSub = !pr.dbSub;
+  _rpDb.page = 0;
+  rpDbDraw(); rpDbTop();
+  clearTimeout(_rpDbPrefT);
+  _rpDbPrefT = setTimeout(rpPersistPrefs, 1200);
+}
+function rpDbGroupCmp() {
+  const pn = RP_DB_IX.partyName, gd = _rpDb.sort && _rpDb.sort.c === pn ? _rpDb.sort.dir : 1;
+  const inner = _rpDb.sort && _rpDb.sort.c !== pn ? rpDbCmp(_rpDb.sort.c, _rpDb.sort.dir) : null;
+  return (a, b) => {
+    if (a.g !== b.g) return a.g === '￿' ? 1 : b.g === '￿' ? -1 : (a.g < b.g ? -1 : 1) * gd;
+    return inner ? inner(a, b) : 0;
+  };
+}
+// each party's count and sums, over the whole list (not just the page)
+function rpDbAgg(rows) {
+  const a = { n: 0, sums: {}, codes: new Set(), sectors: new Set(), name: rows.length ? rows[0].gn : '' };
+  const ix = RP_DB_SUMK.map(k => RP_DB_IX[k]);
+  for (const r of rows) {
+    a.n++;
+    for (const i of ix) { const x = r.s[i]; if (x != null) a.sums[i] = (a.sums[i] || 0) + x; }
+    a.codes.add(r.v[RP_DB_IX.partyCode]); a.sectors.add(r.v[RP_DB_IX.sector]);
+  }
+  ix.forEach(i => { if (a.sums[i] != null) a.sums[i] = Math.round(a.sums[i] * 1000) / 1000; });
+  return a;
+}
+function rpDbGroups(list) {
+  const c = _rpDb.cache;
+  if (c && c.list === list && c.groups) return c.groups;
+  const by = new Map();
+  for (const r of list) { let g = by.get(r.g); if (!g) by.set(r.g, g = []); g.push(r); }
+  const G = new Map();
+  by.forEach((rows, k) => G.set(k, rpDbAgg(rows)));
+  G.total = rpDbAgg(list);
+  if (c && c.list === list) c.groups = G;
+  return G;
+}
+// the rows of one page, each party closed by its subtotal, the last page by the total
+function rpDbItems(list, from, to) {
+  const G = rpDbGroups(list), out = [];
+  for (let i = from; i < to; i++) {
+    const r = list[i];
+    out.push(r);
+    if (i === list.length - 1 || list[i + 1].g !== r.g) out.push(Object.assign({ agg: 'party' }, G.get(r.g)));
+  }
+  if (to === list.length && list.length) out.push(Object.assign({ agg: 'total' }, G.total));
+  return out;
+}
+// a subtotal's cells: the count under DO Number, 'Subtotal (Party)' under
+// Party Name (or both under DO Number when Party Name is hidden), the sums,
+// and the party's code and sector when it has only one
+function rpDbSubCells(it, cols) {
+  const fmt = n => n.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  const named = cols.indexOf(RP_DB_IX.partyName) >= 0;
+  const label = it.agg === 'total' ? 'Total (All parties)' : `Subtotal (${it.name || 'No party'})`;
+  const cnt = `${it.n.toLocaleString('en-IN')} DO${it.n === 1 ? '' : 's'}`;
+  return cols.map(c => {
+    if (c === 0) return named ? cnt : `${label} · ${cnt}`;
+    if (c === RP_DB_IX.partyName) return label;
+    if (it.sums[c] != null) return fmt(it.sums[c]);
+    if (c === RP_DB_IX.partyCode && it.codes.size === 1) return [...it.codes][0];
+    if (c === RP_DB_IX.sector && it.sectors.size === 1) return [...it.sectors][0];
+    return '';
+  });
+}
+function rpDbSubHtml(it, cols) {
+  const cells = rpDbSubCells(it, cols);
+  return `<tr class="${it.agg === 'total' ? 'tot' : 'sub'}">` + cols.map((c, i) => {
+    const col = RP_DB_COLS[c], t = cells[i];
+    const cls = [col.type === 'num' ? 'n' : '', col.wide ? 'w' : ''].filter(Boolean).join(' ');
+    return `<td${cls ? ` class="${cls}"` : ''}${t.length > 24 ? ` title="${rpEsc(t)}"` : ''}>${rpEsc(t)}</td>`;
+  }).join('') + '</tr>';
+}
+function rpDbItemHtml(it, cols, i) { return it.agg ? rpDbSubHtml(it, cols) : rpDbRowHtml(it, cols, i); }
+
+// ═══════════════════════════════════════════════════════
+//  DO DATABASE EXPORTS: Excel, PDF and picture
+// ═══════════════════════════════════════════════════════
+// All three take the DOs the search and filters let through, in the columns
+// shown on the tab, with the party subtotals when Σ is on. Column widths are
+// fitted to what each column holds; long names wrap when the table would be
+// wider than a landscape page, so every column fits across one page.
+
+// what the export holds: the rows (with subtotals), and a line on what they are
+function rpDbExpData() {
+  const list = rpDbFiltered(), cols = rpDbVisCols(), sub = rpDbSubOn();
+  return { list, cols, sub, items: sub ? rpDbItems(list, 0, list.length) : list };
+}
+function rpDbExpNote(list) {
+  const fmtN = x => x.toLocaleString('en-IN');
+  const est = rpEdStyle(), nEd = list.filter(r => r.ed).length, parts = [];
+  if (_rpDb.q) parts.push(`search “${_rpDb.q}”`);
+  if (_rpDb.edOnly) parts.push('edited SOs only');
+  Object.keys(_rpDb.filt).forEach(c => parts.push(RP_DB_COLS[c].t + (_rpDb.filt[c].cond ? ' ' + rpDbCondText(+c, _rpDb.filt[c].cond) : ' filtered')));
+  if (rpDbSubOn()) parts.push('party-wise subtotals');
+  return `${fmtN(list.length)} of ${fmtN(_rpDb.rows.length)} DOs` + (parts.length ? ' · ' + parts.join(' · ') : '') +
+    (nEd ? ` · ${fmtN(nEd)} edited SO${nEd === 1 ? '' : 's'}${est.cur ? ` — edited cells in ${est.cur[0].toLowerCase()} ${est.mode === 'font' ? 'type' : 'highlight'}` : ''}` : '') +
+    (_dbUpdated ? ` · database saved ${rpDbWhen(_dbUpdated)}` : '') + rpDbLiftLine(list);
+}
+// the totals line, as the tab shows it over the table
+function rpDbExpFigs(list, cols) {
+  const fmt = n => n.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  const out = [];
+  [['doQty', 'DO Qty'], ['lifted', 'Lifted'], ['balance', 'Balance'], ['lapsed', 'Lapsed']].forEach(([k, t]) => {
+    const c = RP_DB_IX[k];
+    if (cols.indexOf(c) < 0) return;
+    let s = 0, n = 0;
+    list.forEach(r => { if (r.s[c] != null) { s += r.s[c]; n++; } });
+    if (n) out.push(`${t} ${fmt(Math.round(s * 1000) / 1000)}`);
+  });
+  return out.join(' · ');
+}
+// rows as text: d a DO, sub a party's subtotal, tot the total
+function rpDbExpRows(items, cols) {
+  return items.map(it => it.agg
+    ? { k: it.agg === 'total' ? 'tot' : 'sub', cells: rpDbSubCells(it, cols) }
+    : { k: 'd', cells: cols.map(c => it.v[c]), ed: it.ed ? cols.map(c => it.ed.indexOf(c) >= 0) : null });
+}
+// words into lines no wider than w; a word too long is cut; past max lines, …
+function rpWrapWords(text, w, measure, max) {
+  const words = String(text).split(/\s+/).filter(Boolean), lines = [];
+  let cur = '';
+  const push = s => lines.push(s);
+  for (let word of words) {
+    while (measure(word) > w && word.length > 1) {          // a word longer than the line
+      let k = word.length - 1;
+      while (k > 1 && measure(word.slice(0, k)) > w) k--;
+      if (cur) { push(cur); cur = ''; }
+      push(word.slice(0, k)); word = word.slice(k);
+    }
+    const t = cur ? cur + ' ' + word : word;
+    if (measure(t) <= w) cur = t; else { if (cur) push(cur); cur = word; }
+  }
+  if (cur || !lines.length) push(cur);
+  if (lines.length > max) {
+    const keep = lines.slice(0, max);
+    let last = keep[max - 1];
+    while (last.length > 1 && measure(last + '…') > w) last = last.slice(0, -1);
+    keep[max - 1] = last + '…';
+    return keep;
+  }
+  return lines;
+}
+// Column widths and line breaks.
+//   measure(text, bold, head) → width;  F = { pad, padV, lh, hlh, wrapMin }
+//   target  the width the table should keep within, if the long names can wrap
+function rpDbExpLayout(head, rows, cols, measure, F, target) {
+  const n = cols.length;
+  const wide = cols.map(c => !!RP_DB_COLS[c].wide);
+  const nat = new Array(n).fill(0);
+  rows.forEach(r => r.cells.forEach((s, i) => {
+    if (!s || (i === 0 && r.k !== 'd' && cols.indexOf(RP_DB_IX.partyName) < 0)) return;  // a long label under DO Number wraps
+    nat[i] = Math.max(nat[i], measure(s, r.k !== 'd', false));
+  }));
+  const hw = head.map(t => {
+    const T = t.toUpperCase();
+    return { word: Math.max(...T.split(/\s+/).map(w => measure(w, true, true))), all: measure(T, true, true) };
+  });
+  let W = nat.map((w, i) => Math.ceil(Math.max(w, hw[i].word, hw[i].all / 3) + F.pad * 2));
+  const sum = W.reduce((a, b) => a + b, 0);
+  if (sum > target && wide.some(Boolean)) {
+    const fixed = W.reduce((a, w, i) => a + (wide[i] ? 0 : w), 0);
+    const floor = i => Math.max(hw[i].word + F.pad * 2, F.wrapMin);
+    let lo = 0, hi = Math.max(...W);
+    for (let k = 0; k < 28; k++) {
+      const X = (lo + hi) / 2;
+      const t = fixed + W.reduce((a, w, i) => a + (wide[i] ? Math.min(w, Math.max(X, floor(i))) : 0), 0);
+      if (t <= target) lo = X; else hi = X;
+    }
+    W = W.map((w, i) => wide[i] ? Math.ceil(Math.min(w, Math.max(lo, floor(i)))) : w);
+  }
+  const headLines = head.map((t, i) => rpWrapWords(t.toUpperCase(), W[i] - F.pad * 2, s => measure(s, true, true), 3));
+  const headH = Math.max(...headLines.map(l => l.length)) * F.hlh + F.padV * 2;
+  const L = rows.map(r => {
+    const lines = r.cells.map((s, i) => {
+      if (!s) return [''];
+      const fits = measure(s, r.k !== 'd', false) <= W[i] - F.pad * 2 + 0.01;
+      return fits ? [s] : rpWrapWords(s, W[i] - F.pad * 2, t => measure(t, r.k !== 'd', false), 3);
+    });
+    return { lines, h: Math.max(...lines.map(l => l.length)) * F.lh + F.padV * 2 };
+  });
+  return { W, headLines, headH, L, tw: W.reduce((a, b) => a + b, 0) };
+}
+// colours, shared by the PDF and the picture
+const RP_DBX = { ink: '#151a21', mute: '#5d6a78', ash: '#c9d1da', head: '#e6ebf0', zebra: '#f3f6f9', sub: '#dde4ec', tot: '#212a35', totInk: '#f5f7f9', live: '#b8620a' };
+const RP_DBX_F = { size: 7.6, hsize: 6.2, htc: 0.35, lh: 9.6, hlh: 7.8, pad: 4.2, padV: 3.3, wrapMin: 190 };   // names wrap past ~40 letters
+const RP_DBX_PAGE = { w: 842, h: 595, M: 22 };       // A4 landscape, in points
+
+// today's date for the file names: DO_Database_13_Nov_2026
+function rpDbStamp() { const t = new Date(); return `${rp2(t.getDate())}_${RP_MON[t.getMonth()]}_${t.getFullYear()}`; }
+// ── PDF ──
+async function rpDbPdfBlob(onProgress) {
+  const { list, cols, items } = rpDbExpData();
+  const F = RP_DBX_F, P = RP_DBX_PAGE, C = RP_DBX, hex = rpPdfRgb, est = rpEdStyle();
+  const head = cols.map(c => RP_DB_COLS[c].t), rows = rpDbExpRows(items, cols);
+  const measure = (s, bold, h) => rpPdfWidth(s, bold ? 'HB' : 'H', h ? F.hsize : F.size, h ? F.htc : 0);
+  const lay = rpDbExpLayout(head, rows, cols, measure, F, P.w - P.M * 2);
+  // the page keeps A4's shape; it widens (and so prints smaller) when the columns need it
+  const pw = Math.max(P.w, Math.ceil(lay.tw + P.M * 2)), ph = Math.round(pw * P.h / P.w), M = P.M;
+  const note = rpDbExpNote(list), figs = rpDbExpFigs(list, cols);
+  const noteLines = rpWrapWords(note, pw - M * 2, s => rpPdfWidth(s, 'H', 6.8), 4);
+  const capH = 16 + noteLines.length * 9 + (figs ? 10 : 0) + 6;
+  const footH = 16;
+  // rows onto pages
+  const pages = [];
+  let cur = [], y = M + capH + lay.headH;
+  rows.forEach((r, i) => {
+    const h = lay.L[i].h;
+    if (cur.length && y + h > ph - M - footH) { pages.push(cur); cur = []; y = M + lay.headH; }
+    cur.push(i); y += h;
+  });
+  if (cur.length || !pages.length) pages.push(cur);
+  const num = cols.map(c => RP_DB_COLS[c].type === 'num');
+  const X = [0]; lay.W.forEach((w, i) => X.push(X[i] + w));
+  const stamp = new Date().toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+  const out = [];
+  for (let p = 0; p < pages.length; p++) {
+    if (onProgress && p % 20 === 0) { onProgress(p + 1, pages.length); await rpPause(0); }
+    const g = rpPdfCtx(ph, M);          // x from the left margin, y from the page top
+    let top = M;
+    if (p === 0) {
+      g.text('I3MS DO DATABASE', 0, M + 11, 'HB', 11, hex(C.ink), 1);
+      noteLines.forEach((t, k) => g.text(t, 0, M + 24 + k * 9, 'H', 6.8, hex(C.mute)));
+      if (figs) g.text(figs, 0, M + 24 + noteLines.length * 9 + 1, 'HB', 7.2, hex(C.ink));
+      top = M + capH;
+    }
+    // headings: wrapped and centred
+    g.fill(0, top, lay.tw, lay.headH, hex(C.head));
+    lay.headLines.forEach((ls, i) => {
+      const y0 = top + (lay.headH - ls.length * F.hlh) / 2;
+      ls.forEach((t, k) => {
+        const tw = measure(t, true, true);
+        g.text(t, X[i] + (lay.W[i] - tw) / 2, y0 + (k + 0.78) * F.hlh, 'HB', F.hsize, hex(C.mute), F.htc);
+      });
+    });
+    for (let i = 1; i < cols.length; i++) g.line(X[i], top, X[i], top + lay.headH, hex(C.ash), 0.4);
+    let y = top + lay.headH;
+    g.line(0, y, lay.tw, y, hex(C.ink), 1.1);
+    let zebra = 0;
+    pages[p].forEach(ri => {
+      const r = rows[ri], h = lay.L[ri].h, bold = r.k !== 'd';
+      const bg = r.k === 'tot' ? C.tot : r.k === 'sub' ? C.sub : (zebra++ % 2 ? C.zebra : null);
+      if (bg) g.fill(0, y, lay.tw, h, hex(bg));
+      if (r.k === 'd' && r.ed && est.cur && est.mode === 'fill') r.ed.forEach((e, i) => { if (e) g.fill(X[i], y, lay.W[i], h, hex(est.cur[1])); });
+      lay.L[ri].lines.forEach((ls, i) => {
+        const edf = r.ed && r.ed[i] && est.cur && est.mode === 'font';
+        const col = r.k === 'tot' ? C.totInk : edf ? est.cur[1] : (r.k === 'd' && i > 0 && RP_DB_COLS[cols[i]].type === 'code') ? C.mute : C.ink;
+        const font = bold || edf || (i === 0 && r.k === 'd') ? 'HB' : 'H';
+        ls.forEach((t, k) => {
+          if (!t) return;
+          const tw = rpPdfWidth(t, font, F.size);
+          const tx = num[i] ? X[i] + lay.W[i] - F.pad - tw : X[i] + F.pad;
+          g.text(t, tx, y + F.padV + (k + 0.78) * F.lh, font, F.size, hex(col));
+        });
+      });
+      y += h;
+      g.line(0, y, lay.tw, y, hex(r.k === 'd' ? C.ash : C.mute), r.k === 'd' ? 0.35 : 0.7);
+    });
+    for (let i = 1; i < cols.length; i++) g.line(X[i], top + lay.headH, X[i], y, hex(C.ash), 0.35);
+    g.rect(0, top, lay.tw, y - top, hex(C.mute), 0.6);
+    g.text(`i3MS DO Database · ${stamp}`, 0, ph - 11, 'H', 6, hex(C.mute));
+    const pn = `Page ${p + 1} of ${pages.length}`;
+    g.text(pn, pw - M * 2 - rpPdfWidth(pn, 'H', 6), ph - 11, 'H', 6, hex(C.mute));
+    out.push({ w: pw, h: ph, content: g.ops.join('\n') + '\n' });
+  }
+  return rpWritePdf(out, { title: 'i3MS DO Database', subject: note });
+}
+async function rpDbPdf() {
+  if (_rpBusy) return;
+  if (!rpDbFiltered().length) { alert('No DO matches the search and filters.'); return; }
+  rpLockBtns(true, 'rpDbPdfBtn', 'Building…');
+  try {
+    const blob = await rpDbPdfBlob((i, n) => rpProgress('rpDbPdfBtn', `Page ${i}/${n}…`));
+    await rpShareOrSave(blob, `DO_Database_${rpDbStamp()}.pdf`, 'application/pdf', 'DO Database');
+  } catch (e) {
+    rpSetStatus('Could not build the PDF: ' + e.message, true);
+    alert('Could not build the PDF: ' + e.message);
+  } finally { rpLockBtns(false); }
+}
+
+// ── picture ──
+const RP_DBX_IMGMAX = 500;                  // rows a picture holds and stays sharp; the PDF takes any number
+async function rpDbImageCanvas(maxRows) {
+  const d = rpDbExpData();
+  let items = d.items;
+  if (maxRows && items.length > maxRows) items = items.slice(0, maxRows);
+  const { list, cols } = d;
+  const F = RP_DBX_F, P = RP_DBX_PAGE, C = RP_DBX, est = rpEdStyle();
+  const head = cols.map(c => RP_DB_COLS[c].t), rows = rpDbExpRows(items, cols);
+  const cv = document.createElement('canvas'), ctx = cv.getContext('2d');
+  const FAM = '"Helvetica Neue", Helvetica, Arial, sans-serif';
+  const font = (bold, size) => `${bold ? '700' : '400'} ${size}px ${FAM}`;
+  const measure = (s, bold, h) => { ctx.font = font(bold, h ? F.hsize : F.size); return ctx.measureText(s).width + (h ? F.htc * s.length : 0); };
+  const lay = rpDbExpLayout(head, rows, cols, measure, F, P.w - P.M * 2);
+  const M = 14, note = rpDbExpNote(list) + (items.length < d.items.length ? ` · the first ${items.length.toLocaleString('en-IN')} rows only` : '');
+  const figs = rpDbExpFigs(list, cols);
+  const W = Math.ceil(lay.tw + M * 2);
+  const noteLines = rpWrapWords(note, W - M * 2, s => { ctx.font = font(false, 6.8); return ctx.measureText(s).width; }, 5);
+  const capH = 18 + noteLines.length * 9 + (figs ? 10 : 0) + 6;
+  const H = Math.ceil(M + capH + lay.headH + lay.L.reduce((a, l) => a + l.h, 0) + M);
+  // sharp (2 px a point) for a short list; a long one keeps under ~20 million pixels, so it still shares
+  const k = Math.max(0.8, Math.min(2, 32000 / H, 16000 / W, Math.sqrt(2e7 / (W * H))));
+  cv.width = Math.ceil(W * k); cv.height = Math.ceil(H * k);
+  ctx.scale(k, k);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = 'alphabetic';
+  const text = (s, x, y, bold, size, col, tc) => {
+    ctx.font = font(bold, size); ctx.fillStyle = col;
+    if (!tc) { ctx.fillText(s, x, y); return; }
+    for (const ch of s) { ctx.fillText(ch, x, y); x += ctx.measureText(ch).width + tc; }
+  };
+  const line = (x1, y1, x2, y2, col, w) => { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); };
+  text('I3MS DO DATABASE', M, M + 11, true, 11, C.ink, 1);
+  noteLines.forEach((t, i) => text(t, M, M + 25 + i * 9, false, 6.8, C.mute));
+  if (figs) text(figs, M, M + 25 + noteLines.length * 9 + 1, true, 7.2, C.ink);
+  const X = [M]; lay.W.forEach((w, i) => X.push(X[i] + w));
+  const num = cols.map(c => RP_DB_COLS[c].type === 'num');
+  let y = M + capH;
+  ctx.fillStyle = C.head; ctx.fillRect(M, y, lay.tw, lay.headH);
+  lay.headLines.forEach((ls, i) => {
+    const y0 = y + (lay.headH - ls.length * F.hlh) / 2;
+    ls.forEach((t, j) => text(t, X[i] + (lay.W[i] - measure(t, true, true)) / 2, y0 + (j + 0.78) * F.hlh, true, F.hsize, C.mute, F.htc));
+  });
+  const top = y;
+  y += lay.headH;
+  for (let i = 1; i < cols.length; i++) line(X[i], top, X[i], y, C.ash, 0.4);
+  line(M, y, M + lay.tw, y, C.ink, 1.1);
+  let zebra = 0;
+  rows.forEach((r, ri) => {
+    const h = lay.L[ri].h, bold = r.k !== 'd';
+    const bg = r.k === 'tot' ? C.tot : r.k === 'sub' ? C.sub : (zebra++ % 2 ? C.zebra : null);
+    if (bg) { ctx.fillStyle = bg; ctx.fillRect(M, y, lay.tw, h); }
+    if (r.k === 'd' && r.ed && est.cur && est.mode === 'fill') r.ed.forEach((e, i) => { if (e) { ctx.fillStyle = est.cur[1]; ctx.fillRect(X[i], y, lay.W[i], h); } });
+    lay.L[ri].lines.forEach((ls, i) => {
+      const edf = r.ed && r.ed[i] && est.cur && est.mode === 'font';
+      const col = r.k === 'tot' ? C.totInk : edf ? est.cur[1] : (r.k === 'd' && i > 0 && RP_DB_COLS[cols[i]].type === 'code') ? C.mute : C.ink;
+      const b = bold || edf || (i === 0 && r.k === 'd');
+      ls.forEach((t, j) => {
+        if (!t) return;
+        const tx = num[i] ? X[i] + lay.W[i] - F.pad - measure(t, b, false) : X[i] + F.pad;
+        text(t, tx, y + F.padV + (j + 0.78) * F.lh, b, F.size, col);
+      });
+    });
+    y += h;
+    line(M, y, M + lay.tw, y, r.k === 'd' ? C.ash : C.mute, r.k === 'd' ? 0.35 : 0.7);
+  });
+  for (let i = 1; i < cols.length; i++) line(X[i], top + lay.headH, X[i], y, C.ash, 0.35);
+  ctx.strokeStyle = C.mute; ctx.lineWidth = 0.6; ctx.strokeRect(M, top, lay.tw, y - top);
+  return { canvas: cv, rows: items.length, all: d.items.length };
+}
+async function rpDbImage() {
+  if (_rpBusy) return;
+  const d = rpDbExpData();
+  if (!d.list.length) { alert('No DO matches the search and filters.'); return; }
+  let max = 0;
+  if (d.items.length > RP_DBX_IMGMAX) {
+    if (!confirm(`A picture holds ${RP_DBX_IMGMAX.toLocaleString('en-IN')} rows, and ${d.items.length.toLocaleString('en-IN')} are shown.\n\n` +
+                 `OK makes the picture of the first ${RP_DBX_IMGMAX.toLocaleString('en-IN')}. For all of them, filter the list down or use PDF.`)) return;
+    max = RP_DBX_IMGMAX;
+  }
+  rpLockBtns(true, 'rpDbImgBtn', 'Rendering…');
+  try {
+    await rpPause(30);
+    const { canvas } = await rpDbImageCanvas(max);
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+    if (!blob) throw new Error('the picture is too large — filter the list down');
+    await rpShareOrSave(blob, `DO_Database_${rpDbStamp()}.png`, 'image/png', 'DO Database');
+  } catch (e) {
+    rpSetStatus('Could not build the picture: ' + e.message, true);
+    alert('Could not build the picture: ' + e.message);
+  } finally { rpLockBtns(false); }
+}
+
+// ── Excel ──
+// widths in characters, fitted to what each column holds
+function rpDbXlsWidths(rows, cols, head) {
+  return cols.map((c, i) => {
+    const col = RP_DB_COLS[c];
+    let n = 0;
+    rows.forEach(r => { const s = r.cells[i]; if (s && !(i === 0 && r.k !== 'd' && s.length > 24)) n = Math.max(n, s.length); });
+    if (col.type === 'date') n = Math.max(n, 11);
+    const word = Math.max(...head[i].split(/\s+/).map(w => w.length));
+    return Math.min(col.wide ? 48 : 24, Math.max(n + 2, word + 3, 7));
+  });
+}
 async function rpDbExport() {
-  const list = rpDbFiltered(), cols = rpDbVisCols();
+  const { list, cols, items } = rpDbExpData();
   if (!list.length) { alert('No DO matches the search and filters.'); return; }
   const fracOf = c => list.some(r => r.s[c] != null && Math.round(r.s[c]) !== r.s[c]);
   const serial = k => k ? (Date.UTC(Math.floor(k / 10000), Math.floor(k / 100) % 100 - 1, k % 100) - Date.UTC(1899, 11, 30)) / 864e5 : '';
@@ -9016,29 +9537,30 @@ async function rpDbExport() {
     return { v: col.t, style: col.type === 'date' ? 9 : col.type === 'num' ? (!col.int && fracOf(c) ? 11 : 10) : 5 };
   });
   const est = rpEdStyle();
-  const rows = list.map(r => cols.map((c, i) => {
-    const col = RP_DB_COLS[c];
-    const v = col.type === 'date' ? (r.s[c] ? serial(r.s[c]) : r.v[c]) : col.type === 'num' ? (r.s[c] != null ? r.s[c] : r.v[c]) : r.v[c];
-    // an edited cell gets the edit colour on top of its own number format
-    return est.cur && r.ed && r.ed.indexOf(c) >= 0 ? { v, s: RP_SF_ED[head[i].style] } : v;
-  }));
-  const nEd = list.filter(r => r.ed).length;
-  const parts = [];
-  if (_rpDb.q) parts.push(`search “${_rpDb.q}”`);
-  if (_rpDb.edOnly) parts.push('edited SOs only');
-  Object.keys(_rpDb.filt).forEach(c => parts.push(RP_DB_COLS[c].t + (_rpDb.filt[c].cond ? ' ' + rpDbCondText(+c, _rpDb.filt[c].cond) : ' filtered')));
-  const sh = { name: 'DO Database', freeze: true, filter: true,
-    cols: cols.map(c => ({ doNum: 14, doDate: 13, doQty: 11, partyCode: 13, partyName: 44, sector: 11, collieryCode: 12, collieryName: 30,
-                           status: 9, lifted: 12, balance: 14, lapsed: 12, daysLeft: 10, asking: 13 }[RP_DB_COLS[c].k] || 13)),
+  const SUBS = { sub: { 5: 16, 9: 17, 10: 18, 11: 19 }, tot: { 5: 20, 9: 21, 10: 22, 11: 23 } };
+  const rows = items.map(it => {
+    if (it.agg) {
+      const k = it.agg === 'total' ? 'tot' : 'sub', cells = rpDbSubCells(it, cols);
+      return cols.map((c, i) => ({ v: it.sums[c] != null ? it.sums[c] : cells[i], s: SUBS[k][head[i].style] }));
+    }
+    return cols.map((c, i) => {
+      const col = RP_DB_COLS[c], r = it;
+      const v = col.type === 'date' ? (r.s[c] ? serial(r.s[c]) : r.v[c]) : col.type === 'num' ? (r.s[c] != null ? r.s[c] : r.v[c]) : r.v[c];
+      // an edited cell gets the edit colour on top of its own number format
+      return est.cur && r.ed && r.ed.indexOf(c) >= 0 ? { v, s: RP_SF_ED[head[i].style] } : v;
+    });
+  });
+  const W = rpDbXlsWidths(rpDbExpRows(items, cols), cols, head.map(h => h.v));
+  // the heading row as tall as its most-wrapped heading, wrapped by words as Excel does
+  const wrapN = (t, w) => { let n = 1, cur = 0; t.split(/\s+/).forEach(x => { if (!cur) cur = x.length; else if (cur + 1 + x.length <= w) cur += 1 + x.length; else { n++; cur = x.length; } }); return n; };
+  const hLines = Math.min(3, Math.max(1, ...head.map((h, i) => wrapN(h.v, W[i] - 1))));
+  const figs = rpDbExpFigs(list, cols);
+  const sh = { name: 'DO Database', freeze: true, filter: true, print: { landscape: true, fitWidth: true, titles: true }, cols: W,
     blocks: [
       { t: 'title', v: 'i3MS DO Database' },
-      { t: 'note', v: `${list.length.toLocaleString('en-IN')} of ${_rpDb.rows.length.toLocaleString('en-IN')} DOs` + (parts.length ? ' · ' + parts.join(' · ') : '') +
-                      (nEd ? ` · ${nEd.toLocaleString('en-IN')} edited SO${nEd === 1 ? '' : 's'}${est.cur ? ` — edited cells in ${est.cur[0].toLowerCase()} ${est.mode === 'font' ? 'type' : 'highlight'}` : ''}` : '') +
-                      (_dbUpdated ? ` · database saved ${rpDbWhen(_dbUpdated)}` : '') + rpDbLiftLine(list) },
-      { t: 'table', head, rows },
-    ] };
-  const t = new Date();
-  const fname = `DO_Database_${rp2(t.getDate())}_${RP_MON[t.getMonth()]}_${t.getFullYear()}.xlsx`;
+      { t: 'note', v: rpDbExpNote(list) },
+    ].concat(figs ? [{ t: 'note', v: figs }] : []).concat([{ t: 'table', head, rows, headHt: hLines * 15 + 4 }]) };
+  const fname = `DO_Database_${rpDbStamp()}.xlsx`;
   try {
     await rpShareOrSave(rpSfWorkbook([sh], { ed: est.cur ? { mode: est.mode, rgb: est.cur[1] } : null }), fname, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'DO Database');
   } catch (e) { alert('Could not build the Excel file: ' + e.message); }
@@ -9133,27 +9655,31 @@ function rpSaveBlob(blob, fname) {
 // the same message. One operation at a time, every button locked for its
 // duration.
 let _rpBusy = false;
-const RP_BTNS = ['rpShareBtn','rpDlBtn','rpHtmlBtn','rpSaveDayBtn'];
+const RP_BTNS = ['rpShareBtn','rpDlBtn','rpHtmlBtn','rpSaveDayBtn','rpDbPdfBtn','rpDbImgBtn'];
+// While a file is built the buttons wait; the one at work spins (and, with
+// words on, says what it is doing).
 function rpLockBtns(on, activeId, activeText) {
   _rpBusy = on;
   RP_BTNS.forEach(id => {
     const b = document.getElementById(id);
     if (!b) return;
     if (on) {
-      if (!b.dataset.label) b.dataset.label = b.textContent;
+      if (!b.dataset.label) { b.dataset.label = b.innerHTML; b.dataset.tip = b.title || ''; }
       b.disabled = true;
       b.style.opacity = '.45';
-      if (id === activeId && activeText) { b.textContent = activeText; b.style.opacity = '1'; }
+      if (id === activeId && activeText) { rpBtnLabel(b, activeText); b.classList.add('busy'); b.style.opacity = '1'; }
     } else {
       b.disabled = false;
       b.style.opacity = '1';
-      if (b.dataset.label) { b.textContent = b.dataset.label; delete b.dataset.label; }
+      b.classList.remove('busy');
+      if (b.dataset.label) { b.innerHTML = b.dataset.label; b.title = b.dataset.tip || ''; delete b.dataset.label; delete b.dataset.tip; }
     }
   });
+  if (!on) rpSyncExportBtns();
 }
 function rpProgress(id, text) {
   const b = document.getElementById(id);
-  if (b) b.textContent = text;
+  if (b) rpBtnLabel(b, text);
 }
 
 // One delivery per call: the share sheet, or a download — never both.
@@ -11139,12 +11665,12 @@ function updateStats() {
     document.getElementById('asofDate').textContent =
       ks.length ? `${ks.length} days · ${activeDates[0]} → ${activeDates[activeDates.length-1]}` : '—';
     document.getElementById('asofTime').textContent = 'Consolidated';
-    btn.textContent = `💾 Save all ${ks.length} days`;
+    rpBtnLabel(btn, `Save all ${ks.length} days`);
     btn.onclick = saveRpAllDays;
   } else {
     document.getElementById('asofDate').textContent = rpActiveDMY() || '—';
     document.getElementById('asofTime').textContent = tabMaxTimeStr || '—';
-    btn.textContent = '💾 Save Day';
+    rpBtnLabel(btn, 'Save Day');
     btn.onclick = saveRpDay;
   }
 
@@ -11173,6 +11699,7 @@ function showSavedReports() {
 //  BOOT
 // ═══════════════════════════════════════════════════════
 rpThemeUI();
+rpIconsBoot();
 rpTopBoot();
 loadSettingsFromGitHub()
   .then(() => loadRpHistory())
