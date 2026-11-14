@@ -1898,7 +1898,7 @@ body.dark .rp-tbtn .rp-tmoon { display:block; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B58-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B59-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -4310,7 +4310,7 @@ async function rpGsSend() {
 // key / value rows and tables with drop-downs where there's a fixed choice.
 // Export takes what's on screen; import fills the settings screen from the
 // file, and nothing reaches the shared settings until Save.
-const RP_BUILD = 'rp-B58-test';
+const RP_BUILD = 'rp-B59-test';
 const RP_SF_FORMAT = 'RoadPowerSettings 1';
 const RP_SF_YN = ['Yes', 'No'];
 
@@ -4507,7 +4507,7 @@ function rpSfSheets() {
       ...(sc => [
         ['Subtotal by', RP_DB_COLS[RP_DB_IX[sc.by]].t, { list: Object.keys(RP_SUB_BY).map(k => RP_DB_COLS[RP_DB_IX[k]].t), note: 'What the subtotals go by, when Σ is on.' }],
         ['Subtotal shows', RP_SUB_FN[sc.fn].t, { list: Object.keys(RP_SUB_FN).map(f => RP_SUB_FN[f].t), note: 'The Sum, Average or Count of the figures.' }],
-        ['Subtotal decimals', yn(sc.dec), { list: RP_SF_YN, note: 'No: subtotals, and the totals over the table, in whole numbers.' }],
+        ['Subtotal decimals', yn(sc.dec), { list: RP_SF_YN, note: 'No: whole numbers all through the DO Database report (DOs, subtotals, totals); its Excel cells keep their decimals, shown whole.' }],
       ])(rpDbSubNorm(d.dbSubCfg))] },
     { t: 'blank' },
     { t: 'note', v: 'The columns, in the order shown. Move a row up or down to move its column; DO Number stays first.' },
@@ -8530,7 +8530,7 @@ function rpDbDraw() {
   chipBox.style.display = chips.length ? '' : 'none';
 
   const sortOf = c => _rpDb.sort && _rpDb.sort.c === c ? (_rpDb.sort.dir > 0 ? '▲' : '▼') : '';
-  _rpDb.rowOpt = { ed: tabo.edit, sel: tabo.remove };
+  _rpDb.rowOpt = { ed: tabo.edit, sel: tabo.remove, dec: rpDbSubCfg().dec };
   let h = '<thead><tr>' + cols.map(c => {
     const col = RP_DB_COLS[c], f = !!_rpDb.filt[c], so = sortOf(c), cls = [col.type === 'num' ? 'n' : '', f ? 'f' : ''].filter(Boolean).join(' ');
     return `<th${cls ? ` class="${cls}"` : ''}><button class="rp-dbh" data-c="${c}" onclick="rpDbOpen(${c}, this)" aria-haspopup="dialog" ` +
@@ -8615,11 +8615,18 @@ function rpDbLiftNote(list) {
 }
 
 const RP_DB_VIRT = 400;        // past this many rows on one page, draw only what is in view
+// a DO's cell as shown: with Decimals unticked (Σ options), its figures in whole
+// numbers — the DO keeps its exact figures for sorting, filters and sums
+const RP_DB_WHOLE = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
+function rpDbTxt(r, c, dec) {
+  const col = RP_DB_COLS[c];
+  return dec || col.type !== 'num' || col.int || r.s[c] == null ? r.v[c] : RP_DB_WHOLE.format(r.s[c]);
+}
 function rpDbRowHtml(r, cols, i) {
   const o = _rpDb.rowOpt || {}, sel = o.sel && _rpDb.sel.has(r.v[0]);
   const tr = [i % 2 ? 'z' : '', sel ? 'sel' : ''].filter(Boolean).join(' ');
   return `<tr${tr ? ` class="${tr}"` : ''}>` + cols.map(c => {
-    const col = RP_DB_COLS[c], v = r.v[c], ed = r.ed && r.ed.indexOf(c) >= 0;
+    const col = RP_DB_COLS[c], v = rpDbTxt(r, c, o.dec), ed = r.ed && r.ed.indexOf(c) >= 0;
     const tip = ed ? `Edited — the i3MS list says ${r.was[c] || '(blank)'}` : col.wide && v.length > 28 ? v : r.sub && c === RP_DB_IX.status ? r.sub : '';
     // the tab's ticks and ✎ go before the DO number
     const pre = c !== 0 ? '' : (o.sel ? `<input type="checkbox" class="rp-dbsel" data-k="${rpEsc(v)}"${sel ? ' checked' : ''} aria-label="Select ${rpEsc(v)}">` : '') +
@@ -8661,7 +8668,7 @@ function rpDbColWidths(list, from, to, cols, items) {
     // the few longest values of the column, measured in the font they are shown in
     const top = [];
     const see = v => { if (top.length < 6 || v.length > top[top.length - 1].length) { top.push(v); top.sort((a, b) => b.length - a.length); if (top.length > 6) top.pop(); } };
-    for (let i = from; i < to; i++) see(list[i].v[c]);
+    for (let i = from; i < to; i++) see(rpDbTxt(list[i], c, o.dec));
     // a subtotal's figures (its label runs across the cells beside it instead)
     subs.forEach(cells => { if (ci > 0) see(cells[ci]); });
     cv.font = col.wide ? '12px "IBM Plex Sans", sans-serif' : (c === 0 ? '600 ' : '') + '12px "IBM Plex Mono", monospace';
@@ -9354,7 +9361,7 @@ function rpDbSubLabel(it, cfg) {
   const f = RP_SUB_FN[cfg.fn];
   return it.agg === 'total' ? `${f.tot} (All ${RP_SUB_BY[cfg.by].pl})` : `${f.sub} (${it.name || '(Blank)'})`;
 }
-// the totals over the table (and in the exports' heading) go by the same Decimals choice
+// the totals over the table (and in the exports' heading) go by the same Decimals choice, as do the DOs' own figures (rpDbTxt)
 function rpDbTotNum(x) { return x.toLocaleString('en-IN', { maximumFractionDigits: rpDbSubCfg().dec ? 2 : 0 }); }
 function rpDbSubNum(x, cfg) { return x.toLocaleString('en-IN', { maximumFractionDigits: cfg.dec && cfg.fn !== 'count' ? 2 : 0 }); }
 function rpDbSubCells(it, cols) {
@@ -9381,7 +9388,7 @@ function rpDbSubHtml(it, cols) {
 function rpDbItemHtml(it, cols, i) { return it.agg ? rpDbSubHtml(it, cols) : rpDbRowHtml(it, cols, i); }
 function rpDbSubDesc(cfg) {
   cfg = cfg || rpDbSubCfg();
-  return `${RP_SUB_FN[cfg.fn].t.toLowerCase()} by ${RP_DB_COLS[RP_DB_IX[cfg.by]].t}${cfg.fn !== 'count' && !cfg.dec ? ', whole numbers' : ''}`;
+  return `${RP_SUB_FN[cfg.fn].t.toLowerCase()} by ${RP_DB_COLS[RP_DB_IX[cfg.by]].t}${!cfg.dec ? ', whole numbers' : ''}`;
 }
 // the Σ button: lit when on; says what it gathers by, and that holding it opens the options
 function rpDbSubPaint() {
@@ -9437,7 +9444,7 @@ function rpDbSubMenuPaint() {
       <div class="rp-dbp-mode rp-dbsubfn">${Object.keys(RP_SUB_FN).map(f =>
         `<button data-fn="${f}" class="${cfg.fn === f ? 'on' : ''}" aria-pressed="${cfg.fn === f}">${RP_SUB_FN[f].t}</button>`).join('')}</div>
       <div class="rp-dbsubnote">${cfg.fn === 'sum' ? 'of DO Qty, Lifted, Balance, Lapsed and Asking Rate.' : cfg.fn === 'avg' ? 'of DO Qty, Lifted, Balance, Lapsed, Days to Expiry and Asking Rate.' : 'of the DOs with a figure in each of those columns.'}</div>
-      <label class="rp-dbsubon"><input type="checkbox" id="rpDbSubDec"${cfg.dec ? ' checked' : ''}> <span>Decimals <i>— up to 2 places in the subtotals and the totals over the table; unticked, whole numbers${cfg.fn === 'count' ? ' (counts are whole anyway)' : ''}</i></span></label>
+      <label class="rp-dbsubon"><input type="checkbox" id="rpDbSubDec"${cfg.dec ? ' checked' : ''}> <span>Decimals <i>— up to 2 places all through the report: the DOs, subtotals and totals. Unticked, whole numbers; Excel cells keep their decimals, shown whole</i></span></label>
     </div>
     <div class="rp-dbp-foot">
       <span class="rp-dbsubsaved${dirty ? ' dirty' : ''}">${dirty ? 'Not your default — kept till the app closes' : 'Your default'}</span><span style="flex:1"></span>
@@ -9535,6 +9542,7 @@ function rpDbExpNote(list) {
   if (_rpDb.edOnly) parts.push('edited SOs only');
   Object.keys(_rpDb.filt).forEach(c => parts.push(RP_DB_COLS[c].t + (_rpDb.filt[c].cond ? ' ' + rpDbCondText(+c, _rpDb.filt[c].cond) : ' filtered')));
   if (rpDbSubOn()) parts.push('subtotals: ' + rpDbSubDesc());
+  else if (!rpDbSubCfg().dec) parts.push('whole numbers');
   return `${fmtN(list.length)} of ${fmtN(_rpDb.rows.length)} DOs` + (parts.length ? ' · ' + parts.join(' · ') : '') +
     (nEd ? ` · ${fmtN(nEd)} edited SO${nEd === 1 ? '' : 's'}${est.cur ? ` — edited cells in ${est.cur[0].toLowerCase()} ${est.mode === 'font' ? 'type' : 'highlight'}` : ''}` : '') +
     (_dbUpdated ? ` · database saved ${rpDbWhen(_dbUpdated)}` : '') + rpDbLiftLine(list);
@@ -9554,9 +9562,10 @@ function rpDbExpFigs(list, cols) {
 }
 // rows as text: d a DO, sub a party's subtotal, tot the total
 function rpDbExpRows(items, cols) {
+  const dec = rpDbSubCfg().dec;
   return items.map(it => it.agg
     ? { k: it.agg === 'total' ? 'tot' : 'sub', cells: rpDbSubCells(it, cols) }
-    : { k: 'd', cells: cols.map(c => it.v[c]), ed: it.ed ? cols.map(c => it.ed.indexOf(c) >= 0) : null });
+    : { k: 'd', cells: cols.map(c => rpDbTxt(it, c, dec)), ed: it.ed ? cols.map(c => it.ed.indexOf(c) >= 0) : null });
 }
 // words into lines no wider than w; a word too long is cut; past max lines, …
 function rpWrapWords(text, w, measure, max) {
@@ -9841,7 +9850,9 @@ function rpDbXlsWidths(rows, cols, head) {
 async function rpDbExport() {
   const { list, cols, items } = rpDbExpData();
   if (!list.length) { alert('No DO matches the search and filters.'); return; }
-  const fracOf = c => list.some(r => r.s[c] != null && Math.round(r.s[c]) !== r.s[c]);
+  const dec = rpDbSubCfg().dec;
+  // with Decimals unticked the cells still hold their decimals, shown as whole numbers (#,##0)
+  const fracOf = c => dec && list.some(r => r.s[c] != null && Math.round(r.s[c]) !== r.s[c]);
   const serial = k => k ? (Date.UTC(Math.floor(k / 10000), Math.floor(k / 100) % 100 - 1, k % 100) - Date.UTC(1899, 11, 30)) / 864e5 : '';
   const head = cols.map(c => {
     const col = RP_DB_COLS[c];
@@ -9855,8 +9866,7 @@ async function rpDbExport() {
       return cols.map((c, i) => {
         const x = it.vals[c];
         if (x == null) return { v: cells[i], s: SUBS[k][head[i].style === 9 ? 9 : 5] };
-        const v = scfg.dec && scfg.fn !== 'count' ? x : Math.round(x);
-        return { v, s: SUBS[k][Number.isInteger(v) ? 10 : 11] };
+        return { v: x, s: SUBS[k][scfg.dec && scfg.fn !== 'count' && !Number.isInteger(x) ? 11 : 10] };
       });
     }
     return cols.map((c, i) => {
