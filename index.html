@@ -1898,7 +1898,7 @@ body.dark .rp-tbtn .rp-tmoon { display:block; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B57-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B58-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -4310,7 +4310,7 @@ async function rpGsSend() {
 // key / value rows and tables with drop-downs where there's a fixed choice.
 // Export takes what's on screen; import fills the settings screen from the
 // file, and nothing reaches the shared settings until Save.
-const RP_BUILD = 'rp-B57-test';
+const RP_BUILD = 'rp-B58-test';
 const RP_SF_FORMAT = 'RoadPowerSettings 1';
 const RP_SF_YN = ['Yes', 'No'];
 
@@ -4507,7 +4507,7 @@ function rpSfSheets() {
       ...(sc => [
         ['Subtotal by', RP_DB_COLS[RP_DB_IX[sc.by]].t, { list: Object.keys(RP_SUB_BY).map(k => RP_DB_COLS[RP_DB_IX[k]].t), note: 'What the subtotals go by, when Σ is on.' }],
         ['Subtotal shows', RP_SUB_FN[sc.fn].t, { list: Object.keys(RP_SUB_FN).map(f => RP_SUB_FN[f].t), note: 'The Sum, Average or Count of the figures.' }],
-        ['Subtotal decimals', yn(sc.dec), { list: RP_SF_YN, note: 'No: subtotals in whole numbers.' }],
+        ['Subtotal decimals', yn(sc.dec), { list: RP_SF_YN, note: 'No: subtotals, and the totals over the table, in whole numbers.' }],
       ])(rpDbSubNorm(d.dbSubCfg))] },
     { t: 'blank' },
     { t: 'note', v: 'The columns, in the order shown. Move a row up or down to move its column; DO Number stays first.' },
@@ -8485,13 +8485,13 @@ function rpDbDraw() {
   const qty = list.reduce((a, r) => a + (r.qty || 0), 0);
   const tot = k => { const c = RP_DB_IX[k]; let t = 0, n = 0; list.forEach(r => { if (r.s[c] != null) { t += r.s[c]; n++; } }); return n ? t : null; };
   const figs = [['lifted', 'Lifted'], ['balance', 'Balance'], ['lapsed', 'Lapsed']].filter(([k]) => !hid.has(k))
-    .map(([k, t]) => { const v = tot(k); return v == null ? '' : ` · ${t} <b>${v.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</b>`; }).join('');
+    .map(([k, t]) => { const v = tot(k); return v == null ? '' : ` · ${t} <b>${rpDbTotNum(v)}</b>`; }).join('');
   const any = _rpDb.q || Object.keys(_rpDb.filt).length || _rpDb.edOnly;
   const when = rpDbWhen(_dbUpdated);
   document.getElementById('rpDbMeta').textContent = `${fmtN(total)} DOs${when ? ' · saved ' + when : ''}`;
   document.getElementById('rpDbSum').innerHTML =
     (any ? `<b>${fmtN(list.length)}</b> of ${fmtN(total)} DOs match` : `<b>${fmtN(total)}</b> DOs`) +
-    (cols.indexOf(2) >= 0 ? ` · DO Qty <b>${qty.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</b>` : '') + figs +
+    (cols.indexOf(2) >= 0 ? ` · DO Qty <b>${rpDbTotNum(qty)}</b>` : '') + figs +
     (list.length > to - from ? ` · showing ${fmtN(from + 1)}–${fmtN(to)}` : '');
   rpDbLiftNote(list);
   const cb = document.getElementById('rpDbColsBtn');
@@ -9354,6 +9354,8 @@ function rpDbSubLabel(it, cfg) {
   const f = RP_SUB_FN[cfg.fn];
   return it.agg === 'total' ? `${f.tot} (All ${RP_SUB_BY[cfg.by].pl})` : `${f.sub} (${it.name || '(Blank)'})`;
 }
+// the totals over the table (and in the exports' heading) go by the same Decimals choice
+function rpDbTotNum(x) { return x.toLocaleString('en-IN', { maximumFractionDigits: rpDbSubCfg().dec ? 2 : 0 }); }
 function rpDbSubNum(x, cfg) { return x.toLocaleString('en-IN', { maximumFractionDigits: cfg.dec && cfg.fn !== 'count' ? 2 : 0 }); }
 function rpDbSubCells(it, cols) {
   const cfg = rpDbSubCfg();
@@ -9435,7 +9437,7 @@ function rpDbSubMenuPaint() {
       <div class="rp-dbp-mode rp-dbsubfn">${Object.keys(RP_SUB_FN).map(f =>
         `<button data-fn="${f}" class="${cfg.fn === f ? 'on' : ''}" aria-pressed="${cfg.fn === f}">${RP_SUB_FN[f].t}</button>`).join('')}</div>
       <div class="rp-dbsubnote">${cfg.fn === 'sum' ? 'of DO Qty, Lifted, Balance, Lapsed and Asking Rate.' : cfg.fn === 'avg' ? 'of DO Qty, Lifted, Balance, Lapsed, Days to Expiry and Asking Rate.' : 'of the DOs with a figure in each of those columns.'}</div>
-      <label class="rp-dbsubon"><input type="checkbox" id="rpDbSubDec"${cfg.dec ? ' checked' : ''}${cfg.fn === 'count' ? ' disabled' : ''}> <span>Decimals <i>(up to 2 places; unticked, whole numbers)</i></span></label>
+      <label class="rp-dbsubon"><input type="checkbox" id="rpDbSubDec"${cfg.dec ? ' checked' : ''}> <span>Decimals <i>— up to 2 places in the subtotals and the totals over the table; unticked, whole numbers${cfg.fn === 'count' ? ' (counts are whole anyway)' : ''}</i></span></label>
     </div>
     <div class="rp-dbp-foot">
       <span class="rp-dbsubsaved${dirty ? ' dirty' : ''}">${dirty ? 'Not your default — kept till the app closes' : 'Your default'}</span><span style="flex:1"></span>
@@ -9452,7 +9454,8 @@ function rpDbSubSet(o) {
   const cfg = Object.assign(rpDbSubCfg(), o), saved = rpDbSubSaved();
   _rpDb.subSess = JSON.stringify(cfg) === JSON.stringify(saved) ? null : cfg;
   const pr = appSettings.powerReport = appSettings.powerReport || {};
-  if (!pr.dbSub) { pr.dbSub = true; clearTimeout(_rpDbPrefT); _rpDbPrefT = setTimeout(rpPersistPrefs, 1200); }
+  // what the subtotals go by, or show, switches them on; Decimals alone also rules the totals line, so it doesn't
+  if (!pr.dbSub && (o.by || o.fn)) { pr.dbSub = true; clearTimeout(_rpDbPrefT); _rpDbPrefT = setTimeout(rpPersistPrefs, 1200); }
   _rpDb.page = 0;
   rpDbDraw(); rpDbTop(); rpDbSubPaint(); rpDbSubMenuPaint();
 }
@@ -9538,7 +9541,7 @@ function rpDbExpNote(list) {
 }
 // the totals line, as the tab shows it over the table
 function rpDbExpFigs(list, cols) {
-  const fmt = n => n.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  const fmt = rpDbTotNum;
   const out = [];
   [['doQty', 'DO Qty'], ['lifted', 'Lifted'], ['balance', 'Balance'], ['lapsed', 'Lapsed']].forEach(([k, t]) => {
     const c = RP_DB_IX[k];
