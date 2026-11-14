@@ -1211,10 +1211,35 @@ body.dark .rp-db.edh .rp-dbt tbody td.ed { color:var(--ink); }
 .rp-dbt td { padding:5px 9px; }
 .rp-dbt tbody tr.z td { background:var(--zebra); }
 .rp-dbt tbody tr.sp td { padding:0; border:0; background:transparent; box-shadow:none; position:static; }
+/* Σ: a corner mark says it holds options; holding it mustn't select text or open the phone's menu */
+.rp-dbbtn.lp { background-image:linear-gradient(135deg, transparent 50%, currentColor 50%); background-size:6px 6px; background-position:right 3px bottom 3px; background-repeat:no-repeat; }
+#rpDbSubBtn { -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; touch-action:manipulation; }
+.rp-dbsubpop { width:min(380px, calc(100vw - 16px)); }
+.rp-dbsubbody { flex:1; min-height:0; overflow:auto; padding:2px 0 8px; }
+.rp-dbsubon { display:flex; align-items:center; gap:9px; padding:7px 12px; font-size:13px; cursor:pointer; }
+.rp-dbsubon input { width:16px; height:16px; margin:0; accent-color:#d97a06; flex-shrink:0; }
+.rp-dbsubon i { font-style:normal; color:var(--dim); font-size:11.5px; }
+.rp-dbp-sub2 { padding:10px 12px 4px; font-family:'IBM Plex Sans Condensed', sans-serif; font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); }
+.rp-dbsubby { display:grid; grid-template-columns:1fr 1fr; padding:0 4px; }
+.rp-dbsubby label { display:flex; align-items:center; gap:8px; padding:6px 8px; font-size:13px; cursor:pointer; }
+.rp-dbsubby input { accent-color:#d97a06; margin:0; }
+.rp-dbsubfn { margin:2px 12px 4px; }
+.rp-dbsubnote { padding:0 12px 4px; font-size:11.5px; color:var(--dim); }
+.rp-dbp-foot.rp-dbcolfoot, .rp-dbsubpop .rp-dbp-foot { flex-wrap:wrap; row-gap:6px; }
+.rp-dbsubsaved { flex:1 1 100%; font-size:11.5px; color:var(--dim); }
+.rp-dbfootbr { flex:1 1 100%; height:0; }
+.rp-dbsubsaved.dirty { color:#d97a06; }
+.rp-dbcolrow { display:flex; align-items:center; gap:4px; padding-right:8px; }
+.rp-dbcolrow label { flex:1; min-width:0; }
+.rp-dbcolrow .rp-dbmv { border-color:var(--edge, var(--border)); }
+.rp-dbmvfix { width:64px; text-align:center; font-size:10.5px; color:var(--dim); }
 /* party subtotals and the total */
 .rp-dbt tbody tr.sub td { background:var(--ash-soft); font-weight:700; border-bottom-color:var(--mute); overflow:hidden; text-overflow:ellipsis; }
 .rp-dbt tbody tr.tot td { background:var(--ink); color:var(--paper); font-weight:700; overflow:hidden; text-overflow:ellipsis; }
 .rp-dbt tbody tr.tot td.k, .rp-dbt tbody tr.tot td:first-child { color:var(--paper); }
+/* the label runs across the empty cells beside it, and keeps in view while the table scrolls sideways */
+.rp-dbt tbody tr.sub td.sl, .rp-dbt tbody tr.tot td.sl { position:static; box-shadow:none; overflow:visible; }
+.rp-dbt tbody tr.sub td.sl span, .rp-dbt tbody tr.tot td.sl span { position:sticky; left:9px; display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; vertical-align:bottom; }
 .rp-dbt tbody tr.sub td.w, .rp-dbt tbody tr.tot td.w { font-family:'IBM Plex Sans', sans-serif; }
 .rp-dbt td.n { text-align:right; font-variant-numeric:tabular-nums; }
 .rp-dbt thead th { white-space:normal; vertical-align:middle; }
@@ -1348,9 +1373,12 @@ button.rp-dbt-x:focus-visible { outline:2px solid #d97a06; outline-offset:-2px; 
 .rp-dbto input { width:17px; height:17px; margin:1px 0 0; accent-color:#d97a06; flex-shrink:0; }
 .rp-dbto b { display:block; font-size:13px; font-weight:600; color:var(--text); }
 .rp-dbto i { display:block; font-style:normal; font-size:11.5px; line-height:1.4; color:var(--dim); margin-top:1px; }
-.rp-dbcolgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(min(180px, 44%), 1fr)); gap:2px 14px; margin-bottom:8px; }
-.rp-dbcolgrid .rp-lkcheck { font-size:12.5px; }
-.rp-dbcolgrid .rp-lkcheck { margin:0; padding:5px 0; }
+.rp-dbcolgrid { columns:2 240px; column-gap:18px; margin-bottom:8px; }
+.rp-colrow { display:flex; align-items:center; gap:4px; break-inside:avoid; border-bottom:1px solid var(--border); }
+.rp-colrow .rp-lkcheck { flex:1; min-width:0; font-size:12.5px; margin:0; padding:5px 0; }
+.rp-dbmv { width:30px; height:28px; flex-shrink:0; border:1px solid var(--border); background:transparent; color:var(--text); cursor:pointer; font-size:14px; line-height:1; }
+.rp-dbmv:disabled { opacity:.25; cursor:default; }
+.rp-dbmv:not(:disabled):active { border-color:#d97a06; color:#d97a06; }
 .rp-sdf { display:grid; gap:8px; margin:10px 0 6px; }
 .rp-sdr { display:grid; grid-template-columns:96px minmax(0,1fr) auto minmax(0,1fr); gap:6px; align-items:center; }
 .rp-sdr > span { font-family:'IBM Plex Sans Condensed', sans-serif; font-size:10px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
@@ -1870,7 +1898,7 @@ body.dark .rp-tbtn .rp-tmoon { display:block; }
     <p>MCL road despatch to the power sector</p>
   </div>
   <div class="header-date" id="headerDate"></div>
-  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B56-test</span>
+  <span style="font-family:var(--mono);font-size:9px;color:#ff8c00;opacity:1;font-weight:700;letter-spacing:.04em;flex-shrink:0;align-self:flex-end;padding-bottom:2px;" title="Build ID — TEST BUILD (epass-settings-test)">rp-B57-test</span>
   <button class="theme-icon-btn" onclick="toggleTheme()" title="Toggle theme">
     <svg id="iconSunHeader" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--amber)">
       <circle cx="12" cy="12" r="4" stroke-width="2"/>
@@ -2291,7 +2319,7 @@ body.dark .rp-tbtn .rp-tmoon { display:block; }
           With <strong>Columns button</strong> ticked above, they can be changed on the tab too.
         </div>
         <div class="rp-dbcolgrid" id="rpDbColGrid"></div>
-        <div class="rp-dact"><button class="rp-mini-btn" onclick="rpDbColsAllDraft()">Show all</button><span class="rp-count" id="rpDbColNote"></span></div>
+        <div class="rp-dact"><button class="rp-mini-btn" onclick="rpDbColsAllDraft()">Show all</button><button class="rp-mini-btn" onclick="rpDbColsOrderDraft()">First order</button><span class="rp-count" id="rpDbColNote"></span></div>
       </div>
       <div class="stt-section">
         <div class="stt-section-hdr">
@@ -3214,7 +3242,7 @@ function rpOpenSettingsNow() {
                groups: rpDraftGroups(pr), groupTable: !!pr.groupTable,
                groupSub: pr.groupSubtotals !== false, groupColors: !!pr.groupColors, autoSave: rpAutoSaveOn(pr),
                doEdits: JSON.parse(JSON.stringify(rpDoEdits(pr))), doEditStyle: (({ mode, font, fill }) => ({ mode, font, fill }))(rpEdStyle(pr)),
-               dbHidden: [...rpDbHidden(pr)], dbColsInTab: rpDbColsInTab(pr), dbTab: rpDbTab(pr), top: rpTopCfg(pr), btnWords: rpBtnWords(pr) };
+               dbHidden: [...rpDbHidden(pr)], dbOrder: rpDbOrderOf(pr), dbSubCfg: rpDbSubSaved(pr), dbColsInTab: rpDbColsInTab(pr), dbTab: rpDbTab(pr), top: rpTopCfg(pr), btnWords: rpBtnWords(pr) };
   _rpDeOpen = null;
   _rpGrpPick = null;
   (pr.parties || []).forEach(p => {
@@ -4282,7 +4310,7 @@ async function rpGsSend() {
 // key / value rows and tables with drop-downs where there's a fixed choice.
 // Export takes what's on screen; import fills the settings screen from the
 // file, and nothing reaches the shared settings until Save.
-const RP_BUILD = 'rp-B56-test';
+const RP_BUILD = 'rp-B57-test';
 const RP_SF_FORMAT = 'RoadPowerSettings 1';
 const RP_SF_YN = ['Yes', 'No'];
 
@@ -4475,10 +4503,16 @@ function rpSfSheets() {
     { t: 'note', v: 'What the DO Database tab offers, and the columns the report and its Excel file show.' },
     { t: 'blank' },
     { t: 'kv', rows: [['Columns button on the tab', yn(d.dbColsInTab !== false), { list: RP_SF_YN, note: 'Yes: the DO Database tab can show and hide columns too. No: only here.' }],
-      ...RP_SF_DBTAB.map(([k, label, note]) => [label, yn(rpDbTab({ dbTab: d.dbTab })[k]), { list: RP_SF_YN, note }])] },
+      ...RP_SF_DBTAB.map(([k, label, note]) => [label, yn(rpDbTab({ dbTab: d.dbTab })[k]), { list: RP_SF_YN, note }]),
+      ...(sc => [
+        ['Subtotal by', RP_DB_COLS[RP_DB_IX[sc.by]].t, { list: Object.keys(RP_SUB_BY).map(k => RP_DB_COLS[RP_DB_IX[k]].t), note: 'What the subtotals go by, when Σ is on.' }],
+        ['Subtotal shows', RP_SUB_FN[sc.fn].t, { list: Object.keys(RP_SUB_FN).map(f => RP_SUB_FN[f].t), note: 'The Sum, Average or Count of the figures.' }],
+        ['Subtotal decimals', yn(sc.dec), { list: RP_SF_YN, note: 'No: subtotals in whole numbers.' }],
+      ])(rpDbSubNorm(d.dbSubCfg))] },
     { t: 'blank' },
+    { t: 'note', v: 'The columns, in the order shown. Move a row up or down to move its column; DO Number stays first.' },
     { t: 'table', head: [{ v: 'Column', ro: true }, { v: 'Show', list: RP_SF_YN }, { v: 'Note', ro: true }],
-      rows: RP_DB_COLS.map(c => [c.t, c.k === 'doNum' ? 'Yes' : yn(!dHid.has(c.k)), c.k === 'doNum' ? 'Always shown' : c.calc ? 'Worked out by the app' : 'From the i3MS list']) },
+      rows: rpDbOrderOf({ dbOrder: d.dbOrder }).map(k => RP_DB_COLS[RP_DB_IX[k]]).map(c => [c.t, c.k === 'doNum' ? 'Yes' : yn(!dHid.has(c.k)), c.k === 'doNum' ? 'Always shown, first' : c.calc ? 'Worked out by the app' : 'From the i3MS list']) },
   ] };
   return [readMe, reports, customers, groupsSh, custReport, exportsSh, sheetSh, doDbSh, doEditsSh, general];
 }
@@ -5166,20 +5200,36 @@ function rpSfApply(book, fileName) {
     const t = R.table(['Column', 'Show'], true);
     if (t) {
       const byT = Object.fromEntries(RP_DB_COLS.map(c => [c.t.toLowerCase(), c.k]));
-      const hid = new Set(d.dbHidden || []);
+      const hid = new Set(d.dbHidden || []), order = [];
       t.forEach(({ r, c }) => {
         const k = byT[rpSfKey(c['column'])];
         if (!k) { if (rpSfTxt(c['column'])) w('DO Database', r, `“${rpSfTxt(c['column'])}” isn’t a DO Database column — left out.`); return; }
+        if (order.indexOf(k) < 0) order.push(k);
         if (k === 'doNum') return;
         const v = rpSfYN(c['show']);
         if (v === null) { w('DO Database', r, `Show for ${RP_DB_COLS[RP_DB_IX[k]].t} must be Yes or No — kept as it was.`); return; }
         if (v) hid.delete(k); else hid.add(k);
       });
       d.dbHidden = RP_DB_COLS.map(c => c.k).filter(k => hid.has(k));
+      // the rows' order is the columns' order; a column left off the list goes where it was
+      const was = rpDbOrderOf({ dbOrder: d.dbOrder });
+      was.forEach((k, i) => { if (order.indexOf(k) < 0) order.splice(Math.min(i, order.length), 0, k); });
+      d.dbOrder = rpDbOrderOf({ dbOrder: order });
+      d.dbHidden = d.dbOrder.filter(k => hid.has(k));
+    }
+    {
+      const sc = rpDbSubNorm(d.dbSubCfg);
+      const by = R.kv('subtotal by');
+      if (by) { const v = rpSfKey(by.v), k = Object.keys(RP_SUB_BY).find(x => RP_DB_COLS[RP_DB_IX[x]].t.toLowerCase() === v); if (k) sc.by = k; else w('DO Database', by.r, `Subtotal by must be one of ${Object.keys(RP_SUB_BY).map(x => RP_DB_COLS[RP_DB_IX[x]].t).join(', ')} — kept as it was.`); }
+      const fn = R.kv('subtotal shows');
+      if (fn) { const v = rpSfKey(fn.v), f = Object.keys(RP_SUB_FN).find(x => RP_SUB_FN[x].t.toLowerCase() === v); if (f) sc.fn = f; else w('DO Database', fn.r, 'Subtotal shows must be Sum, Average or Count — kept as it was.'); }
+      const dc = R.kv('subtotal decimals');
+      if (dc) { const v = rpSfYN(dc.v); if (v === null) w('DO Database', dc.r, 'Subtotal decimals must be Yes or No — kept as it was.'); else sc.dec = v; }
+      d.dbSubCfg = sc;
     }
     const nh = (d.dbHidden || []).length;
     const on = [d.dbColsInTab !== false ? 'Columns' : ''].concat(RP_SF_DBTAB.map(([k, , , short]) => d.dbTab[k] ? short : '')).filter(Boolean);
-    done.push(`DO Database — ${RP_DB_COLS.length - nh} of ${RP_DB_COLS.length} columns shown, Columns button ${d.dbColsInTab !== false ? 'on' : 'off'}` +
+    done.push(`DO Database — ${RP_DB_COLS.length - nh} of ${RP_DB_COLS.length} columns shown, Columns button ${d.dbColsInTab !== false ? 'on' : 'off'}, subtotals ${rpDbSubDesc(rpDbSubNorm(d.dbSubCfg))}` +
               `; on the tab: ${on.length ? on.join(', ') : 'search and filter only'}`);
   }
 
@@ -5736,6 +5786,8 @@ async function saveRpSettings() {
     dbHidden: RP_DB_COLS.map(c => c.k).filter(k => k !== 'doNum' && (_rpDraft.dbHidden || []).indexOf(k) >= 0),
     dbColsInTab: _rpDraft.dbColsInTab !== false,
     dbTab: rpDbTab({ dbTab: _rpDraft.dbTab }),
+    dbOrder: rpDbOrderOf({ dbOrder: _rpDraft.dbOrder }),
+    dbSubCfg: rpDbSubNorm(_rpDraft.dbSubCfg),
     top: rpTopCfg({ top: _rpDraft.top }),
     btnWords: !!_rpDraft.btnWords,
     doEditStyle: (({ mode, font, fill }) => ({ mode, font, fill }))(rpEdStyle({ doEditStyle: _rpDraft.doEditStyle })),
@@ -5770,6 +5822,7 @@ async function saveRpSettings() {
     const resp = await res.json();
     _settingsSha = resp.content.sha;
     appSettings = Object.assign({}, appSettings, { powerReport: newSettings.powerReport });
+    _rpDb.colSess = null; _rpDb.subSess = null;   // the defaults just saved win over the tab's session changes
     _rpUnlockedAt = Date.now();               // whoever just saved is already in
     _rpDraft.lock = rpLockDraft(newSettings.powerReport);
     document.getElementById('rpLockPin1').value = '';
@@ -5781,6 +5834,7 @@ async function saveRpSettings() {
     const edMoved = JSON.stringify(rpDoEdits(pr0)) !== JSON.stringify(rpDoEdits());
     if (edMoved) { rpDbChanged(); rpLiftRefresh(); }
     else if (JSON.stringify(pr0.dbHidden || []) !== JSON.stringify(newSettings.powerReport.dbHidden) || rpDbColsInTab(pr0) !== rpDbColsInTab() ||
+             JSON.stringify(rpDbOrderOf(pr0)) !== JSON.stringify(rpDbOrderOf()) || JSON.stringify(rpDbSubSaved(pr0)) !== JSON.stringify(rpDbSubSaved()) ||
              JSON.stringify(rpDbTab(pr0)) !== JSON.stringify(rpDbTab())) rpLiftRefresh();
     if (allRows.length && rpAutoSaveOn() && (!rpAutoSaveOn(pr0) || edMoved)) rpAutoSaveMaybe();
     setTimeout(closeRpSettings, 1000);
@@ -6272,6 +6326,8 @@ async function rpPersistPrefs(extra) {
   const more = {};
   if (pr.dbHidden != null) more.dbHidden = pr.dbHidden;
   if (pr.dbSub != null) more.dbSub = !!pr.dbSub;
+  if (pr.dbOrder) more.dbOrder = pr.dbOrder;
+  if (pr.dbSubCfg) more.dbSubCfg = pr.dbSubCfg;
   (Array.isArray(extra) ? extra : []).forEach(k => { more[k] = pr[k]; });
   try {
     const res = await fetch(
@@ -7478,22 +7534,34 @@ const RP_SF_DBTAB = [
   ['edit',   'Edit SOs on the tab',      'Yes: ✎ on each row opens the SO’s details to change.', 'Edit'],
   ['remove', 'Remove SOs on the tab',    'Yes: rows can be ticked and removed from the DO database.', 'Remove'],
   ['smart',  'Smart filter on the tab',  'Yes: conditions such as greater than or contains in each column’s menu.', 'Smart filter'],
+  ['subOpts', 'Subtotal options on the tab', 'Yes: holding Σ opens what subtotals go by and show.', 'Subtotal options'],
+  ['order',  'Column order on the tab',  'Yes: ↑ ↓ in the Columns list on the tab.', 'Column order'],
 ];
-function rpDbHidden(pr) { const h = (pr || appSettings.powerReport || {}).dbHidden; return new Set(Array.isArray(h) ? h.filter(k => k !== 'doNum' && RP_DB_IX[k] != null) : []); }
+// the columns left out: as saved (pr given), or as the tab has them this session
+function rpDbHidden(pr) {
+  const h = pr ? pr.dbHidden : _rpDb.colSess ? _rpDb.colSess.hidden : (appSettings.powerReport || {}).dbHidden;
+  return new Set(Array.isArray(h) ? h.filter(k => k !== 'doNum' && RP_DB_IX[k] != null) : []);
+}
 function rpDbColsInTab(pr) { return (pr || appSettings.powerReport || {}).dbColsInTab !== false; }
-function rpDbVisCols() { const h = rpDbHidden(); return _rpDb.cols.filter(c => !h.has(RP_DB_COLS[c].k)); }
+// the columns shown, in the order picked
+function rpDbVisCols() {
+  const h = rpDbHidden();
+  return rpDbColState().order.map(k => RP_DB_IX[k]).filter(i => _rpDb.cols.indexOf(i) >= 0 && !h.has(RP_DB_COLS[i].k));
+}
 
-// the report's Columns menu: ticks apply at once and are kept in the settings
-let _rpDbColT = null;
+// the report's Columns menu: ticks and ↑ ↓ apply at once, for this session, or as the default when saved
 function rpDbColsOpen(anchor) {
   rpDbClose();
   const bg = document.createElement('div');
   bg.id = 'rpDbPopBg'; bg.onclick = rpDbClose;
   const el = document.createElement('div');
   el.id = 'rpDbPop'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Columns');
+  const mv = rpDbTab().order;
   el.innerHTML = `<div class="rp-dbp-h"><b>Columns</b><button class="rp-dbp-x" onclick="rpDbClose()" aria-label="Close">✕</button></div>
     <div class="rp-dbp-list" id="rpDbColList"></div>
-    <div class="rp-dbp-foot"><button class="rp-dbbtn" onclick="rpDbColAll()">Show all</button><span style="flex:1"></span>
+    <div class="rp-dbp-foot rp-dbcolfoot"><span class="rp-dbsubsaved" id="rpDbColSaved"></span>
+      <button class="rp-dbbtn" onclick="rpDbColAll()">Show all</button>${mv ? '<button class="rp-dbbtn" onclick="rpDbColNatural()">First order</button>' : ''}<span class="rp-dbfootbr"></span><span style="flex:1"></span>
+      <button class="rp-dbbtn" id="rpDbColSave" onclick="rpDbColSaveDefault()" disabled>Save as default</button>
       <button class="rp-dbbtn rp-dbok" onclick="rpDbClose()">Done</button></div>`;
   document.body.appendChild(bg); document.body.appendChild(el);
   if (window.innerWidth < 600) { el.classList.add('sheet'); bg.classList.add('dim'); }
@@ -7505,24 +7573,33 @@ function rpDbColsOpen(anchor) {
   document.addEventListener('keydown', rpDbKey);
   rpDbColsPaint();
 }
-function rpDbColsPaint() {
+function rpDbColsPaint(focus) {
   const box = document.getElementById('rpDbColList');
   if (!box) return;
-  const h = rpDbHidden();
-  box.innerHTML = RP_DB_COLS.map(c => `<label><input type="checkbox" data-k="${c.k}"${h.has(c.k) ? '' : ' checked'}${c.k === 'doNum' ? ' disabled' : ''}>` +
-    `<span class="v">${rpEsc(c.t)}</span>${c.calc ? '<span class="c">worked out</span>' : ''}</label>`).join('');
+  const st = rpDbColState(), h = new Set(st.hidden), mv = rpDbTab().order, last = st.order.length - 1;
+  box.innerHTML = st.order.map((k, i) => {
+    const c = RP_DB_COLS[RP_DB_IX[k]];
+    return `<div class="rp-dbcolrow"><label><input type="checkbox" data-k="${k}"${h.has(k) ? '' : ' checked'}${k === 'doNum' ? ' disabled' : ''}>` +
+      `<span class="v">${rpEsc(c.t)}</span>${c.calc ? '<span class="c">worked out</span>' : ''}</label>` +
+      (mv ? (k === 'doNum' ? '<span class="rp-dbmvfix">first</span>'
+        : `<button class="rp-dbmv" data-mv="${k}" data-d="-1"${i <= 1 ? ' disabled' : ''} aria-label="Move ${rpEsc(c.t)} up">↑</button>` +
+          `<button class="rp-dbmv" data-mv="${k}" data-d="1"${i === last ? ' disabled' : ''} aria-label="Move ${rpEsc(c.t)} down">↓</button>`) : '') + '</div>';
+  }).join('');
   box.onchange = e => { const k = e.target.dataset && e.target.dataset.k; if (k) rpDbColSet(k, e.target.checked); };
+  box.onclick = e => {
+    const b = e.target.closest && e.target.closest('[data-mv]');
+    if (!b) return;
+    rpDbColMove(b.dataset.mv, +b.dataset.d);
+    const again = box.querySelector(`[data-mv="${b.dataset.mv}"][data-d="${b.dataset.d}"]`);     // the arrow stays under the finger
+    if (again) { (again.disabled ? box.querySelector(`[data-mv="${b.dataset.mv}"]:not([disabled])`) || again : again).focus(); again.closest('.rp-dbcolrow').scrollIntoView({ block: 'nearest' }); }
+  };
+  const dirty = rpDbColDirty(), sv = document.getElementById('rpDbColSave'), nt = document.getElementById('rpDbColSaved');
+  if (sv) sv.disabled = !dirty;
+  if (nt) { nt.textContent = dirty ? 'Not your default — kept till the app closes' : 'Your default'; nt.classList.toggle('dirty', dirty); }
 }
-function rpDbColSet(k, on) {
-  const pr = appSettings.powerReport = appSettings.powerReport || {};
-  const h = rpDbHidden();
-  if (on) h.delete(k); else h.add(k);
-  pr.dbHidden = RP_DB_COLS.map(c => c.k).filter(x => h.has(x));
-  rpDbDraw(); rpDbColsPaint();
-  clearTimeout(_rpDbColT);
-  _rpDbColT = setTimeout(() => rpPersistPrefs(), 1200);
-}
-function rpDbColAll() { RP_DB_COLS.forEach(c => { if (rpDbHidden().has(c.k)) rpDbColSet(c.k, true); }); }
+function rpDbColSet(k, on) { rpDbColChange(s => { if (on) s.hidden = s.hidden.filter(x => x !== k); else if (s.hidden.indexOf(k) < 0) s.hidden.push(k); }); }
+function rpDbColAll() { rpDbColChange(s => { s.hidden = []; }); }
+function rpDbColNatural() { rpDbColChange(s => { s.order = RP_DB_NATURAL(); }); }
 
 // ── the settings tab ──
 const RP_DB_TABOPTS = [
@@ -7531,6 +7608,8 @@ const RP_DB_TABOPTS = [
   ['edit',   'Edit SOs',       '✎ on each row opens the SO’s details to change — kept as soon as it closes, as in DO Edits.'],
   ['remove', 'Remove SOs',     'A tick on each row, and Select all that match the search and filters, to remove DOs with their lifting and edits.'],
   ['smart',  'Smart filter',   'Conditions in each column’s menu: greater than, less than, equals, before, after, contains… two joined by And or Or.'],
+  ['subOpts', 'Subtotal options', 'Hold Σ (or right-click it) to pick what subtotals go by — party, colliery, sector, grade… — Sum, Average or Count, and decimals, and to save that as your default.'],
+  ['order',  'Column order',   '↑ ↓ in the Columns button’s list, to put the columns in your own order and save it as your default.'],
 ];
 function renderRpDoDb() {
   if (!_rpDraft) return;
@@ -7543,15 +7622,30 @@ function renderRpDoDb() {
   }
   const grid = document.getElementById('rpDbColGrid');
   if (grid) {
-    const h = new Set(_rpDraft.dbHidden || []);
-    grid.innerHTML = RP_DB_COLS.map(c => `<label class="rp-lkcheck"><input type="checkbox" data-k="${c.k}"${h.has(c.k) ? '' : ' checked'}${c.k === 'doNum' ? ' disabled' : ''}>${rpEsc(c.t)}</label>`).join('');
+    const h = new Set(_rpDraft.dbHidden || []), order = _rpDraft.dbOrder = rpDbOrderOf({ dbOrder: _rpDraft.dbOrder }), last = order.length - 1;
+    grid.innerHTML = order.map((k, i) => {
+      const c = RP_DB_COLS[RP_DB_IX[k]];
+      return `<div class="rp-colrow"><label class="rp-lkcheck"><input type="checkbox" data-k="${k}"${h.has(k) ? '' : ' checked'}${k === 'doNum' ? ' disabled' : ''}>${rpEsc(c.t)}</label>` +
+        (k === 'doNum' ? '' : `<button class="rp-dbmv" data-mv="${k}" data-d="-1"${i <= 1 ? ' disabled' : ''} aria-label="Move ${rpEsc(c.t)} up">↑</button>` +
+                              `<button class="rp-dbmv" data-mv="${k}" data-d="1"${i === last ? ' disabled' : ''} aria-label="Move ${rpEsc(c.t)} down">↓</button>`) + '</div>';
+    }).join('');
     grid.onchange = e => {
       const k = e.target.dataset && e.target.dataset.k;
       if (!k) return;
       const s = new Set(_rpDraft.dbHidden || []);
       if (e.target.checked) s.delete(k); else s.add(k);
-      _rpDraft.dbHidden = RP_DB_COLS.map(c => c.k).filter(x => s.has(x));
-      rpDbColsNote();
+      _rpDraft.dbHidden = _rpDraft.dbOrder.filter(x => s.has(x));
+      rpDbColsNote(); rpSttDots();
+    };
+    grid.onclick = e => {
+      const b = e.target.closest && e.target.closest('[data-mv]');
+      if (!b) return;
+      const o = _rpDraft.dbOrder, i = o.indexOf(b.dataset.mv), j = i + +b.dataset.d;
+      if (i < 1 || j < 1 || j >= o.length) return;
+      o.splice(i, 1); o.splice(j, 0, b.dataset.mv);
+      renderRpDoDb(); rpSttDots();
+      const again = document.querySelector(`#rpDbColGrid [data-mv="${b.dataset.mv}"][data-d="${b.dataset.d}"]`);
+      if (again && !again.disabled) again.focus();
     };
     rpDbColsNote();
   }
@@ -7562,6 +7656,7 @@ function rpDbColsNote() {
   if (el) el.textContent = n ? `${RP_DB_COLS.length - n} of ${RP_DB_COLS.length} columns shown` : `All ${RP_DB_COLS.length} columns shown`;
 }
 function rpDbColsAllDraft() { _rpDraft.dbHidden = []; renderRpDoDb(); }
+function rpDbColsOrderDraft() { _rpDraft.dbOrder = RP_DB_NATURAL(); renderRpDoDb(); rpSttDots(); }
 
 // ── Saved DOs: a filter picks them, the ticks say which go ──
 const _rpSd = { st: new Set(), sec: new Set(), tab: false, unt: new Set(), shown: 50, busy: false };
@@ -8164,6 +8259,7 @@ const RP_DB_IX = {};
 RP_DB_COLS.forEach((c, i) => { RP_DB_IX[c.k] = i; });
 const RP_DB_PAGE = 200;
 const _rpDb = { ver: 0, sig: '', rows: [], cols: [], q: '', filt: {}, sort: { c: 1, dir: -1 }, page: 0, fv: 0, cache: null, pop: null, tok: 0, gaps: null,
+                subSess: null, colSess: null,
                 sel: new Set(), selMsg: null, selBusy: false, edPop: null, rowOpt: null };
 // rows per page and View all, kept in the settings (powerReport.dbPageSize / dbPageAll)
 function rpDbSize() { const n = +((appSettings.powerReport || {}).dbPageSize); return n >= 10 && n <= 100000 ? Math.round(n) : RP_DB_PAGE; }
@@ -8192,7 +8288,19 @@ function rpDbQty(x) {
 // what the rows are built from: the database, the lifting, the date and the power list
 function rpDbSig() {
   const pr = appSettings.powerReport || {};
-  return [_dbVer, _liftVer, rpTodayNo(), (pr.parties || []).filter(p => p.power).map(p => rpCodesOf(p).join(',')).join(';'), JSON.stringify(rpDoEdits())].join('|');
+  return [_dbVer, _liftVer, rpTodayNo(), (pr.parties || []).filter(p => p.power).map(p => rpCodesOf(p).join(',')).join(';'), JSON.stringify(rpDoEdits()),
+          JSON.stringify(appSettings.mines || [])].join('|');
+}
+// The colliery names the Sourcewise and MCL reports use — the settings'
+// colliery list, shared with ePass Viewer — by colliery code.
+let _rpMineNames = null, _rpMineSig = null;
+function rpMineNames() {
+  const sig = JSON.stringify(appSettings.mines || []);
+  if (_rpMineNames && _rpMineSig === sig) return _rpMineNames;
+  const m = {};
+  rpCoalfields().groups.forEach(g => g.mines.forEach(x => x.codes.forEach(c => { if (!m[c] && x.name) m[c] = x.name; })));
+  _rpMineNames = m; _rpMineSig = sig;
+  return m;
 }
 function rpDbBuild() {
   const sig = rpDbSig();
@@ -8212,6 +8320,7 @@ function rpDbBuild() {
   };
   const nf = rpDbBuild.nf || (rpDbBuild.nf = [new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 }), new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 })]);
   const fmt = (n, int) => nf[int ? 1 : 0].format(n);
+  const mines = rpMineNames();
   _rpDb.rows = Object.keys(db).map(doNum => {
     const r = db[doNum] || {};
     const qty = rpDbQty(r.doQty);
@@ -8238,6 +8347,11 @@ function rpDbBuild() {
       if (c.calc) { const n = x[c.k]; return n == null ? '' : c.type === 'num' ? fmt(n, c.int) : n; }
       if (c.type === 'num') { const n = rpDbQty(r[c.k]); return n == null ? String(r[c.k] == null ? '' : r[c.k]).trim() : fmt(n); }
       if (c.k === 'grade') return rpGradeOf(rpDecode(r[c.k]));
+      // a colliery goes by its Sourcewise name, unless its name was edited
+      if (c.k === 'collieryName' && !(edits[doNum] && edits[doNum].collieryName != null)) {
+        const nm = mines[String(r.collieryCode || '').trim()];
+        if (nm) return nm;
+      }
       return rpDecode(r[c.k]);
     });
     const s = RP_DB_COLS.map((c, i) => !v[i] ? null : c.type === 'date' ? rpDbDateKey(v[i])
@@ -8294,12 +8408,16 @@ function rpDbCmp(c, dir) {
   };
 }
 function rpDbFiltered() {
-  const sub = rpDbSubOn();
-  const sig = [_rpDb.ver, _rpDb.q, _rpDb.fv, _rpDb.edOnly ? 'ed' : '', _rpDb.sort ? _rpDb.sort.c + ':' + _rpDb.sort.dir : '', sub ? 'sub' : ''].join('|');
+  const sub = rpDbSubOn(), scfg = sub ? rpDbSubCfg() : null;
+  const sig = [_rpDb.ver, _rpDb.q, _rpDb.fv, _rpDb.edOnly ? 'ed' : '', _rpDb.sort ? _rpDb.sort.c + ':' + _rpDb.sort.dir : '', sub ? 'sub:' + scfg.by : ''].join('|');
   if (_rpDb.cache && _rpDb.cache.sig === sig) return _rpDb.cache.list;
   const words = rpDbWords(_rpDb.q);
   let list = _rpDb.rows.filter(r => rpDbPass(r, words, -1));
-  if (sub) list.sort(rpDbGroupCmp());                  // party by party
+  if (sub) {                                           // group by group
+    const gk = rpDbGk(scfg.by);
+    list.forEach(r => { r.gl = gk(r); r.gk = r.gl ? r.gl.toUpperCase() : '\uffff'; });
+    list.sort(rpDbGroupCmp(scfg.by));
+  }
   else if (_rpDb.sort) list.sort(rpDbCmp(_rpDb.sort.c, _rpDb.sort.dir));
   _rpDb.cache = { sig, list };
   return list;
@@ -8324,7 +8442,7 @@ function renderRpDb() {
            <label class="rp-dbsearch"><span>Search</span>
              <input id="rpDbQ" type="search" autocomplete="off" spellcheck="false" aria-label="Search every column"></label>
            <button class="rp-dbbtn rp-ib" id="rpDbColsBtn" onclick="rpDbColsOpen(this)" aria-haspopup="dialog" title="Columns" aria-label="Columns">${rpIc('cols')}<span class="bl">Columns</span></button>
-           <button class="rp-dbbtn rp-ib" id="rpDbSubBtn" onclick="rpDbSubToggle()" aria-pressed="false" title="Party-wise subtotals" aria-label="Party-wise subtotals">${rpIc('sigma')}<span class="bl">Subtotals</span></button>
+           <button class="rp-dbbtn rp-ib" id="rpDbSubBtn" aria-pressed="false" title="Subtotals" aria-label="Subtotals">${rpIc('sigma')}<span class="bl">Subtotals</span></button>
            <button class="rp-dbbtn rp-ib" id="rpDbEd" onclick="rpDbEdOnly()" aria-pressed="false" title="Show only the edited SOs">${rpIc('pencil')}<span class="bl"></span></button>
            <button class="rp-dbbtn rp-ib" id="rpDbClear" onclick="rpDbClearAll()" title="Clear the search and every filter" aria-label="Clear all">${rpIc('filterx')}<span class="bl">Clear all</span></button>
          </div>
@@ -8335,6 +8453,7 @@ function renderRpDb() {
          <div class="rp-dbscroll" id="rpDbScroll"><table class="rp-dbt" id="rpDbTable"></table></div>
          <div class="rp-dbmore" id="rpDbMore"></div>
        </div>`;
+    rpLongPress(document.getElementById('rpDbSubBtn'), rpDbSubToggle, rpDbSubHold);   // tap: on / off; hold: options
     const tb = document.getElementById('rpDbTable');
     tb.onclick = e => { const b = e.target.closest && e.target.closest('.rp-dbedb'); if (b) rpDbEditOpen(b.dataset.k); };
     tb.onchange = e => { if (e.target.classList && e.target.classList.contains('rp-dbsel')) rpDbSelTick(e.target); };
@@ -8380,9 +8499,8 @@ function rpDbDraw() {
   rpBtnLabel(cb, hid.size ? `Columns · ${hid.size} hidden` : 'Columns');
   cb.dataset.n = hid.size ? `−${hid.size}` : '';
   document.getElementById('rpDbClear').style.display = any ? '' : 'none';
-  const sb = document.getElementById('rpDbSubBtn'), subOn = rpDbSubOn();
-  sb.classList.toggle('on', subOn); sb.setAttribute('aria-pressed', String(subOn));
-  rpBtnLabel(sb, subOn ? 'Party-wise subtotals: on' : 'Party-wise subtotals');
+  const subOn = rpDbSubOn();
+  rpDbSubPaint();
   // what is filtered, each with its own ✕
   // edited cells as set in ⚙ → DO Edits; the Edited switch while there are any
   const est = rpEdStyle(), card = document.querySelector('#rpPane5 .rp-db');
@@ -8544,8 +8662,8 @@ function rpDbColWidths(list, from, to, cols, items) {
     const top = [];
     const see = v => { if (top.length < 6 || v.length > top[top.length - 1].length) { top.push(v); top.sort((a, b) => b.length - a.length); if (top.length > 6) top.pop(); } };
     for (let i = from; i < to; i++) see(list[i].v[c]);
-    // a subtotal's sum (a label under DO Number trails off instead)
-    subs.forEach(cells => { if (c !== 0 || cells[ci].length < 14) see(cells[ci]); });
+    // a subtotal's figures (its label runs across the cells beside it instead)
+    subs.forEach(cells => { if (ci > 0) see(cells[ci]); });
     cv.font = col.wide ? '12px "IBM Plex Sans", sans-serif' : (c === 0 ? '600 ' : '') + '12px "IBM Plex Mono", monospace';
     let w = Math.max(0, ...top.map(v => cv.measureText(v).width)) + 20;
     if (col.wide) w = Math.min(w, 300);
@@ -8845,7 +8963,7 @@ function rpDbClose() {
 //     smart   conditions (>, ≤, contains, …) in each column's menu
 function rpDbTab(pr) {
   const t = (pr || appSettings.powerReport || {}).dbTab || {};
-  return { edited: t.edited !== false, edit: !!t.edit, remove: !!t.remove, smart: !!t.smart };
+  return { edited: t.edited !== false, edit: !!t.edit, remove: !!t.remove, smart: !!t.smart, subOpts: t.subOpts !== false, order: t.order !== false };
 }
 
 // Before a form is drawn again, let a box still being typed in hand over its
@@ -9131,91 +9249,268 @@ function rpBtnUi() {
 function rpBtnPick(words) { _rpDraft.btnWords = !!words; rpBtnUi(); rpSttDots(); }
 
 // ═══════════════════════════════════════════════════════
-//  PARTY-WISE SUBTOTALS (Σ on the DO Database tab)
+//  SUBTOTALS (Σ on the DO Database tab; hold Σ for its options)
 // ═══════════════════════════════════════════════════════
-//   powerReport.dbSub  true: the DOs go party by party, each party closed by
-//                      'Subtotal (Party)', and the list by 'Total (All parties)'.
-//                      The Excel, PDF and picture take the same rows.
-// Parties go A to Z (Z to A when sorted so by Party Name); within a party
-// the DOs keep the sort picked.
+//   powerReport.dbSub     true: the DOs go group by group, each group closed by
+//                         its subtotal row and the list by a total row. The
+//                         Excel, PDF and picture take the same rows.
+//   powerReport.dbSubCfg  the saved default for what the rows hold:
+//                         { by: a column key, fn: 'sum' | 'avg' | 'count', dec: true | false }
+//   Changes made on the tab hold till the app closes (_rpDb.subSess) unless
+//   saved as the default there; ⚙ → DO Database → Subtotal options can take
+//   the options away from the tab.
+// Groups go A to Z (Z to A when sorted so by the grouping column); within a
+// group the DOs keep the sort picked.
 const RP_DB_SUMK = ['doQty', 'lifted', 'balance', 'lapsed', 'asking'];
+// what a subtotal can gather by: the column, its plural, and the columns that
+// come along when they're the same all through a group
+const RP_SUB_BY = {
+  partyName:    { pl: 'parties',        with: ['partyCode', 'sector'] },
+  partyCode:    { pl: 'party codes',    with: ['partyName', 'sector'] },
+  sector:       { pl: 'sectors',        with: [] },
+  collieryName: { pl: 'collieries',     with: ['collieryCode'] },
+  collieryCode: { pl: 'colliery codes', with: ['collieryName'] },
+  grade:        { pl: 'grades',         with: [] },
+  size:         { pl: 'sizes',          with: [] },
+  status:       { pl: 'statuses',       with: [] },
+};
+// what a row holds: Sum leaves out Days to Expiry, which doesn't add up
+const RP_SUB_FN = {
+  sum:   { t: 'Sum',     sub: 'Subtotal', tot: 'Total',   cols: RP_DB_SUMK },
+  avg:   { t: 'Average', sub: 'Average',  tot: 'Average', cols: RP_DB_SUMK.concat(['daysLeft']) },
+  count: { t: 'Count',   sub: 'Count',    tot: 'Count',   cols: RP_DB_SUMK.concat(['daysLeft']) },
+};
+const RP_SUB_DEF = { by: 'partyName', fn: 'sum', dec: true };
+function rpDbSubNorm(c) {
+  c = c || {};
+  return { by: RP_SUB_BY[c.by] ? c.by : RP_SUB_DEF.by, fn: RP_SUB_FN[c.fn] ? c.fn : RP_SUB_DEF.fn, dec: c.dec !== false };
+}
+function rpDbSubSaved(pr) { return rpDbSubNorm((pr || appSettings.powerReport || {}).dbSubCfg); }
+function rpDbSubCfg() { return _rpDb.subSess ? rpDbSubNorm(_rpDb.subSess) : rpDbSubSaved(); }
 function rpDbSubOn() { return !!(appSettings.powerReport || {}).dbSub; }
 function rpDbSubToggle() {
   const pr = appSettings.powerReport = appSettings.powerReport || {};
   pr.dbSub = !pr.dbSub;
   _rpDb.page = 0;
-  rpDbDraw(); rpDbTop();
+  rpDbDraw(); rpDbTop(); rpDbSubPaint();
   clearTimeout(_rpDbPrefT);
   _rpDbPrefT = setTimeout(rpPersistPrefs, 1200);
 }
-function rpDbGroupCmp() {
-  const pn = RP_DB_IX.partyName, gd = _rpDb.sort && _rpDb.sort.c === pn ? _rpDb.sort.dir : 1;
-  const inner = _rpDb.sort && _rpDb.sort.c !== pn ? rpDbCmp(_rpDb.sort.c, _rpDb.sort.dir) : null;
+// the group a row falls in: its value in the grouping column (a party with no name goes by its code)
+function rpDbGk(by) {
+  const c = RP_DB_IX[by];
+  return by === 'partyName' ? r => r.v[c] || r.v[RP_DB_IX.partyCode] || '' : r => r.v[c] || '';
+}
+function rpDbGroupCmp(by) {
+  const bc = RP_DB_IX[by], gd = _rpDb.sort && _rpDb.sort.c === bc ? _rpDb.sort.dir : 1;
+  const inner = _rpDb.sort && _rpDb.sort.c !== bc ? rpDbCmp(_rpDb.sort.c, _rpDb.sort.dir) : null;
   return (a, b) => {
-    if (a.g !== b.g) return a.g === '￿' ? 1 : b.g === '￿' ? -1 : (a.g < b.g ? -1 : 1) * gd;
+    if (a.gk !== b.gk) return a.gk === '￿' ? 1 : b.gk === '￿' ? -1 : (a.gk < b.gk ? -1 : 1) * gd;
     return inner ? inner(a, b) : 0;
   };
 }
-// each party's count and sums, over the whole list (not just the page)
-function rpDbAgg(rows) {
-  const a = { n: 0, sums: {}, codes: new Set(), sectors: new Set(), name: rows.length ? rows[0].gn : '' };
-  const ix = RP_DB_SUMK.map(k => RP_DB_IX[k]);
-  for (const r of rows) {
-    a.n++;
-    for (const i of ix) { const x = r.s[i]; if (x != null) a.sums[i] = (a.sums[i] || 0) + x; }
-    a.codes.add(r.v[RP_DB_IX.partyCode]); a.sectors.add(r.v[RP_DB_IX.sector]);
-  }
-  ix.forEach(i => { if (a.sums[i] != null) a.sums[i] = Math.round(a.sums[i] * 1000) / 1000; });
+// a group's count, and its Sum / Average / Count of each figure, over the whole list (not just the page)
+function rpDbAgg(rows, cfg) {
+  const a = { n: rows.length, vals: {}, same: {}, name: rows.length ? rows[0].gl : '' };
+  RP_SUB_FN[cfg.fn].cols.forEach(k => {
+    const i = RP_DB_IX[k];
+    let s = 0, n = 0;
+    for (const r of rows) { const x = r.s[i]; if (x != null) { s += x; n++; } }
+    if (!n) return;
+    a.vals[i] = cfg.fn === 'count' ? n : cfg.fn === 'avg' ? Math.round(s / n * 100) / 100 : Math.round(s * 1000) / 1000;
+  });
+  RP_SUB_BY[cfg.by].with.forEach(k => {
+    const i = RP_DB_IX[k], vs = new Set(rows.map(r => r.v[i]));
+    if (vs.size === 1) a.same[i] = [...vs][0];
+  });
   return a;
 }
 function rpDbGroups(list) {
-  const c = _rpDb.cache;
-  if (c && c.list === list && c.groups) return c.groups;
+  const c = _rpDb.cache, cfg = rpDbSubCfg(), key = JSON.stringify(cfg);
+  if (c && c.list === list && c.groups && c.gkey === key) return c.groups;
   const by = new Map();
-  for (const r of list) { let g = by.get(r.g); if (!g) by.set(r.g, g = []); g.push(r); }
+  for (const r of list) { let g = by.get(r.gk); if (!g) by.set(r.gk, g = []); g.push(r); }
   const G = new Map();
-  by.forEach((rows, k) => G.set(k, rpDbAgg(rows)));
-  G.total = rpDbAgg(list);
-  if (c && c.list === list) c.groups = G;
+  by.forEach((rows, k) => G.set(k, rpDbAgg(rows, cfg)));
+  G.total = rpDbAgg(list, cfg);
+  if (c && c.list === list) { c.groups = G; c.gkey = key; }
   return G;
 }
-// the rows of one page, each party closed by its subtotal, the last page by the total
+// the rows of one page, each group closed by its subtotal, the last page by the total
 function rpDbItems(list, from, to) {
   const G = rpDbGroups(list), out = [];
   for (let i = from; i < to; i++) {
     const r = list[i];
     out.push(r);
-    if (i === list.length - 1 || list[i + 1].g !== r.g) out.push(Object.assign({ agg: 'party' }, G.get(r.g)));
+    if (i === list.length - 1 || list[i + 1].gk !== r.gk) out.push(Object.assign({ agg: 'group' }, G.get(r.gk)));
   }
   if (to === list.length && list.length) out.push(Object.assign({ agg: 'total' }, G.total));
   return out;
 }
-// a subtotal's cells: the count under DO Number, 'Subtotal (Party)' under
-// Party Name (or both under DO Number when Party Name is hidden), the sums,
-// and the party's code and sector when it has only one
+// a subtotal's cells: 'Subtotal (Name) · n DOs' in the first cell — it runs on
+// across the empty cells beside it, so it reads on a phone too; then the
+// figures, and the columns that are the same all through the group
+function rpDbSubLabel(it, cfg) {
+  const f = RP_SUB_FN[cfg.fn];
+  return it.agg === 'total' ? `${f.tot} (All ${RP_SUB_BY[cfg.by].pl})` : `${f.sub} (${it.name || '(Blank)'})`;
+}
+function rpDbSubNum(x, cfg) { return x.toLocaleString('en-IN', { maximumFractionDigits: cfg.dec && cfg.fn !== 'count' ? 2 : 0 }); }
 function rpDbSubCells(it, cols) {
-  const fmt = n => n.toLocaleString('en-IN', { maximumFractionDigits: 2 });
-  const named = cols.indexOf(RP_DB_IX.partyName) >= 0;
-  const label = it.agg === 'total' ? 'Total (All parties)' : `Subtotal (${it.name || 'No party'})`;
-  const cnt = `${it.n.toLocaleString('en-IN')} DO${it.n === 1 ? '' : 's'}`;
-  return cols.map(c => {
-    if (c === 0) return named ? cnt : `${label} · ${cnt}`;
-    if (c === RP_DB_IX.partyName) return label;
-    if (it.sums[c] != null) return fmt(it.sums[c]);
-    if (c === RP_DB_IX.partyCode && it.codes.size === 1) return [...it.codes][0];
-    if (c === RP_DB_IX.sector && it.sectors.size === 1) return [...it.sectors][0];
+  const cfg = rpDbSubCfg();
+  const label = rpDbSubLabel(it, cfg), cnt = `${it.n.toLocaleString('en-IN')} DO${it.n === 1 ? '' : 's'}`;
+  return cols.map((c, i) => {
+    if (i === 0) return `${label} · ${cnt}`;
+    if (it.vals[c] != null) return rpDbSubNum(it.vals[c], cfg);
+    if (it.same[c] != null) return it.same[c];
     return '';
   });
 }
+// how many cells the label takes: the first and the empty ones after it
+function rpDbSubSpan(cells) { let n = 1; while (n < cells.length && cells[n] === '') n++; return n; }
 function rpDbSubHtml(it, cols) {
-  const cells = rpDbSubCells(it, cols);
-  return `<tr class="${it.agg === 'total' ? 'tot' : 'sub'}">` + cols.map((c, i) => {
-    const col = RP_DB_COLS[c], t = cells[i];
-    const cls = [col.type === 'num' ? 'n' : '', col.wide ? 'w' : ''].filter(Boolean).join(' ');
-    return `<td${cls ? ` class="${cls}"` : ''}${t.length > 24 ? ` title="${rpEsc(t)}"` : ''}>${rpEsc(t)}</td>`;
-  }).join('') + '</tr>';
+  const cells = rpDbSubCells(it, cols), span = rpDbSubSpan(cells);
+  return `<tr class="${it.agg === 'total' ? 'tot' : 'sub'}"><td class="sl"${span > 1 ? ` colspan="${span}"` : ''} title="${rpEsc(cells[0])}"><span>${rpEsc(cells[0])}</span></td>` +
+    cols.slice(span).map((c, j) => {
+      const col = RP_DB_COLS[c], t = cells[span + j];
+      const cls = [col.type === 'num' ? 'n' : '', col.wide ? 'w' : ''].filter(Boolean).join(' ');
+      return `<td${cls ? ` class="${cls}"` : ''}${t.length > 24 ? ` title="${rpEsc(t)}"` : ''}>${rpEsc(t)}</td>`;
+    }).join('') + '</tr>';
 }
 function rpDbItemHtml(it, cols, i) { return it.agg ? rpDbSubHtml(it, cols) : rpDbRowHtml(it, cols, i); }
+function rpDbSubDesc(cfg) {
+  cfg = cfg || rpDbSubCfg();
+  return `${RP_SUB_FN[cfg.fn].t.toLowerCase()} by ${RP_DB_COLS[RP_DB_IX[cfg.by]].t}${cfg.fn !== 'count' && !cfg.dec ? ', whole numbers' : ''}`;
+}
+// the Σ button: lit when on; says what it gathers by, and that holding it opens the options
+function rpDbSubPaint() {
+  const sb = document.getElementById('rpDbSubBtn');
+  if (!sb) return;
+  const on = rpDbSubOn(), opts = rpDbTab().subOpts;
+  sb.classList.toggle('on', on); sb.classList.toggle('lp', opts);
+  sb.setAttribute('aria-pressed', String(on));
+  rpBtnLabel(sb, `Subtotals${on ? ': ' + rpDbSubDesc() : ''}${opts ? ' — hold for options' : ''}`);
+}
+
+// ── holding Σ (or right-clicking it): the options ──
+function rpLongPress(btn, onTap, onHold) {
+  let t = null, held = false;
+  btn.addEventListener('pointerdown', e => {
+    if (e.button > 0) return;
+    held = false; clearTimeout(t);
+    t = setTimeout(() => { held = true; onHold(); }, 500);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => btn.addEventListener(ev, () => clearTimeout(t)));
+  btn.addEventListener('contextmenu', e => { e.preventDefault(); clearTimeout(t); if (!held) { held = true; onHold(); } });
+  btn.addEventListener('click', () => { if (held) { held = false; return; } onTap(); });
+}
+function rpDbSubHold() { if (rpDbTab().subOpts) rpDbSubOpen(); else rpDbSubToggle(); }
+function rpDbSubOpen() {
+  rpDbClose();
+  const anchor = document.getElementById('rpDbSubBtn');
+  const bg = document.createElement('div'); bg.id = 'rpDbPopBg'; bg.onclick = rpDbClose;
+  const el = document.createElement('div'); el.id = 'rpDbPop'; el.className = 'rp-dbsubpop';
+  el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Subtotal options');
+  document.body.appendChild(bg); document.body.appendChild(el);
+  rpDbSubMenuPaint();
+  if (window.innerWidth < 600) { el.classList.add('sheet'); bg.classList.add('dim'); }
+  else {
+    const r = anchor.getBoundingClientRect(), w = el.offsetWidth;
+    el.style.left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)) + 'px';
+    el.style.top = (r.bottom + 4) + 'px'; el.style.maxHeight = (window.innerHeight - r.bottom - 12) + 'px';
+  }
+  document.addEventListener('keydown', rpDbKey);
+}
+function rpDbSubMenuPaint() {
+  const el = document.getElementById('rpDbPop');
+  if (!el || !el.classList.contains('rp-dbsubpop')) return;
+  const cfg = rpDbSubCfg(), saved = rpDbSubSaved(), dirty = JSON.stringify(cfg) !== JSON.stringify(saved), on = rpDbSubOn();
+  const have = new Set(_rpDb.cols.map(i => RP_DB_COLS[i].k));
+  el.innerHTML = `<div class="rp-dbp-h"><b>Subtotals</b><button class="rp-dbp-x" onclick="rpDbClose()" aria-label="Close">✕</button></div>
+    <div class="rp-dbsubbody">
+      <label class="rp-dbsubon"><input type="checkbox" id="rpDbSubOnTgl"${on ? ' checked' : ''}> <span>Show subtotals</span></label>
+      <div class="rp-dbp-sub2">Subtotal by</div>
+      <div class="rp-dbsubby" id="rpDbSubBy">${Object.keys(RP_SUB_BY).filter(k => have.has(k)).map(k =>
+        `<label><input type="radio" name="rpDbSubBy" value="${k}"${cfg.by === k ? ' checked' : ''}><span>${rpEsc(RP_DB_COLS[RP_DB_IX[k]].t)}</span></label>`).join('')}</div>
+      <div class="rp-dbp-sub2">Each subtotal shows the</div>
+      <div class="rp-dbp-mode rp-dbsubfn">${Object.keys(RP_SUB_FN).map(f =>
+        `<button data-fn="${f}" class="${cfg.fn === f ? 'on' : ''}" aria-pressed="${cfg.fn === f}">${RP_SUB_FN[f].t}</button>`).join('')}</div>
+      <div class="rp-dbsubnote">${cfg.fn === 'sum' ? 'of DO Qty, Lifted, Balance, Lapsed and Asking Rate.' : cfg.fn === 'avg' ? 'of DO Qty, Lifted, Balance, Lapsed, Days to Expiry and Asking Rate.' : 'of the DOs with a figure in each of those columns.'}</div>
+      <label class="rp-dbsubon"><input type="checkbox" id="rpDbSubDec"${cfg.dec ? ' checked' : ''}${cfg.fn === 'count' ? ' disabled' : ''}> <span>Decimals <i>(up to 2 places; unticked, whole numbers)</i></span></label>
+    </div>
+    <div class="rp-dbp-foot">
+      <span class="rp-dbsubsaved${dirty ? ' dirty' : ''}">${dirty ? 'Not your default — kept till the app closes' : 'Your default'}</span><span style="flex:1"></span>
+      <button class="rp-dbbtn" id="rpDbSubSave" onclick="rpDbSubSaveDefault()"${dirty ? '' : ' disabled'}>Save as default</button>
+      <button class="rp-dbbtn rp-dbok" onclick="rpDbClose()">Done</button>
+    </div>`;
+  el.querySelector('#rpDbSubOnTgl').onchange = e => { if (e.target.checked !== rpDbSubOn()) rpDbSubToggle(); rpDbSubMenuPaint(); };
+  el.querySelector('#rpDbSubBy').onchange = e => { if (e.target.name === 'rpDbSubBy') rpDbSubSet({ by: e.target.value }); };
+  el.querySelectorAll('.rp-dbsubfn button').forEach(b => { b.onclick = () => rpDbSubSet({ fn: b.dataset.fn }); });
+  el.querySelector('#rpDbSubDec').onchange = e => rpDbSubSet({ dec: e.target.checked });
+}
+// an option picked: shown at once (switching subtotals on), kept for this session
+function rpDbSubSet(o) {
+  const cfg = Object.assign(rpDbSubCfg(), o), saved = rpDbSubSaved();
+  _rpDb.subSess = JSON.stringify(cfg) === JSON.stringify(saved) ? null : cfg;
+  const pr = appSettings.powerReport = appSettings.powerReport || {};
+  if (!pr.dbSub) { pr.dbSub = true; clearTimeout(_rpDbPrefT); _rpDbPrefT = setTimeout(rpPersistPrefs, 1200); }
+  _rpDb.page = 0;
+  rpDbDraw(); rpDbTop(); rpDbSubPaint(); rpDbSubMenuPaint();
+}
+async function rpDbSubSaveDefault() {
+  const pr = appSettings.powerReport = appSettings.powerReport || {};
+  pr.dbSubCfg = rpDbSubCfg();
+  _rpDb.subSess = null;
+  rpDbSubMenuPaint(); rpDbSubPaint();
+  await rpPersistPrefs(['dbSubCfg']);
+}
+
+// ═══════════════════════════════════════════════════════
+//  COLUMN ORDER (the Columns button; ⚙ → DO Database → Columns)
+// ═══════════════════════════════════════════════════════
+//   powerReport.dbOrder  every column's key, in the order shown (DO Number first)
+//   powerReport.dbHidden the columns left out
+//   On the tab, ticks and ↑ ↓ hold till the app closes (_rpDb.colSess) unless
+//   saved as the default; ⚙ → DO Database → Column order can take ↑ ↓ away.
+function rpDbOrderOf(pr) {
+  const o = (pr || appSettings.powerReport || {}).dbOrder, seen = new Set(['doNum']), out = ['doNum'];
+  (Array.isArray(o) ? o : []).forEach(k => { if (RP_DB_IX[k] != null && !seen.has(k)) { seen.add(k); out.push(k); } });
+  RP_DB_COLS.forEach(c => { if (!seen.has(c.k)) { seen.add(c.k); out.push(c.k); } });
+  return out;
+}
+const RP_DB_NATURAL = () => RP_DB_COLS.map(c => c.k);
+function rpDbColState() {
+  if (_rpDb.colSess) return _rpDb.colSess;
+  return { hidden: [...rpDbHidden(appSettings.powerReport || {})], order: rpDbOrderOf() };
+}
+function rpDbColDirty() {
+  if (!_rpDb.colSess) return false;
+  const pr = appSettings.powerReport || {};
+  return JSON.stringify(_rpDb.colSess) !== JSON.stringify({ hidden: [...rpDbHidden(pr)], order: rpDbOrderOf(pr) });
+}
+// a change on the tab: shown at once, kept for this session
+function rpDbColChange(fn) {
+  const st = rpDbColState(), next = { hidden: st.hidden.slice(), order: st.order.slice() };
+  fn(next);
+  next.hidden = next.order.filter(k => next.hidden.indexOf(k) >= 0 && k !== 'doNum');
+  _rpDb.colSess = next;
+  if (!rpDbColDirty()) _rpDb.colSess = null;
+  rpDbDraw(); rpDbColsPaint();
+}
+function rpDbColMove(k, d) {
+  rpDbColChange(s => {
+    const i = s.order.indexOf(k), j = i + d;
+    if (i < 1 || j < 1 || j >= s.order.length) return;          // DO Number stays first
+    s.order.splice(i, 1); s.order.splice(j, 0, k);
+  });
+}
+async function rpDbColSaveDefault() {
+  const pr = appSettings.powerReport = appSettings.powerReport || {};
+  const st = rpDbColState();
+  pr.dbHidden = st.hidden.slice(); pr.dbOrder = st.order.slice();
+  _rpDb.colSess = null;
+  rpDbColsPaint();
+  await rpPersistPrefs(['dbOrder']);
+}
 
 // ═══════════════════════════════════════════════════════
 //  DO DATABASE EXPORTS: Excel, PDF and picture
@@ -9236,7 +9531,7 @@ function rpDbExpNote(list) {
   if (_rpDb.q) parts.push(`search “${_rpDb.q}”`);
   if (_rpDb.edOnly) parts.push('edited SOs only');
   Object.keys(_rpDb.filt).forEach(c => parts.push(RP_DB_COLS[c].t + (_rpDb.filt[c].cond ? ' ' + rpDbCondText(+c, _rpDb.filt[c].cond) : ' filtered')));
-  if (rpDbSubOn()) parts.push('party-wise subtotals');
+  if (rpDbSubOn()) parts.push('subtotals: ' + rpDbSubDesc());
   return `${fmtN(list.length)} of ${fmtN(_rpDb.rows.length)} DOs` + (parts.length ? ' · ' + parts.join(' · ') : '') +
     (nEd ? ` · ${fmtN(nEd)} edited SO${nEd === 1 ? '' : 's'}${est.cur ? ` — edited cells in ${est.cur[0].toLowerCase()} ${est.mode === 'font' ? 'type' : 'highlight'}` : ''}` : '') +
     (_dbUpdated ? ` · database saved ${rpDbWhen(_dbUpdated)}` : '') + rpDbLiftLine(list);
@@ -9293,7 +9588,7 @@ function rpDbExpLayout(head, rows, cols, measure, F, target) {
   const wide = cols.map(c => !!RP_DB_COLS[c].wide);
   const nat = new Array(n).fill(0);
   rows.forEach(r => r.cells.forEach((s, i) => {
-    if (!s || (i === 0 && r.k !== 'd' && cols.indexOf(RP_DB_IX.partyName) < 0)) return;  // a long label under DO Number wraps
+    if (!s || (i === 0 && r.k !== 'd')) return;          // a subtotal's label runs across the empty cells beside it
     nat[i] = Math.max(nat[i], measure(s, r.k !== 'd', false));
   }));
   const hw = head.map(t => {
@@ -9316,14 +9611,27 @@ function rpDbExpLayout(head, rows, cols, measure, F, target) {
   const headLines = head.map((t, i) => rpWrapWords(t.toUpperCase(), W[i] - F.pad * 2, s => measure(s, true, true), 3));
   const headH = Math.max(...headLines.map(l => l.length)) * F.hlh + F.padV * 2;
   const L = rows.map(r => {
+    const span = r.k === 'd' ? 1 : rpDbSubSpan(r.cells);
     const lines = r.cells.map((s, i) => {
       if (!s) return [''];
-      const fits = measure(s, r.k !== 'd', false) <= W[i] - F.pad * 2 + 0.01;
-      return fits ? [s] : rpWrapWords(s, W[i] - F.pad * 2, t => measure(t, r.k !== 'd', false), 3);
+      const w = (i === 0 ? W.slice(0, span).reduce((a, b) => a + b, 0) : W[i]) - F.pad * 2;
+      const fits = measure(s, r.k !== 'd', false) <= w + 0.01;
+      return fits ? [s] : rpWrapWords(s, w, t => measure(t, r.k !== 'd', false), 3);
     });
-    return { lines, h: Math.max(...lines.map(l => l.length)) * F.lh + F.padV * 2 };
+    return { lines, span, h: Math.max(...lines.map(l => l.length)) * F.lh + F.padV * 2 };
   });
   return { W, headLines, headH, L, tw: W.reduce((a, b) => a + b, 0) };
+}
+// the rules between columns, from y0 down the rows given, broken where a label runs across
+function rpDbExpRules(L, y0, n, draw) {
+  for (let i = 1; i < n; i++) {
+    let y = y0, from = y0;
+    L.forEach(l => {
+      if (l.span > i) { if (y > from) draw(i, from, y); from = y + l.h; }
+      y += l.h;
+    });
+    if (y > from) draw(i, from, y);
+  }
 }
 // colours, shared by the PDF and the picture
 const RP_DBX = { ink: '#151a21', mute: '#5d6a78', ash: '#c9d1da', head: '#e6ebf0', zebra: '#f3f6f9', sub: '#dde4ec', tot: '#212a35', totInk: '#f5f7f9', live: '#b8620a' };
@@ -9400,7 +9708,7 @@ async function rpDbPdfBlob(onProgress) {
       y += h;
       g.line(0, y, lay.tw, y, hex(r.k === 'd' ? C.ash : C.mute), r.k === 'd' ? 0.35 : 0.7);
     });
-    for (let i = 1; i < cols.length; i++) g.line(X[i], top + lay.headH, X[i], y, hex(C.ash), 0.35);
+    rpDbExpRules(pages[p].map(ri => lay.L[ri]), top + lay.headH, cols.length, (i, y1, y2) => g.line(X[i], y1, X[i], y2, hex(C.ash), 0.35));
     g.rect(0, top, lay.tw, y - top, hex(C.mute), 0.6);
     g.text(`i3MS DO Database · ${stamp}`, 0, ph - 11, 'H', 6, hex(C.mute));
     const pn = `Page ${p + 1} of ${pages.length}`;
@@ -9488,7 +9796,7 @@ async function rpDbImageCanvas(maxRows) {
     y += h;
     line(M, y, M + lay.tw, y, r.k === 'd' ? C.ash : C.mute, r.k === 'd' ? 0.35 : 0.7);
   });
-  for (let i = 1; i < cols.length; i++) line(X[i], top + lay.headH, X[i], y, C.ash, 0.35);
+  rpDbExpRules(lay.L, top + lay.headH, cols.length, (i, y1, y2) => line(X[i], y1, X[i], y2, C.ash, 0.35));
   ctx.strokeStyle = C.mute; ctx.lineWidth = 0.6; ctx.strokeRect(M, top, lay.tw, y - top);
   return { canvas: cv, rows: items.length, all: d.items.length };
 }
@@ -9540,8 +9848,13 @@ async function rpDbExport() {
   const SUBS = { sub: { 5: 16, 9: 17, 10: 18, 11: 19 }, tot: { 5: 20, 9: 21, 10: 22, 11: 23 } };
   const rows = items.map(it => {
     if (it.agg) {
-      const k = it.agg === 'total' ? 'tot' : 'sub', cells = rpDbSubCells(it, cols);
-      return cols.map((c, i) => ({ v: it.sums[c] != null ? it.sums[c] : cells[i], s: SUBS[k][head[i].style] }));
+      const k = it.agg === 'total' ? 'tot' : 'sub', cells = rpDbSubCells(it, cols), scfg = rpDbSubCfg();
+      return cols.map((c, i) => {
+        const x = it.vals[c];
+        if (x == null) return { v: cells[i], s: SUBS[k][head[i].style === 9 ? 9 : 5] };
+        const v = scfg.dec && scfg.fn !== 'count' ? x : Math.round(x);
+        return { v, s: SUBS[k][Number.isInteger(v) ? 10 : 11] };
+      });
     }
     return cols.map((c, i) => {
       const col = RP_DB_COLS[c], r = it;
